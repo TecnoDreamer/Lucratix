@@ -7,13 +7,14 @@ limpa os cookies no cliente. Revogacao server-side fica para uma issue de
 hardening quando houver um store de sessao (ex.: Redis ou tabela dedicada).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.rate_limit import login_rate_limiter
 from app.core.security import create_access_token, create_refresh_token
 from app.models.user import User
 from app.modules.auth.service import authenticate_user, register_user
@@ -67,7 +68,20 @@ def register(data: UserRegister, db: Session = Depends(get_db)) -> dict[str, str
 
 
 @router.post("/login")
-def login(data: UserLogin, response: Response, db: Session = Depends(get_db)) -> UserRead:
+def login(
+    data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)
+) -> UserRead:
+    # RNF-005: limita tentativas por IP + e-mail alvo, para nao permitir
+    # que um IP unico faca forca bruta distribuida entre varias contas
+    # nem que um unico e-mail seja atacado a partir de varios IPs sem limite.
+    client_host = request.client.host if request.client else "unknown"
+    rate_limit_key = f"{client_host}:{data.email}"
+    if not login_rate_limiter.check(rate_limit_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas de login. Tente novamente em instantes.",
+        )
+
     user = authenticate_user(db, data.email, data.password)
     if user is None:
         # Mensagem generica: nao diferencia "email inexistente" de "senha incorreta" (RF-002).
