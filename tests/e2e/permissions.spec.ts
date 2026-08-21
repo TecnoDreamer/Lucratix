@@ -47,7 +47,7 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     await viewerPage.getByLabel("Receita").fill("999");
     await viewerPage.getByRole("button", { name: "Registrar baseline" }).click();
 
-    await expect(viewerPage.getByRole("alert")).toBeVisible();
+    await expect(viewerPage.getByText("Papel insuficiente para esta operacao")).toBeVisible();
     await expect(viewerPage.getByText("Nenhum baseline registrado ainda.")).toBeVisible();
   } finally {
     await ownerContext.close();

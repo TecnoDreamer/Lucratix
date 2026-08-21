@@ -32,7 +32,7 @@ test("usuario cria um canal e uma campanha de marketing", async ({ page }) => {
   await page.waitForURL("**/marketing");
 
   await page.getByLabel("Novo canal").fill("Google Ads");
-  await page.getByRole("button", { name: "Adicionar" }).click();
+  await page.getByRole("button", { name: "Adicionar", exact: true }).click();
   await expect(page.getByText("Google Ads")).toBeVisible();
 
   await page.getByLabel("Canal").selectOption({ label: "Google Ads" });
