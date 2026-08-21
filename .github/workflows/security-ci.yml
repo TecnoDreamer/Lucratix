@@ -1,0 +1,48 @@
+name: security-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: apps/api
+        run: pip install -e ".[dev]"
+
+      - name: Bandit (SAST)
+        working-directory: apps/api
+        run: bandit -r app -ll
+
+      - name: pip-audit (dependencias)
+        working-directory: apps/api
+        run: pip-audit
+
+  frontend-security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (dependencias)
+        run: npm audit --omit=dev
