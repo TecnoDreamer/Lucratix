@@ -20,6 +20,7 @@
 7. Payload malformado ou com tipo inválido retorna 422 com mensagem de validação, não um erro 500.
 8. Requisição de origem não permitida é rejeitada por CORS.
 9. Nenhuma senha, token ou cookie aparece em log de aplicação (verificação manual em code review + grep automatizado quando possível).
+10. Rate limiting em `/api/v1/auth/login` bloqueia (HTTP 429) após exceder o limite de tentativas por IP+e-mail (RNF-005) — implementado em `app/core/rate_limit.py`, coberto por `tests/security/test_rate_limiting.py`.
 
 ## Quando rodar
 
