@@ -5,9 +5,10 @@ Limitacao conhecida (MVP): a revogacao imediata de refresh token no servidor
 os tokens sao JWT stateless e expiram naturalmente (ver ADR-0004). Logout
 limpa os cookies no cliente. Revogacao server-side fica para uma issue de
 hardening quando houver um store de sessao (ex.: Redis ou tabela dedicada).
+Ver issue #24.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
@@ -15,7 +16,13 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.rate_limit import login_rate_limiter
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import (
+    InvalidTokenError,
+    TokenType,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
 from app.models.user import User
 from app.modules.auth.service import (
     authenticate_user,
@@ -104,6 +111,42 @@ def login(
     _set_auth_cookies(response, user)
     record_audit(db, action="user.login", entity="user", entity_id=user.id, user_id=user.id)
     db.commit()
+    return UserRead.model_validate(user)
+
+
+@router.post("/refresh")
+def refresh(
+    response: Response,
+    refresh_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> UserRead:
+    """RF-003 (issue #33): renova o `access_token` a partir do `refresh_token`.
+
+    Sem isso, a sessao do usuario expirava apos `access_token_expire_minutes`
+    (15 min) mesmo com um `refresh_token` valido (7 dias) ainda no cookie —
+    o cookie era emitido no login mas nunca lido em nenhuma rota. Nao rotaciona
+    o refresh token (mantem o mesmo ate expirar); revogacao server-side
+    continua sendo limitacao conhecida (issue #24).
+    """
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+        )
+    try:
+        user_id = decode_token(refresh_token, TokenType.REFRESH)
+    except InvalidTokenError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+        ) from exc
+
+    user = db.get(User, user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+        )
+
+    access_token = create_access_token(user.id)
+    _set_cookie(response, _ACCESS_COOKIE, access_token, settings.access_token_expire_minutes * 60)
     return UserRead.model_validate(user)
 
 

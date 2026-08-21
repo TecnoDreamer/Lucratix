@@ -68,6 +68,47 @@ def test_me_requires_authentication(client):
     assert resp.status_code == 401
 
 
+def test_refresh_issues_new_access_token(client):
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "refresh.ok@example.com", "password": "SenhaForte123!"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "refresh.ok@example.com", "password": "SenhaForte123!"},
+    )
+    old_access_token = client.cookies.get("access_token")
+
+    resp = client.post("/api/v1/auth/refresh")
+
+    assert resp.status_code == 200
+    assert "access_token" in resp.cookies
+    assert resp.cookies["access_token"] != old_access_token
+    assert client.get("/api/v1/auth/me").status_code == 200
+
+
+def test_refresh_without_cookie_is_unauthorized(client):
+    resp = client.post("/api/v1/auth/refresh")
+    assert resp.status_code == 401
+
+
+def test_refresh_with_access_token_instead_of_refresh_is_rejected(client):
+    # Um access_token nao deve ser aceito no lugar do refresh_token (tipos
+    # de token nao sao intercambiaveis, ver `TokenType` em core/security.py).
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "refresh.wrongtype@example.com", "password": "SenhaForte123!"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "refresh.wrongtype@example.com", "password": "SenhaForte123!"},
+    )
+    access_token = client.cookies.get("access_token")
+
+    resp = client.post("/api/v1/auth/refresh", cookies={"refresh_token": access_token})
+    assert resp.status_code == 401
+
+
 def test_logout_clears_session(client):
     client.post(
         "/api/v1/auth/register",
