@@ -6,8 +6,10 @@ from app.core.middleware import SecurityHeadersMiddleware
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.baselines.router import router as baselines_router
+from app.modules.financials.router import router as financials_router
 from app.modules.memberships.router import router as memberships_router
 from app.modules.organizations.router import router as organizations_router
+from app.modules.products.router import router as products_router
 
 settings = get_settings()
 
@@ -30,6 +32,8 @@ app.include_router(organizations_router)
 app.include_router(memberships_router)
 app.include_router(audit_router)
 app.include_router(baselines_router)
+app.include_router(products_router)
+app.include_router(financials_router)
 
 
 @app.get("/health")
