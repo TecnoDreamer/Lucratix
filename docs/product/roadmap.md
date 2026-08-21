@@ -9,9 +9,9 @@
 | 2 | Requisitos (RF, RNF, regras, histórias, critérios de aceite, matriz de rastreabilidade) | Fase 1 | ✅ Concluída |
 | 3 | Arquitetura, ADRs, modelo de domínio, ER, diagramas, threat model | Fase 2 | ✅ Concluída |
 | 4 | Fundação técnica (monorepo, `apps/web`, `apps/api`, Docker Compose) | Fase 3 | ✅ Concluída |
-| 5 | Banco de dados (PostgreSQL, SQLAlchemy, Alembic, migrations) | Fase 4 | ✅ Concluída (migrations escritas à mão; não validadas contra Postgres real nesta sessão — ver [environment.md](../environment.md)) |
+| 5 | Banco de dados (PostgreSQL, SQLAlchemy, Alembic, migrations) | Fase 4 | ✅ Concluída (migrations validadas contra Postgres real no CI do GitHub; localmente ainda pendente, ver nota abaixo) |
 | 6 | Autenticação | Fase 5 | ✅ Concluída |
-| 7 | Organizações e multi-tenancy (com testes explícitos de isolamento entre empresas) | Fase 6 | ✅ Concluída (testes escritos; execução contra Postgres pendente) |
+| 7 | Organizações e multi-tenancy (com testes explícitos de isolamento entre empresas) | Fase 6 | ✅ Concluída (isolamento comprovado por teste automatizado, verde em CI) |
 | 8 | Baseline | Fase 7 | ✅ Concluída |
 | 9 | Produtos/serviços | Fase 7 | ✅ Concluída |
 | 10 | Financeiro | Fase 9 | ✅ Concluída |
@@ -24,7 +24,7 @@
 | 17 | Integrações (GA4, Google Ads, Meta Ads etc.) | Modelo manual validado (Fases 8–16) | ⏳ Não iniciada (fora de escopo até o modelo manual ser validado em uso real) |
 | 18 | Hardening (segurança, performance, acessibilidade, observabilidade, backup) | Todas as anteriores | ⏳ Não iniciada |
 
-**Pendência transversal a todas as fases 5–16:** os testes de integração/API/segurança que dependem de PostgreSQL não puderam ser executados nesta sessão porque o Docker Desktop não respondeu (diagnóstico: o backend WSL2 `docker-desktop` nunca saiu do estado `Stopped`, apesar do processo estar em execução — ver [environment.md](../environment.md)). O código foi validado com tudo que não depende de banco: lint, type checking estrito, SAST, dependency audit e testes unitários. Rodar `docker compose up -d db && pytest` assim que o Docker estiver disponível é o próximo passo antes de qualquer merge para `main`.
+**Nota sobre validação local (fases 5–16):** os testes de integração/API/segurança/E2E que dependem de PostgreSQL não puderam ser executados **localmente** nesta sessão porque o Docker Desktop não respondeu neste ambiente (diagnóstico: o backend WSL2 `docker-desktop` nunca saiu do estado `Stopped`, apesar do processo estar em execução — ver [environment.md](../environment.md)). Todo esse conjunto de testes **foi executado com sucesso no GitHub Actions** (Postgres real como serviço efêmero) antes de cada merge para `main` — ver `backend-ci`, `security-ci` e `e2e-ci`. Rodar `docker compose up -d db && pytest` localmente assim que o Docker Desktop estiver disponível continua sendo recomendado para o ciclo de desenvolvimento do dia a dia (feedback mais rápido que esperar o CI), mas não é um bloqueio para o que já foi mergeado — ver issue [EPIC-016](https://github.com/AleksGustavo/marketing-intelligence-platform/issues/23).
 
 ## Regra de execução
 
