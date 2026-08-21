@@ -111,12 +111,14 @@ export default function OrganizationDetailPage() {
         {organization.name}
       </h1>
       <p className="text-sm text-zinc-500 dark:text-zinc-400">Seu papel: {organization.my_role}</p>
-      <Link
-        href={`/organizations/${id}/dashboard`}
-        className="mt-2 inline-block text-sm font-medium text-zinc-900 underline dark:text-zinc-50"
-      >
-        Ver dashboard
-      </Link>
+      <nav className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-zinc-900 underline dark:text-zinc-50">
+        <Link href={`/organizations/${id}/dashboard`}>Dashboard</Link>
+        <Link href={`/organizations/${id}/products`}>Produtos</Link>
+        <Link href={`/organizations/${id}/financials`}>Financeiro</Link>
+        <Link href={`/organizations/${id}/marketing`}>Marketing</Link>
+        <Link href={`/organizations/${id}/funnel`}>Funil</Link>
+        <Link href={`/organizations/${id}/experiments`}>Experimentos</Link>
+      </nav>
 
       {error && (
         <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
