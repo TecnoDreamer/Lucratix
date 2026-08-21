@@ -23,5 +23,8 @@
     "security:frontend": "npm run --prefix apps/web audit --omit=dev",
     "security": "npm run security:backend && npm run security:frontend",
     "e2e": "npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
   }
 }
