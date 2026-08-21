@@ -111,6 +111,12 @@ export default function OrganizationDetailPage() {
         {organization.name}
       </h1>
       <p className="text-sm text-zinc-500 dark:text-zinc-400">Seu papel: {organization.my_role}</p>
+      <Link
+        href={`/organizations/${id}/dashboard`}
+        className="mt-2 inline-block text-sm font-medium text-zinc-900 underline dark:text-zinc-50"
+      >
+        Ver dashboard
+      </Link>
 
       {error && (
         <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
