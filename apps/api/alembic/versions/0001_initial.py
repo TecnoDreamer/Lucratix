@@ -68,14 +68,22 @@ def upgrade() -> None:
         ),
     )
 
+    # create_type=False: o tipo e criado explicitamente abaixo (.create()).
+    # Sem isso, op.create_table() tenta criar o mesmo ENUM de novo ao
+    # compilar a coluna (pegadinha conhecida do Alembic/SQLAlchemy com
+    # postgresql.ENUM reutilizado como tipo de coluna), causando
+    # "type already exists" mesmo com checkfirst=True no .create().
     membership_role = postgresql.ENUM(
         "ORGANIZATION_OWNER",
         "ORGANIZATION_ADMIN",
         "ANALYST",
         "VIEWER",
         name="membership_role",
+        create_type=False,
     )
-    membership_status = postgresql.ENUM("active", "pending", name="membership_status")
+    membership_status = postgresql.ENUM(
+        "active", "pending", name="membership_status", create_type=False
+    )
     membership_role.create(op.get_bind(), checkfirst=True)
     membership_status.create(op.get_bind(), checkfirst=True)
 
