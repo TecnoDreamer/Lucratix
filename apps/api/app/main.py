@@ -14,6 +14,7 @@ from app.modules.marketing.router import campaigns_router, channels_router
 from app.modules.memberships.router import router as memberships_router
 from app.modules.organizations.router import router as organizations_router
 from app.modules.products.router import router as products_router
+from app.modules.reports.router import router as reports_router
 
 settings = get_settings()
 
@@ -43,6 +44,7 @@ app.include_router(campaigns_router)
 app.include_router(funnels_router)
 app.include_router(analytics_router)
 app.include_router(experiments_router)
+app.include_router(reports_router)
 
 
 @app.get("/health")
