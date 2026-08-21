@@ -8,8 +8,11 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+const _REFRESH_PATH = "/api/v1/auth/refresh";
+const _AUTH_PATHS_WITHOUT_RETRY = new Set(["/api/v1/auth/login", _REFRESH_PATH]);
+
+async function _rawFetch(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(`${API_URL}${path}`, {
     ...init,
     credentials: "include",
     headers: {
@@ -18,7 +21,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   });
+}
 
+async function _toResult<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -34,6 +39,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
   return (await res.json()) as T;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await _rawFetch(path, init);
+
+  // Access token expirado (15min) mas refresh token (7 dias) ainda pode ser
+  // valido: tenta renovar uma vez antes de propagar o 401 (issue #33).
+  if (res.status === 401 && !_AUTH_PATHS_WITHOUT_RETRY.has(path)) {
+    const refreshRes = await _rawFetch(_REFRESH_PATH, { method: "POST" });
+    if (refreshRes.ok) {
+      const retryRes = await _rawFetch(path, init);
+      return _toResult<T>(retryRes);
+    }
+  }
+
+  return _toResult<T>(res);
 }
 
 export const api = {
