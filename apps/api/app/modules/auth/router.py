@@ -16,8 +16,21 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token
 from app.models.user import User
-from app.modules.auth.service import authenticate_user, register_user
-from app.schemas.user import UserLogin, UserRead, UserRegister
+from app.modules.auth.service import (
+    authenticate_user,
+    change_password,
+    confirm_password_reset,
+    register_user,
+    request_password_reset,
+)
+from app.schemas.user import (
+    PasswordChange,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    UserLogin,
+    UserRead,
+    UserRegister,
+)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 settings = get_settings()
@@ -89,3 +102,63 @@ def logout(response: Response, current_user: User = Depends(get_current_user)) -
 @router.get("/me")
 def me(current_user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(current_user)
+
+
+_RESET_REQUEST_MESSAGE = (
+    "Se o e-mail informado estiver cadastrado, voce recebera instrucoes para "
+    "redefinir sua senha."
+)
+
+
+@router.post("/password-reset/request")
+def request_password_reset_route(
+    data: PasswordResetRequest, db: Session = Depends(get_db)
+) -> dict[str, str]:
+    raw_token = request_password_reset(db, data.email)
+    db.commit()
+
+    response: dict[str, str] = {"message": _RESET_REQUEST_MESSAGE}
+    # Limitacao conhecida do MVP (RF-004): sem servico de envio de e-mail
+    # integrado, o token e devolvido diretamente na resposta em ambiente
+    # NAO-producao, para permitir testar o fluxo ponta a ponta. Isto NUNCA
+    # deve acontecer com ENV=production (RN-012 relaxada deliberadamente
+    # apenas fora de producao) — antes de um deploy real, substituir por
+    # envio de e-mail e remover este campo incondicionalmente.
+    if not settings.is_production and raw_token is not None:
+        response["dev_token"] = raw_token
+    return response
+
+
+@router.post("/password-reset/confirm")
+def confirm_password_reset_route(
+    data: PasswordResetConfirm, db: Session = Depends(get_db)
+) -> dict[str, str]:
+    success = confirm_password_reset(db, data.token, data.new_password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalido ou expirado"
+        )
+    db.commit()
+    return {"message": "Senha redefinida com sucesso."}
+
+
+@router.post("/change-password")
+def change_password_route(
+    data: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    success = change_password(db, current_user, data.current_password, data.new_password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Senha atual incorreta"
+        )
+    record_audit(
+        db,
+        action="user.password_changed",
+        entity="user",
+        entity_id=current_user.id,
+        user_id=current_user.id,
+    )
+    db.commit()
+    return {"message": "Senha alterada com sucesso."}
