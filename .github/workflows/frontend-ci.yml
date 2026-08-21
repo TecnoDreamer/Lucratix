@@ -1,0 +1,45 @@
+name: frontend-ci
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/frontend-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Gera os tipos globais de rota (PageProps/LayoutProps) antes do type
+      # check — sem isso, tsc falha em CI com "Cannot find name 'LayoutProps'"
+      # mesmo com codigo correto, pois esses tipos so existem apos
+      # `next dev`, `next build` ou `next typegen` rodar ao menos uma vez.
+      - name: Generate route types
+        run: npx next typegen
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build

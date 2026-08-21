@@ -36,3 +36,13 @@ Pontos de atenção para fases futuras:
 ## Próximos passos
 
 Seguir para a Fase 1 (Produto): documentação de visão de produto, problema, proposta de valor, personas, stakeholders, jornada, escopo, MVP, roadmap, riscos e hipóteses — sem implementar código ainda.
+
+## Atualização — Docker Desktop indisponível (2026-08-21, durante as Fases 4–16)
+
+Ao tentar subir o PostgreSQL via `docker compose up -d db` para rodar migrations e testes de integração/API/segurança, o `docker` CLI (`docker ps`, `docker info`) ficou sem responder indefinidamente (~1h de tentativas espaçadas), mesmo após iniciar o Docker Desktop manualmente e aguardar.
+
+**Diagnóstico:** `wsl -l -v` mostrou a distribuição `docker-desktop` no estado `Stopped`, apesar dos processos `Docker Desktop.exe`/`com.docker.backend` estarem em execução havia mais de uma hora. Ou seja, o backend Linux do Docker Desktop nunca terminou de inicializar — sintoma típico de uma tela de primeiro uso (EULA/onboarding) ou configuração pendente que exige interação gráfica, indisponível neste ambiente de automação.
+
+**Impacto:** nenhuma migration foi validada contra um Postgres real; testes de `tests/integration/`, `tests/api/` e `tests/security/` (todos escritos e prontos) não puderam ser executados. Testes unitários (`tests/unit/`, 70 casos, cobrindo especialmente o motor de métricas e a lógica de experimentos — a lógica de negócio mais sensível do produto) rodam sem banco e foram executados normalmente.
+
+**Ação recomendada para quem retomar o trabalho:** abrir o Docker Desktop interativamente (sessão com GUI) para completar qualquer configuração inicial pendente, confirmar `docker ps` responde, depois rodar `docker compose up -d db && npm run migrate && pytest` a partir da raiz do projeto.

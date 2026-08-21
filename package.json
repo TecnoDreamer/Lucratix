@@ -1,0 +1,27 @@
+{
+  "name": "marketing-intelligence-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Task runner de conveniencia. Ver docs/product/roadmap.md.",
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:down": "docker compose down",
+    "dev:build": "docker compose up --build",
+    "migrate": "docker compose exec api alembic upgrade head",
+    "migrate:new": "docker compose exec api alembic revision --autogenerate -m",
+    "seed": "docker compose exec api python -m app.seed",
+    "test:backend": "docker compose exec api pytest",
+    "test:frontend": "npm run --prefix apps/web test --if-present",
+    "test": "npm run test:backend && npm run test:frontend",
+    "lint:backend": "docker compose exec api ruff check .",
+    "lint:frontend": "npm run --prefix apps/web lint",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "typecheck:backend": "docker compose exec api mypy app",
+    "typecheck:frontend": "npm run --prefix apps/web exec -- tsc --noEmit",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
+    "security:backend": "docker compose exec api sh -c \"bandit -r app && pip-audit\"",
+    "security:frontend": "npm run --prefix apps/web audit --omit=dev",
+    "security": "npm run security:backend && npm run security:frontend",
+    "e2e": "npx playwright test"
+  }
+}
