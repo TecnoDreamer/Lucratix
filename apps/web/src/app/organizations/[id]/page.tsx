@@ -118,6 +118,8 @@ export default function OrganizationDetailPage() {
         <Link href={`/organizations/${id}/marketing`}>Marketing</Link>
         <Link href={`/organizations/${id}/funnel`}>Funil</Link>
         <Link href={`/organizations/${id}/experiments`}>Experimentos</Link>
+        <Link href={`/organizations/${id}/reports`}>Relatório</Link>
+        <Link href={`/organizations/${id}/audit`}>Auditoria</Link>
       </nav>
 
       {error && (
