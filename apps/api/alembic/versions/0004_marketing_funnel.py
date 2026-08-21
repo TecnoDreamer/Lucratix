@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("type", sa.String(100), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_marketing_channels_organization_id", "marketing_channels", ["organization_id"])
@@ -62,10 +62,10 @@ def upgrade() -> None:
         sa.Column("customers", sa.Integer(), nullable=True),
         sa.Column("attributed_revenue", sa.Numeric(14, 2), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_campaigns_organization_id", "campaigns", ["organization_id"])
@@ -90,10 +90,10 @@ def upgrade() -> None:
         sa.Column("customers", sa.Integer(), nullable=True),
         sa.Column("repeat_purchases", sa.Integer(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_unique_constraint(

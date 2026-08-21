@@ -31,6 +31,13 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Gera os tipos globais de rota (PageProps/LayoutProps) antes do type
+      # check — sem isso, tsc falha em CI com "Cannot find name 'LayoutProps'"
+      # mesmo com codigo correto, pois esses tipos so existem apos
+      # `next dev`, `next build` ou `next typegen` rodar ao menos uma vez.
+      - name: Generate route types
+        run: npx next typegen
+
       - name: Type check
         run: npx tsc --noEmit
 

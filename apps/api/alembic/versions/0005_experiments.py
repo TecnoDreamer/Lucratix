@@ -38,10 +38,10 @@ def upgrade() -> None:
         sa.Column("end_date", sa.Date(), nullable=True),
         sa.Column("status", experiment_status, nullable=False, server_default="draft"),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_experiments_organization_id", "experiments", ["organization_id"])
@@ -59,10 +59,10 @@ def upgrade() -> None:
         sa.Column("sample_size", sa.Integer(), nullable=True),
         sa.Column("conversions", sa.Integer(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_experiment_variants_experiment_id", "experiment_variants", ["experiment_id"])

@@ -27,8 +27,18 @@ def upgrade() -> None:
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("is_platform_admin", sa.Boolean(), nullable=False, server_default=sa.false()),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
     )
     op.create_unique_constraint("uq_users_email", "users", ["email"])
     op.create_index("ix_users_email", "users", ["email"])
@@ -44,8 +54,18 @@ def upgrade() -> None:
         sa.Column("timezone", sa.String(64), nullable=False, server_default="America/Sao_Paulo"),
         sa.Column("tracking_start_date", sa.Date(), nullable=True),
         sa.Column("notes", sa.String(2000), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
     )
 
     membership_role = postgresql.ENUM(
@@ -76,8 +96,18 @@ def upgrade() -> None:
         ),
         sa.Column("role", membership_role, nullable=False),
         sa.Column("status", membership_status, nullable=False, server_default="active"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
     )
     op.create_unique_constraint(
         "uq_membership_user_org", "memberships", ["user_id", "organization_id"]
@@ -103,7 +133,12 @@ def upgrade() -> None:
         sa.Column("action", sa.String(100), nullable=False),
         sa.Column("entity", sa.String(100), nullable=False),
         sa.Column("entity_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.clock_timestamp(),
+            nullable=False,
+        ),
     )
     op.create_index("ix_audit_logs_organization_id", "audit_logs", ["organization_id"])
 

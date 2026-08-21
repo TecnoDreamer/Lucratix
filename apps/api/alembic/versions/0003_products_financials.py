@@ -34,10 +34,10 @@ def upgrade() -> None:
         sa.Column("cost", sa.Numeric(14, 2), nullable=True),
         sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_products_organization_id", "products", ["organization_id"])
@@ -58,10 +58,10 @@ def upgrade() -> None:
         sa.Column("marketing_investment", sa.Numeric(14, 2), nullable=True),
         sa.Column("taxes", sa.Numeric(14, 2), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_unique_constraint(

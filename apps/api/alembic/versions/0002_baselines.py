@@ -46,7 +46,7 @@ def upgrade() -> None:
         sa.Column("recurrence_rate", sa.Numeric(7, 4), nullable=True),
         sa.Column("notes", sa.String(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.clock_timestamp(), nullable=False
         ),
     )
     op.create_index("ix_baselines_organization_id", "baselines", ["organization_id"])
