@@ -7,6 +7,7 @@ from app.modules.analytics.router import router as analytics_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.baselines.router import router as baselines_router
+from app.modules.experiments.router import router as experiments_router
 from app.modules.financials.router import router as financials_router
 from app.modules.funnels.router import router as funnels_router
 from app.modules.marketing.router import campaigns_router, channels_router
@@ -41,6 +42,7 @@ app.include_router(channels_router)
 app.include_router(campaigns_router)
 app.include_router(funnels_router)
 app.include_router(analytics_router)
+app.include_router(experiments_router)
 
 
 @app.get("/health")
