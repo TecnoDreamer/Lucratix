@@ -5,6 +5,8 @@ Tokens are always delivered to the client as HttpOnly cookies — see ADR-0004 �
 never read from `localStorage` by any frontend code.
 """
 
+import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -85,3 +87,21 @@ def decode_token(token: str, expected_type: TokenType) -> uuid.UUID:
         return uuid.UUID(payload["sub"])
     except (KeyError, ValueError) as exc:
         raise InvalidTokenError("Token sem sujeito valido") from exc
+
+
+def generate_password_reset_token() -> tuple[str, str]:
+    """RF-004. Retorna (raw_token, token_hash).
+
+    `raw_token` e o valor entregue ao usuario (nunca persistido); `token_hash`
+    (SHA-256) e o que fica no banco — um hash rapido e suficiente aqui
+    (diferente de senha, ver hash_password/Argon2 acima) porque o token
+    ja tem alta entropia (256 bits, gerado por secrets.token_urlsafe) e
+    e de uso unico e curta duracao, não sujeito a ataque de forca bruta
+    offline do mesmo jeito que uma senha escolhida por humano.
+    """
+    raw_token = secrets.token_urlsafe(32)
+    return raw_token, hash_password_reset_token(raw_token)
+
+
+def hash_password_reset_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()

@@ -7,6 +7,7 @@ from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.marketing_channel import MarketingChannel
 from app.models.membership import Membership, MembershipRole, MembershipStatus
 from app.models.organization import Organization
+from app.models.password_reset_token import PasswordResetToken
 from app.models.product import Product
 from app.models.user import User
 
@@ -24,6 +25,7 @@ __all__ = [
     "MembershipRole",
     "MembershipStatus",
     "Organization",
+    "PasswordResetToken",
     "Product",
     "User",
 ]
