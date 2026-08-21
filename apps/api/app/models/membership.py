@@ -58,11 +58,26 @@ class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
     )
+    # values_callable: sem isso, SQLAlchemy usa o NOME do membro do enum
+    # Python (ex.: "ACTIVE") como valor gravado no Postgres, nao o .value
+    # (ex.: "active") - e o enum do Postgres (migrations) so aceita os
+    # valores em minusculo, causando InvalidTextRepresentation em runtime
+    # (bug real encontrado via e2e-ci, nao pego pelos testes que usam
+    # Base.metadata.create_all em vez de Alembic).
     role: Mapped[MembershipRole] = mapped_column(
-        SAEnum(MembershipRole, name="membership_role"), nullable=False
+        SAEnum(
+            MembershipRole,
+            name="membership_role",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        nullable=False,
     )
     status: Mapped[MembershipStatus] = mapped_column(
-        SAEnum(MembershipStatus, name="membership_status"),
+        SAEnum(
+            MembershipStatus,
+            name="membership_status",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
         default=MembershipStatus.ACTIVE,
         nullable=False,
     )

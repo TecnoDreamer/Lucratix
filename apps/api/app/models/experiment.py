@@ -30,8 +30,13 @@ class Experiment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     primary_metric: Mapped[str] = mapped_column(String(255), nullable=False)
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # values_callable: ver comentario equivalente em app/models/membership.py.
     status: Mapped[ExperimentStatus] = mapped_column(
-        SAEnum(ExperimentStatus, name="experiment_status"),
+        SAEnum(
+            ExperimentStatus,
+            name="experiment_status",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
         default=ExperimentStatus.DRAFT,
         nullable=False,
     )
