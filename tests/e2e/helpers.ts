@@ -28,20 +28,26 @@ export async function registerAndLogin(page: Page, emailPrefix: string): Promise
 }
 
 export async function createOrganization(page: Page, name: string): Promise<void> {
+  const responsePromise = page
+    .waitForResponse(
+      (res) => res.url().endsWith("/api/v1/organizations") && res.request().method() === "POST",
+      { timeout: 8000 }
+    )
+    .catch((e: Error) => {
+      // eslint-disable-next-line no-console
+      console.log(`[createOrganization] nenhuma resposta de POST /organizations capturada: ${e.message}`);
+      return null;
+    });
+
   await page.getByLabel("Nova empresa").fill(name);
   await page.getByRole("button", { name: "Criar" }).click();
 
-  const link = page.getByRole("link", { name });
-  const alert = page.getByRole("alert");
-  await Promise.race([
-    link.waitFor({ state: "visible", timeout: 8000 }).catch(() => {}),
-    alert.waitFor({ state: "visible", timeout: 8000 }).catch(() => {}),
-  ]);
-
-  if (await alert.isVisible().catch(() => false)) {
-    const text = await alert.textContent();
-    throw new Error(`Falha ao criar organizacao "${name}": alerta na pagina diz "${text}"`);
+  const response = await responsePromise;
+  if (response) {
+    const body = await response.text().catch(() => "<sem corpo>");
+    // eslint-disable-next-line no-console
+    console.log(`[createOrganization] POST /organizations -> ${response.status()} ${body}`);
   }
 
-  await expect(link).toBeVisible({ timeout: 8000 });
+  await expect(page.getByRole("link", { name })).toBeVisible({ timeout: 5000 });
 }
