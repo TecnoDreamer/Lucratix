@@ -30,5 +30,18 @@ export async function registerAndLogin(page: Page, emailPrefix: string): Promise
 export async function createOrganization(page: Page, name: string): Promise<void> {
   await page.getByLabel("Nova empresa").fill(name);
   await page.getByRole("button", { name: "Criar" }).click();
-  await expect(page.getByRole("link", { name })).toBeVisible();
+
+  const link = page.getByRole("link", { name });
+  const alert = page.getByRole("alert");
+  await Promise.race([
+    link.waitFor({ state: "visible", timeout: 8000 }).catch(() => {}),
+    alert.waitFor({ state: "visible", timeout: 8000 }).catch(() => {}),
+  ]);
+
+  if (await alert.isVisible().catch(() => false)) {
+    const text = await alert.textContent();
+    throw new Error(`Falha ao criar organizacao "${name}": alerta na pagina diz "${text}"`);
+  }
+
+  await expect(link).toBeVisible({ timeout: 8000 });
 }
