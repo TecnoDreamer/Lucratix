@@ -19,7 +19,10 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    experiment_status = postgresql.ENUM("draft", "running", "finished", name="experiment_status")
+    # create_type=False: ver comentario equivalente em 0001_initial.py.
+    experiment_status = postgresql.ENUM(
+        "draft", "running", "finished", name="experiment_status", create_type=False
+    )
     experiment_status.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
