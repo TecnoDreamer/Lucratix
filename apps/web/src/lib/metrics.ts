@@ -23,7 +23,7 @@ export interface PeriodComparison {
 
 export function formatMetric(metric: MetricResult, options?: { percent?: boolean }): string {
   if (!metric.is_applicable || metric.value === null) {
-    return "nao aplicavel";
+    return "não aplicável";
   }
   if (options?.percent) {
     return `${(metric.value * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;

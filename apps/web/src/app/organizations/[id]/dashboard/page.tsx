@@ -137,12 +137,12 @@ export default function DashboardPage() {
             </h2>
             {data.revenueComparison ? (
               <div className="mt-2 flex gap-6 text-sm text-zinc-900 dark:text-zinc-50">
-                <span>Baseline: {data.revenueComparison.baseline_value ?? "nao aplicavel"}</span>
-                <span>Atual: {data.revenueComparison.current_value ?? "nao aplicavel"}</span>
+                <span>Baseline: {data.revenueComparison.baseline_value ?? "não aplicável"}</span>
+                <span>Atual: {data.revenueComparison.current_value ?? "não aplicável"}</span>
                 <span>
                   Variacao:{" "}
                   {data.revenueComparison.percent_change === null
-                    ? "nao aplicavel"
+                    ? "não aplicável"
                     : `${(data.revenueComparison.percent_change * 100).toFixed(1)}%`}
                 </span>
               </div>

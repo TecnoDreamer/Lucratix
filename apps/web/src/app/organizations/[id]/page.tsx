@@ -7,7 +7,7 @@ import { api, ApiError } from "@/lib/api";
 import type { Baseline, Organization } from "@/lib/types";
 
 function formatNumber(value: number | null): string {
-  return value === null ? "nao aplicavel" : value.toLocaleString("pt-BR");
+  return value === null ? "não aplicável" : value.toLocaleString("pt-BR");
 }
 
 async function fetchOrganizationData(
