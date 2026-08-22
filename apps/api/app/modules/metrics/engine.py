@@ -15,8 +15,19 @@ assincronos.
 """
 
 from dataclasses import dataclass
+from decimal import Decimal
 
-Number = int | float
+# Numeric columns do SQLAlchemy (ver app/models/*.py) chegam aqui como
+# decimal.Decimal, nao float — Python nao permite aritmetica misturando
+# Decimal e float (ex.: Decimal("1") * 1.0 levanta TypeError), entao todo
+# valor numerico de entrada e convertido para float assim que entra neste
+# modulo (ver _as_float), garantindo que o dado real do banco funcione
+# igual ao dado sintetico usado nos testes unitarios.
+Number = int | float | Decimal
+
+
+def _as_float(value: Number) -> float:
+    return float(value)
 
 
 @dataclass(frozen=True)
@@ -56,7 +67,7 @@ def _safe_ratio(
         return MetricResult.missing_data(denominator_field)
     if denominator == 0:
         return MetricResult.division_by_zero(denominator_field)
-    return MetricResult.ok((numerator / denominator) * multiplier)
+    return MetricResult.ok((_as_float(numerator) / _as_float(denominator)) * multiplier)
 
 
 def margin(revenue: Number | None, profit: Number | None) -> MetricResult:
@@ -71,7 +82,9 @@ def profit(
 ) -> MetricResult:
     if revenue is None:
         return MetricResult.missing_data("revenue")
-    return MetricResult.ok(revenue - (costs or 0) - (expenses or 0) - (taxes or 0))
+    return MetricResult.ok(
+        _as_float(revenue) - _as_float(costs or 0) - _as_float(expenses or 0) - _as_float(taxes or 0)
+    )
 
 
 def cac(marketing_investment: Number | None, new_customers: Number | None) -> MetricResult:
@@ -96,7 +109,8 @@ def roi(attributed_revenue: Number | None, investment: Number | None) -> MetricR
         return MetricResult.missing_data("investment")
     if investment == 0:
         return MetricResult.division_by_zero("investment")
-    return MetricResult.ok((attributed_revenue - investment) / investment)
+    revenue_f, investment_f = _as_float(attributed_revenue), _as_float(investment)
+    return MetricResult.ok((revenue_f - investment_f) / investment_f)
 
 
 def ltv(
@@ -110,7 +124,9 @@ def ltv(
         return MetricResult.missing_data("purchase_frequency")
     if retention_time is None:
         return MetricResult.missing_data("retention_time")
-    return MetricResult.ok(average_ticket * purchase_frequency * retention_time)
+    return MetricResult.ok(
+        _as_float(average_ticket) * _as_float(purchase_frequency) * _as_float(retention_time)
+    )
 
 
 def conversion_rate(conversions: Number | None, base: Number | None) -> MetricResult:
@@ -194,12 +210,13 @@ def compare_periods(baseline_value: Number | None, current_value: Number | None)
             percent_change=None,
         )
 
-    absolute_change = current_value - baseline_value
-    percent_change = None if baseline_value == 0 else absolute_change / baseline_value
+    baseline_f, current_f = _as_float(baseline_value), _as_float(current_value)
+    absolute_change = current_f - baseline_f
+    percent_change = None if baseline_f == 0 else absolute_change / baseline_f
 
     return PeriodComparison(
-        baseline_value=float(baseline_value),
-        current_value=float(current_value),
-        absolute_change=float(absolute_change),
-        percent_change=None if percent_change is None else float(percent_change),
+        baseline_value=baseline_f,
+        current_value=current_f,
+        absolute_change=absolute_change,
+        percent_change=percent_change,
     )
