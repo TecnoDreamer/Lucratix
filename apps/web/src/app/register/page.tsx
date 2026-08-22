@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
+import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
+import { Alert } from "@/components/ui";
+import { IconLock, IconMail, IconUser } from "@/components/icons";
+import { AuthHero } from "@/components/auth-hero";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,67 +38,79 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Criar conta</h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Marketing Analytics, Growth &amp; BI Platform
-        </p>
+    <div className="flex flex-1">
+      <AuthHero
+        eyebrow="Comece agora"
+        title="Substitua planilhas soltas por uma visão só, atualizada e confiável."
+        description="Cadastre a primeira empresa em segundos e comece a registrar baselines, campanhas e resultados hoje mesmo."
+      />
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Nome
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            E-mail
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Senha
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
+      <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
+        <div className="w-full max-w-sm animate-fade-in-up">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+            Criar conta
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Marketing Analytics, Growth &amp; BI Platform
+          </p>
 
-          {error && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              {error}
-            </p>
-          )}
-          {message && <p className="text-sm text-emerald-600 dark:text-emerald-400">{message}</p>}
+          <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
+            <label className={labelClass}>
+              Nome
+              <span className="relative">
+                <IconUser className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  required
+                  autoFocus
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`${input} pl-9`}
+                />
+              </span>
+            </label>
+            <label className={labelClass}>
+              E-mail
+              <span className="relative">
+                <IconMail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`${input} pl-9`}
+                />
+              </span>
+            </label>
+            <label className={labelClass}>
+              Senha
+              <span className="relative">
+                <IconLock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${input} pl-9`}
+                />
+              </span>
+            </label>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-          >
-            {submitting ? "Enviando..." : "Cadastrar"}
-          </button>
-        </form>
+            {error && <Alert>{error}</Alert>}
+            {message && <Alert tone="success">{message}</Alert>}
 
-        <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
-          Ja tem conta?{" "}
-          <Link href="/login" className="font-medium text-zinc-900 underline dark:text-zinc-50">
-            Entrar
-          </Link>
-        </p>
+            <button type="submit" disabled={submitting} className={`${buttonPrimary} mt-1 w-full py-2.5`}>
+              {submitting ? "Enviando..." : "Cadastrar"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+            Ja tem conta?{" "}
+            <Link href="/login" className={linkClass}>
+              Entrar
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

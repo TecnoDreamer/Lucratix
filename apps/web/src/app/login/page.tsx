@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
+import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
+import { Alert } from "@/components/ui";
+import { IconLock, IconMail, IconShieldCheck } from "@/components/icons";
+import { AuthHero } from "@/components/auth-hero";
 import type { User } from "@/lib/types";
 
 export default function LoginPage() {
@@ -12,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shake, setShake] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,62 +27,81 @@ export default function LoginPage() {
       router.push("/organizations");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Entrar</h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Marketing Analytics, Growth &amp; BI Platform
-        </p>
+    <div className="flex flex-1">
+      <AuthHero
+        eyebrow="Bem-vindo de volta"
+        title="Seus clientes. Seus números. Uma única visão."
+        description="Baselines, funil, campanhas e experimentos de CRO — organizados por empresa, prontos para orientar a próxima decisão."
+      />
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            E-mail
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Senha
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
+      <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
+        <div className="w-full max-w-sm animate-fade-in-up">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+            Entrar
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Marketing Analytics, Growth &amp; BI Platform
+          </p>
 
-          {error && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+          <form
+            onSubmit={handleSubmit}
+            className={`mt-7 flex flex-col gap-4 ${shake ? "animate-[shake_0.4s]" : ""}`}
           >
-            {submitting ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
+            <label className={labelClass}>
+              E-mail
+              <span className="relative">
+                <IconMail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`${input} pl-9`}
+                />
+              </span>
+            </label>
+            <label className={labelClass}>
+              Senha
+              <span className="relative">
+                <IconLock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${input} pl-9`}
+                />
+              </span>
+            </label>
 
-        <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
-          Ainda nao tem conta?{" "}
-          <Link href="/register" className="font-medium text-zinc-900 underline dark:text-zinc-50">
-            Cadastre-se
-          </Link>
-        </p>
+            {error && <Alert>{error}</Alert>}
+
+            <button type="submit" disabled={submitting} className={`${buttonPrimary} mt-1 w-full py-2.5`}>
+              {submitting ? "Entrando..." : "Entrar"}
+            </button>
+          </form>
+
+          <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+            <IconShieldCheck className="h-3.5 w-3.5" />
+            Sua sessão fica protegida e você continua conectado com segurança.
+          </p>
+
+          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+            Ainda nao tem conta?{" "}
+            <Link href="/register" className={linkClass}>
+              Cadastre-se
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

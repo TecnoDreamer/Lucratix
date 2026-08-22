@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
 import { formatValue, type Product } from "@/lib/business";
+import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
+import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
+import { IconPackage } from "@/components/icons";
 
 async function fetchProducts(id: string): Promise<Product[]> {
   return api.get<Product[]>(`/api/v1/organizations/${id}/products?include_inactive=true`);
@@ -79,98 +81,102 @@ export default function ProductsPage() {
     }
   }
 
-  if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-zinc-500">Carregando...</div>;
-  }
-
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <Link href={`/organizations/${id}`} className="text-sm text-zinc-500 underline dark:text-zinc-400">
-        &larr; Voltar
-      </Link>
-      <h1 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-        Produtos e serviços
-      </h1>
+    <div className="animate-fade-in-up py-8">
+      <div className="flex items-center gap-2">
+        <IconPackage className="h-4 w-4 text-slate-400" />
+        <h2 className={sectionTitle}>Produtos e serviços</h2>
+      </div>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <div className="mt-4">
+          <Alert>{error}</Alert>
+        </div>
       )}
 
-      <table className="mt-6 w-full text-sm">
-        <thead>
-          <tr className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500 dark:border-zinc-800">
-            <th className="py-2">Nome</th>
-            <th className="py-2">Preço</th>
-            <th className="py-2">Custo</th>
-            <th className="py-2">Margem</th>
-            <th className="py-2">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p.id} className="border-b border-zinc-100 dark:border-zinc-900">
-              <td className="py-2">{p.name}</td>
-              <td className="py-2">{formatValue(p.price)}</td>
-              <td className="py-2">{formatValue(p.cost)}</td>
-              <td className="py-2">
-                {p.margin === null ? "não aplicável" : `${(p.margin * 100).toFixed(1)}%`}
-              </td>
-              <td className="py-2">
-                <button
-                  onClick={() => toggleActive(p)}
-                  className="text-xs underline text-zinc-500 dark:text-zinc-400"
-                >
-                  {p.active ? "ativo" : "inativo"}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="mt-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={<IconPackage className="h-5 w-5" />}
+            title="Nenhum produto cadastrado ainda."
+            description="Adicione o primeiro produto ou serviço abaixo."
+          />
+        ) : (
+          <Card className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={tableHead}>
+                  <th className="px-4 py-2.5">Nome</th>
+                  <th className="px-4 py-2.5">Preço</th>
+                  <th className="px-4 py-2.5">Custo</th>
+                  <th className="px-4 py-2.5">Margem</th>
+                  <th className="px-4 py-2.5">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p.id} className={tableRow}>
+                    <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
+                      {p.name}
+                    </td>
+                    <td className="px-4 py-2.5">{formatValue(p.price)}</td>
+                    <td className="px-4 py-2.5">{formatValue(p.cost)}</td>
+                    <td className="px-4 py-2.5">
+                      {p.margin === null ? "não aplicável" : `${(p.margin * 100).toFixed(1)}%`}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <button
+                        onClick={() => toggleActive(p)}
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
+                          p.active
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300"
+                            : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
+                        }`}
+                      >
+                        {p.active ? "ativo" : "inativo"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        )}
+      </div>
 
-      <form
-        onSubmit={handleCreate}
-        className="mt-8 flex flex-wrap items-end gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800"
-      >
-        <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-          Nome
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-          Preço
-          <input
-            type="number"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-          Custo
-          <input
-            type="number"
-            step="0.01"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-        >
-          {submitting ? "Criando..." : "Adicionar"}
-        </button>
-      </form>
+      <Card className="mt-6 p-5">
+        <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
+          <label className={label}>
+            Nome
+            <input required value={name} onChange={(e) => setName(e.target.value)} className={input} />
+          </label>
+          <label className={label}>
+            Preço
+            <input
+              type="number"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className={`${input} w-32`}
+            />
+          </label>
+          <label className={label}>
+            Custo
+            <input
+              type="number"
+              step="0.01"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              className={`${input} w-32`}
+            />
+          </label>
+          <button type="submit" disabled={submitting} className={buttonPrimary}>
+            {submitting ? "Criando..." : "Adicionar"}
+          </button>
+        </form>
+      </Card>
     </div>
   );
 }

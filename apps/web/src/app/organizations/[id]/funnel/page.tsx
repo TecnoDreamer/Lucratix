@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
 import { formatValue, type FunnelSnapshot } from "@/lib/business";
+import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
+import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
+import { IconFunnel } from "@/components/icons";
 
 async function fetchSnapshots(id: string): Promise<FunnelSnapshot[]> {
   return api.get<FunnelSnapshot[]>(`/api/v1/organizations/${id}/funnel-snapshots`);
@@ -85,80 +87,86 @@ export default function FunnelPage() {
     }
   }
 
-  if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-zinc-500">Carregando...</div>;
-  }
-
   return (
-    <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
-      <Link href={`/organizations/${id}`} className="text-sm text-zinc-500 underline dark:text-zinc-400">
-        &larr; Voltar
-      </Link>
-      <h1 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">Funil</h1>
+    <div className="animate-fade-in-up py-8">
+      <div className="flex items-center gap-2">
+        <IconFunnel className="h-4 w-4 text-slate-400" />
+        <h2 className={sectionTitle}>Funil</h2>
+      </div>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <div className="mt-4">
+          <Alert>{error}</Alert>
+        </div>
       )}
 
-      <table className="mt-6 w-full text-sm">
-        <thead>
-          <tr className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500 dark:border-zinc-800">
-            <th className="py-2">Período</th>
-            {FIELDS.map((f) => (
-              <th key={f.key} className="py-2">
-                {f.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {snapshots.map((s) => (
-            <tr key={s.id} className="border-b border-zinc-100 dark:border-zinc-900">
-              <td className="py-2">{s.period}</td>
-              {FIELDS.map((f) => (
-                <td key={f.key} className="py-2">
-                  {formatValue(s[f.key] as number | null)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <form
-        onSubmit={handleSave}
-        className="mt-8 flex flex-wrap items-end gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800"
-      >
-        <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-          Período
-          <input
-            type="month"
-            value={period.slice(0, 7)}
-            onChange={(e) => setPeriod(`${e.target.value}-01`)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+      <div className="mt-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : snapshots.length === 0 ? (
+          <EmptyState
+            icon={<IconFunnel className="h-5 w-5" />}
+            title="Nenhum snapshot de funil registrado ainda."
           />
-        </label>
-        {FIELDS.map((f) => (
-          <label key={f.key} className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            {f.label}
+        ) : (
+          <Card className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={tableHead}>
+                  <th className="px-4 py-2.5">Período</th>
+                  {FIELDS.map((f) => (
+                    <th key={f.key} className="px-4 py-2.5">
+                      {f.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {snapshots.map((s) => (
+                  <tr key={s.id} className={tableRow}>
+                    <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
+                      {s.period}
+                    </td>
+                    {FIELDS.map((f) => (
+                      <td key={f.key} className="px-4 py-2.5">
+                        {formatValue(s[f.key] as number | null)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        )}
+      </div>
+
+      <Card className="mt-6 p-5">
+        <form onSubmit={handleSave} className="flex flex-wrap items-end gap-3">
+          <label className={label}>
+            Período
             <input
-              type="number"
-              value={values[f.key] ?? ""}
-              onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
-              className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              type="month"
+              value={period.slice(0, 7)}
+              onChange={(e) => setPeriod(`${e.target.value}-01`)}
+              className={input}
             />
           </label>
-        ))}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-        >
-          {submitting ? "Salvando..." : "Salvar período"}
-        </button>
-      </form>
+          {FIELDS.map((f) => (
+            <label key={f.key} className={label}>
+              {f.label}
+              <input
+                type="number"
+                value={values[f.key] ?? ""}
+                onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                className={`${input} w-24`}
+              />
+            </label>
+          ))}
+          <button type="submit" disabled={submitting} className={buttonPrimary}>
+            {submitting ? "Salvando..." : "Salvar período"}
+          </button>
+        </form>
+      </Card>
     </div>
   );
 }
