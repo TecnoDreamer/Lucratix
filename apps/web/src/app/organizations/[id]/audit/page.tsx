@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { sectionTitle, tableHead, tableRow } from "@/lib/ui";
+import { Alert, Card, Skeleton } from "@/components/ui";
+import { IconShieldCheck } from "@/components/icons";
 
 interface AuditLogEntry {
   id: string;
@@ -54,49 +56,57 @@ export default function AuditPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-zinc-500">Carregando...</div>;
-  }
-
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <Link href={`/organizations/${id}`} className="text-sm text-zinc-500 underline dark:text-zinc-400">
-        &larr; Voltar
-      </Link>
-      <h1 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">Auditoria</h1>
+    <div className="animate-fade-in-up py-8">
+      <div className="flex items-center gap-2">
+        <IconShieldCheck className="h-4 w-4 text-slate-400" />
+        <h2 className={sectionTitle}>Auditoria</h2>
+      </div>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <div className="mt-4">
+          <Alert>{error}</Alert>
+        </div>
       )}
 
       {!error && (
-        <table className="mt-6 w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500 dark:border-zinc-800">
-              <th className="py-2">Quando</th>
-              <th className="py-2">Ação</th>
-              <th className="py-2">Entidade</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log) => (
-              <tr key={log.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                <td className="py-2">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
-                <td className="py-2">{log.action}</td>
-                <td className="py-2">{log.entity}</td>
-              </tr>
-            ))}
-            {logs.length === 0 && (
-              <tr>
-                <td colSpan={3} className="py-4 text-center text-zinc-500 dark:text-zinc-400">
-                  Nenhum evento registrado ainda.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="mt-4">
+          {loading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : (
+            <Card className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className={tableHead}>
+                    <th className="px-4 py-2.5">Quando</th>
+                    <th className="px-4 py-2.5">Ação</th>
+                    <th className="px-4 py-2.5">Entidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log) => (
+                    <tr key={log.id} className={tableRow}>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                        {new Date(log.created_at).toLocaleString("pt-BR")}
+                      </td>
+                      <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
+                        {log.action}
+                      </td>
+                      <td className="px-4 py-2.5">{log.entity}</td>
+                    </tr>
+                  ))}
+                  {logs.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                        Nenhum evento registrado ainda.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );

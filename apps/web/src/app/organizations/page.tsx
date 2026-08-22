@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
+import { buttonGhost, buttonPrimary, cardHover, input, label, pageContainer } from "@/lib/ui";
+import { Alert, EmptyState, Skeleton } from "@/components/ui";
+import { IconBuilding, IconChevronRight, IconLogOut, IconPlus, IconSparkles } from "@/components/icons";
 import type { Organization, User } from "@/lib/types";
 
 export default function OrganizationsPage() {
@@ -56,73 +59,86 @@ export default function OrganizationsPage() {
     router.push("/login");
   }
 
-  if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-zinc-500">Carregando...</div>;
-  }
-
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Suas empresas</h1>
+    <div className={pageContainer}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="animate-fade-in-up">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+            Suas empresas
+          </h1>
           {user && (
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Logado como {user.name} ({user.email})
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Logado como <span className="font-medium text-slate-700 dark:text-slate-300">{user.name}</span>{" "}
+              ({user.email})
             </p>
           )}
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-        >
-          Sair
+        <button onClick={handleLogout} className={buttonGhost}>
+          <IconLogOut className="h-4 w-4" /> Sair
         </button>
       </div>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <div className="mt-4">
+          <Alert>{error}</Alert>
+        </div>
       )}
 
-      <ul className="mt-6 flex flex-col gap-2">
-        {organizations.length === 0 && (
-          <li className="text-sm text-zinc-500 dark:text-zinc-400">
-            Nenhuma empresa ainda. Cadastre a primeira abaixo.
-          </li>
+      <div className="mt-6">
+        {loading ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ) : organizations.length === 0 ? (
+          <EmptyState
+            icon={<IconSparkles className="h-5 w-5" />}
+            title="Nenhuma empresa ainda. Cadastre a primeira abaixo."
+            description="Cada empresa/cliente tem seus próprios dados, métricas e histórico, totalmente isolados dos demais."
+          />
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {organizations.map((org, i) => (
+              <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
+                <Link
+                  href={`/organizations/${org.id}`}
+                  className={`${cardHover} group flex items-center justify-between gap-3 px-4 py-3.5`}
+                >
+                  <span className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                      <IconBuilding className="h-[18px] w-[18px]" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-slate-900 dark:text-slate-50">
+                        {org.name}
+                      </span>
+                      <span className="block text-xs text-slate-500 dark:text-slate-400">{org.my_role}</span>
+                    </span>
+                  </span>
+                  <IconChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
-        {organizations.map((org) => (
-          <li key={org.id}>
-            <Link
-              href={`/organizations/${org.id}`}
-              className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3 text-sm hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
-            >
-              <span className="font-medium text-zinc-900 dark:text-zinc-50">{org.name}</span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">{org.my_role}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      </div>
 
       <form
         onSubmit={handleCreate}
-        className="mt-8 flex items-end gap-2 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+        className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 dark:border-slate-800 sm:flex-row sm:items-end"
       >
-        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
+        <label className={`flex-1 ${label}`}>
           Nova empresa
           <input
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nome da empresa/cliente"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
+            className={input}
           />
         </label>
-        <button
-          type="submit"
-          disabled={creating}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-        >
+        <button type="submit" disabled={creating} className={buttonPrimary}>
+          <IconPlus className="h-4 w-4" />
           {creating ? "Criando..." : "Criar"}
         </button>
       </form>
