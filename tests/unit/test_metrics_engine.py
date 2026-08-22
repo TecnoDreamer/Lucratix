@@ -5,6 +5,8 @@ Cada metrica e testada em tres cenarios: caminho feliz, dado ausente
 silenciosamente quando o resultado nao e aplicavel.
 """
 
+from decimal import Decimal
+
 import pytest
 
 from app.modules.metrics import engine
@@ -146,6 +148,57 @@ def test_churn_rate_propagates_not_applicable_from_retention():
 def test_churn_rate_propagates_missing_data():
     result = engine.churn_rate(active_end=None, active_start=100)
     assert result.is_applicable is False
+
+
+class TestDecimalInputsFromDatabase:
+    """Regressao: colunas Numeric do SQLAlchemy chegam como decimal.Decimal,
+    nao float. `Decimal("1") * 1.0` levanta TypeError em Python puro, o que
+    quebrava qualquer metrica com dado real do banco (nunca detectado pelos
+    testes acima, que so passam int/float sinteticos) — ver correcao em
+    app/modules/metrics/engine.py (_as_float).
+    """
+
+    def test_margin_with_decimal_revenue_and_profit(self):
+        result = engine.margin(revenue=Decimal("1000.00"), profit=Decimal("600.00"))
+        assert result.is_applicable is True
+        assert result.value == pytest.approx(0.6)
+
+    def test_margin_with_decimal_revenue_and_float_profit(self):
+        # Cenario exato do bug real: profit() ja devolveu float, revenue
+        # ainda e Decimal (direto da coluna) — tipos misturados na mesma chamada.
+        result = engine.margin(revenue=Decimal("1000.00"), profit=600.0)
+        assert result.is_applicable is True
+        assert result.value == pytest.approx(0.6)
+
+    def test_cpm_with_decimal_uses_multiplier_without_type_error(self):
+        # cpm() usa multiplier=1000 (float) internamente — era o ponto exato
+        # onde Decimal * float estourava TypeError.
+        result = engine.cpm(investment=Decimal("50.00"), impressions=Decimal("10000"))
+        assert result.value == pytest.approx(5.0)
+
+    def test_profit_with_decimal_fields(self):
+        result = engine.profit(
+            revenue=Decimal("1000.00"),
+            costs=Decimal("300.00"),
+            expenses=Decimal("50.00"),
+            taxes=Decimal("10.00"),
+        )
+        assert result.value == pytest.approx(640.0)
+
+    def test_roi_with_decimal_fields(self):
+        result = engine.roi(attributed_revenue=Decimal("4000.00"), investment=Decimal("1000.00"))
+        assert result.value == pytest.approx(3.0)
+
+    def test_ltv_with_decimal_fields(self):
+        result = engine.ltv(
+            average_ticket=Decimal("100.00"), purchase_frequency=Decimal("2"), retention_time=Decimal("3")
+        )
+        assert result.value == pytest.approx(600.0)
+
+    def test_compare_periods_with_decimal_fields(self):
+        cmp = engine.compare_periods(baseline_value=Decimal("50000.00"), current_value=Decimal("68000.00"))
+        assert cmp.absolute_change == pytest.approx(18000.0)
+        assert cmp.percent_change == pytest.approx(0.36)
 
 
 class TestComparePeriods:
