@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Em producao (Vercel) nao aponta direto para o backend: fica em branco
+// (caminho relativo) e o rewrite de next.config.ts repassa /api/* para o
+// Railway, mantendo tudo na mesma origem para o cookie de sessao funcionar.
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:8000");
 
 export class ApiError extends Error {
   status: number;

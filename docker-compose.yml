@@ -19,6 +19,8 @@ services:
   api:
     build:
       context: ./apps/api
+      args:
+        INSTALL_DEV: "true"
     restart: unless-stopped
     environment:
       ENV: ${ENV:-development}
