@@ -19,21 +19,27 @@ function currentMonthPeriod(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
-async function fetchDashboardData(
-  id: string,
-  period: string
-): Promise<{ dashboard: Dashboard; revenueComparison: PeriodComparison | null }> {
-  const dashboard = await api.get<Dashboard>(`/api/v1/organizations/${id}/dashboard?period=${period}`);
-
-  let revenueComparison: PeriodComparison | null = null;
+async function fetchRevenueComparison(id: string, period: string): Promise<PeriodComparison | null> {
   try {
-    revenueComparison = await api.get<PeriodComparison>(
+    return await api.get<PeriodComparison>(
       `/api/v1/organizations/${id}/dashboard/compare-to-baseline?period=${period}&metric=revenue`
     );
   } catch (err) {
     // Sem baseline registrado ainda: comparacao fica indisponivel, painel segue funcional.
-    if (!(err instanceof ApiError && err.status === 404)) throw err;
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
   }
+}
+
+async function fetchDashboardData(
+  id: string,
+  period: string
+): Promise<{ dashboard: Dashboard; revenueComparison: PeriodComparison | null }> {
+  // Chamadas independentes entre si: rodam em paralelo em vez de em fila.
+  const [dashboard, revenueComparison] = await Promise.all([
+    api.get<Dashboard>(`/api/v1/organizations/${id}/dashboard?period=${period}`),
+    fetchRevenueComparison(id, period),
+  ]);
 
   return { dashboard, revenueComparison };
 }

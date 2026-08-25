@@ -20,8 +20,11 @@ import { IconMegaphone, IconPlus } from "@/components/icons";
 async function fetchData(
   id: string
 ): Promise<{ channels: MarketingChannel[]; campaigns: Campaign[] }> {
-  const channels = await api.get<MarketingChannel[]>(`/api/v1/organizations/${id}/marketing-channels`);
-  const campaigns = await api.get<Campaign[]>(`/api/v1/organizations/${id}/campaigns`);
+  // Independentes entre si: rodam em paralelo em vez de em fila.
+  const [channels, campaigns] = await Promise.all([
+    api.get<MarketingChannel[]>(`/api/v1/organizations/${id}/marketing-channels`),
+    api.get<Campaign[]>(`/api/v1/organizations/${id}/campaigns`),
+  ]);
   return { channels, campaigns };
 }
 
