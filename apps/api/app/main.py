@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.core.config import get_settings
 from app.core.middleware import SecurityHeadersMiddleware
@@ -31,6 +32,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "X-Requested-With"],
 )
+# Comprime respostas JSON grandes (ex.: lista de organizacoes, dashboard) —
+# reduz o tamanho transferido, principalmente relevante com o backend hospedado
+# fora do Brasil (Railway) enquanto o usuario/demo estao no Brasil.
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.include_router(auth_router)
 app.include_router(organizations_router)

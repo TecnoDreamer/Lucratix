@@ -22,9 +22,12 @@ export default function OrganizationsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const me = await api.get<User>("/api/v1/auth/me");
+        // Independentes entre si: rodam em paralelo em vez de em fila.
+        const [me, orgs] = await Promise.all([
+          api.get<User>("/api/v1/auth/me"),
+          api.get<Organization[]>("/api/v1/organizations"),
+        ]);
         setUser(me);
-        const orgs = await api.get<Organization[]>("/api/v1/organizations");
         setOrganizations(orgs);
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
