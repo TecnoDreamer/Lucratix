@@ -76,7 +76,7 @@ test("analytics mostra os KPIs de marketing de uma campanha do mes atual", async
   await page.getByRole("link", { name: "Analytics" }).click();
   await page.waitForURL("**/analytics");
 
-  await expect(page.getByRole("heading", { name: "Marketing" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Marketing", exact: true })).toBeVisible();
   // ROAS = 4000/1000 = 4.
   await expect(page.getByText("4", { exact: true })).toBeVisible();
 });
