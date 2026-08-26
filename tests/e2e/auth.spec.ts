@@ -17,12 +17,12 @@ test("login com senha errada mostra mensagem generica", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("Nome").fill("Usuário E2E");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Cadastrar" }).click();
   await page.waitForURL("**/login");
 
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill("senha-errada");
+  await page.getByLabel("Senha", { exact: true }).fill("senha-errada");
   await page.getByRole("button", { name: "Entrar" }).click();
 
   await expect(page.getByText("Credenciais invalidas")).toBeVisible();
@@ -32,4 +32,41 @@ test("login com senha errada mostra mensagem generica", async ({ page }) => {
 test("acessar /organizations sem sessao redireciona para /login", async ({ page }) => {
   await page.goto("/organizations");
   await page.waitForURL("**/login");
+});
+
+test("mostrar/ocultar senha funciona por clique e por teclado", async ({ page }) => {
+  await page.goto("/login");
+  const senha = page.getByLabel("Senha", { exact: true });
+  await senha.fill("SenhaForte123!");
+  await expect(senha).toHaveAttribute("type", "password");
+
+  const toggle = page.getByRole("button", { name: "Mostrar senha" });
+  await toggle.click();
+  await expect(senha).toHaveAttribute("type", "text");
+  await expect(page.getByRole("button", { name: "Ocultar senha" })).toBeVisible();
+
+  // Acessivel por teclado: foco + Enter tambem alterna.
+  await page.getByRole("button", { name: "Ocultar senha" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(senha).toHaveAttribute("type", "password");
+});
+
+test("navegacao por teclado: email -> senha -> mostrar senha -> esqueci senha -> entrar", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("E-mail").focus();
+  await page.keyboard.type("usuario@example.com");
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Senha", { exact: true })).toBeFocused();
+
+  await page.keyboard.type("SenhaForte123!");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Mostrar senha" })).toBeFocused();
+
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Esqueci minha senha" })).toBeFocused();
+
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Entrar" })).toBeFocused();
 });

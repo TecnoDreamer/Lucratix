@@ -14,13 +14,15 @@ export async function registerAndLogin(page: Page, emailPrefix: string): Promise
   await page.goto("/register");
   await page.getByLabel("Nome").fill("Usuário E2E");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  // exact: true, senao a busca por "Senha" tambem casa com o botao
+  // "Mostrar senha" (contem "senha" como substring do proprio aria-label).
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Cadastrar" }).click();
   await expect(page.getByText(/Cadastro recebido/i)).toBeVisible();
 
   await page.waitForURL("**/login", { timeout: 5000 });
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL("**/organizations");
 
