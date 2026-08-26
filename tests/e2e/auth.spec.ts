@@ -8,7 +8,7 @@ test("usuario consegue se cadastrar, entrar e sair", async ({ page }) => {
 
   await page.getByRole("button", { name: "Sair" }).click();
   await page.waitForURL("**/login");
-  await expect(page.getByRole("heading", { name: "Entrar" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bem-vindo de volta" })).toBeVisible();
 });
 
 test("login com senha errada mostra mensagem generica", async ({ page }) => {

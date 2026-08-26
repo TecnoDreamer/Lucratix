@@ -8,6 +8,7 @@ import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/
 import { Alert } from "@/components/ui";
 import { IconLock, IconMail, IconUser } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,11 +48,12 @@ export default function RegisterPage() {
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
         <div className="w-full max-w-sm animate-fade-in-up">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-            Criar conta
+          <BrandLogo variant="wordmark" priority className="h-8 w-auto lg:hidden" />
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
+            Criar conta na Lucratix
           </h1>
           <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-            Marketing Analytics, Growth &amp; BI Platform
+            Comece a transformar dados em decisões em poucos minutos.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">

@@ -1,6 +1,6 @@
-# Marketing Analytics, Growth & BI Platform
+# Lucratix
 
-Plataforma de Marketing Analytics, Growth, CRO e Business Intelligence para consultorias e profissionais de marketing acompanharem, de forma isolada e segura, os dados de cada empresa/cliente atendido — conectando investimento em marketing a resultado financeiro real (faturamento, lucro, margem, CAC, LTV, ROAS, conversão), com baseline histórico e comparação antes × depois.
+Lucratix é uma plataforma de Business Intelligence, Marketing Analytics, Growth e CRO para consultorias e profissionais de marketing acompanharem, de forma isolada e segura, os dados de cada empresa/cliente atendido — conectando investimento em marketing a resultado financeiro real (faturamento, lucro, margem, CAC, LTV, ROAS, conversão), com baseline histórico e comparação antes × depois.
 
 > **Status atual: fundação técnica, banco de dados, autenticação e multi-tenancy implementados (Fases 4–7).** API FastAPI funcional com cadastro/login/logout, organizações, memberships/RBAC e trilha de auditoria, com isolamento multi-tenant validado por testes automatizados. Front-end Next.js escafoldado, telas de negócio ainda pendentes. Ver [docs/product/roadmap.md](docs/product/roadmap.md).
 
