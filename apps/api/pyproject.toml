@@ -1,7 +1,7 @@
 [project]
 name = "api"
 version = "0.1.0"
-description = "Marketing Analytics, Growth & BI Platform — API"
+description = "Lucratix — Business Intelligence e Analytics — API"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",

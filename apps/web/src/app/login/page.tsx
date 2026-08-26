@@ -8,6 +8,7 @@ import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/
 import { Alert } from "@/components/ui";
 import { IconLock, IconMail, IconShieldCheck } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
+import { BrandLogo } from "@/components/brand-logo";
 import type { User } from "@/lib/types";
 
 export default function LoginPage() {
@@ -47,18 +48,19 @@ function LoginContent() {
   return (
     <div className="flex flex-1">
       <AuthHero
-        eyebrow="Bem-vindo de volta"
+        eyebrow="Acesso à plataforma"
         title="Seus clientes. Seus números. Uma única visão."
         description="Baselines, funil, campanhas e experimentos de CRO — organizados por empresa, prontos para orientar a próxima decisão."
       />
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
         <div className="w-full max-w-sm animate-fade-in-up">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-            Entrar
+          <BrandLogo variant="wordmark" priority className="h-8 w-auto lg:hidden" />
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
+            Bem-vindo de volta
           </h1>
           <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-            Marketing Analytics, Growth &amp; BI Platform
+            Acesse seu ambiente de inteligência empresarial.
           </p>
 
           {sessionRevoked && !error && (

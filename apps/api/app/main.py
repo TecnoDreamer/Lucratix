@@ -20,7 +20,7 @@ from app.modules.reports.router import router as reports_router
 settings = get_settings()
 
 app = FastAPI(
-    title="Marketing Analytics, Growth & BI Platform — API",
+    title="Lucratix API",
     version="0.1.0",
 )
 

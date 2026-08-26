@@ -15,14 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Marketing Analytics, Growth & BI Platform",
-  description: "Marketing analytics, growth, CRO e business intelligence por cliente.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  title: {
+    default: "Lucratix | Business Intelligence e Analytics",
+    template: "%s | Lucratix",
+  },
+  description:
+    "Lucratix: business intelligence, analytics e lucratividade por cliente — marketing analytics, growth e CRO conectados a resultado financeiro real.",
+  applicationName: "Lucratix",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>

@@ -1,9 +1,19 @@
 import { IconFlask, IconFunnel, IconTrendingUp } from "@/components/icons";
+import { BrandLogo } from "@/components/brand-logo";
 
 const POINTS = [
   { icon: IconTrendingUp, text: "Baselines e dashboards por cliente, sempre isolados" },
   { icon: IconFunnel, text: "Funil completo: impressão até recompra" },
   { icon: IconFlask, text: "Experimentos de CRO com significância estatística real" },
+];
+
+// Mini-dashboard demonstrativo do painel de marca — seção 12 do prompt de
+// redesign. Ilustrativo, não são dados reais de nenhuma empresa (nem da
+// Lucratix, que não vende para si mesma).
+const DEMO_KPIS = [
+  { label: "Receita", value: "R$ 185.420", delta: "+12,4%" },
+  { label: "Margem", value: "28,7%", delta: null },
+  { label: "Lucro", value: "R$ 53.215", delta: "+9,1%" },
 ];
 
 export function AuthHero({
@@ -16,14 +26,14 @@ export function AuthHero({
   description: string;
 }) {
   return (
-    <div className="relative hidden flex-1 overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 lg:flex lg:flex-col lg:justify-between lg:px-12 lg:py-14">
+    <div className="relative hidden flex-1 overflow-hidden bg-gradient-to-br from-[#001640] via-[#012a6b] to-[#0052e0] lg:flex lg:flex-col lg:justify-between lg:px-12 lg:py-14">
       <div
         aria-hidden
         className="animate-float pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-400/30 blur-3xl"
       />
       <div
         aria-hidden
-        className="animate-float-slow pointer-events-none absolute bottom-[-6rem] right-[-6rem] h-96 w-96 rounded-full bg-sky-300/20 blur-3xl"
+        className="animate-float-slow pointer-events-none absolute bottom-[-6rem] right-[-6rem] h-96 w-96 rounded-full bg-[color:var(--brand-glow)]/20 blur-3xl"
       />
       <div
         aria-hidden
@@ -35,8 +45,8 @@ export function AuthHero({
         }}
       />
 
-      <div className="relative animate-fade-in-up text-sm font-semibold tracking-wide text-blue-100">
-        Marketing Analytics, Growth &amp; BI Platform
+      <div className="relative animate-fade-in-up">
+        <BrandLogo variant="wordmark" priority className="h-9 w-auto drop-shadow-lg" />
       </div>
 
       <div className="relative animate-fade-in-up" style={{ animationDelay: "80ms" }}>
@@ -60,9 +70,30 @@ export function AuthHero({
             </li>
           ))}
         </ul>
-      </div>
 
-      <div className="relative h-4" />
+        <div
+          className="relative mt-8 flex animate-fade-in-up gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm"
+          style={{ animationDelay: "360ms" }}
+          aria-hidden
+        >
+          {DEMO_KPIS.map(({ label, value, delta }) => (
+            <div key={label} className="flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">
+                {label}
+              </p>
+              <p className="mt-1 text-base font-semibold text-white">{value}</p>
+              {delta && (
+                <p className="mt-0.5 text-[11px] font-medium text-[color:var(--brand-glow)]">
+                  ↑ {delta}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="relative mt-2 text-[11px] text-blue-300/70" aria-hidden>
+          Dados ilustrativos — não refletem uma empresa real.
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 # Visão de Produto
 
-## Nome de trabalho
+## Nome
 
-Marketing Analytics, Growth & BI Platform (nome de repositório sugerido: `marketing-intelligence-platform`)
+Lucratix (nome de repositório: `marketing-intelligence-platform` — mantido por ser referência técnica/infraestrutura, não a marca do produto).
 
 ## Declaração de visão
 
-Para consultorias e profissionais de marketing que precisam provar e melhorar o impacto do seu trabalho em clientes, a **[Nome do Produto]** é uma plataforma de Marketing Analytics, Growth, CRO e Business Intelligence que centraliza os dados de cada empresa atendida e responde, com rastreabilidade, às perguntas de negócio que mais importam — faturamento, lucratividade, CAC, LTV, ROAS, conversão e evolução antes × depois — diferente de planilhas soltas ou dashboards de vaidade das próprias plataformas de anúncio, que não isolam clientes, não guardam baseline histórico e não conectam marketing a resultado financeiro real.
+Para consultorias e profissionais de marketing que precisam provar e melhorar o impacto do seu trabalho em clientes, a **Lucratix** é uma plataforma de Business Intelligence, Marketing Analytics, Growth e CRO que centraliza os dados de cada empresa atendida e responde, com rastreabilidade, às perguntas de negócio que mais importam — faturamento, lucratividade, CAC, LTV, ROAS, conversão e evolução antes × depois — diferente de planilhas soltas ou dashboards de vaidade das próprias plataformas de anúncio, que não isolam clientes, não guardam baseline histórico e não conectam marketing a resultado financeiro real.
 
 ## Problema central
 

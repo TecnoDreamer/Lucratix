@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonPrimary } from "@/lib/ui";
-import { IconAlertCircle, IconBuilding } from "@/components/icons";
+import { IconAlertCircle } from "@/components/icons";
+import { BrandLogo } from "@/components/brand-logo";
 import type { User } from "@/lib/types";
 
 export default function Home() {
@@ -43,29 +44,23 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-b from-white to-blue-50 px-4 text-center dark:from-slate-950 dark:to-slate-900">
-      <div
-        className={`flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg animate-scale-in ${
-          apiUnavailable
-            ? "bg-gradient-to-br from-rose-500 to-rose-600 shadow-rose-600/30"
-            : "bg-gradient-to-br from-blue-500 to-blue-700 shadow-blue-600/30"
-        }`}
-      >
-        {apiUnavailable ? (
+      {apiUnavailable ? (
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-600/30 animate-scale-in">
           <IconAlertCircle className="h-7 w-7" />
-        ) : (
-          <IconBuilding className="h-7 w-7" />
-        )}
-      </div>
+        </div>
+      ) : (
+        <BrandLogo variant="wordmark" priority className="h-10 w-auto animate-scale-in" />
+      )}
       <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-          Marketing Analytics, Growth &amp; BI Platform
-        </h1>
         {apiUnavailable ? (
-          <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-            Nao foi possivel conectar ao servidor. Verifique se a API esta rodando e tente de novo.
-          </p>
+          <>
+            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Lucratix</h1>
+            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+              Nao foi possivel conectar ao servidor. Verifique se a API esta rodando e tente de novo.
+            </p>
+          </>
         ) : (
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Verificando sessão...</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Carregando seu ambiente...</p>
         )}
       </div>
       {apiUnavailable ? (
