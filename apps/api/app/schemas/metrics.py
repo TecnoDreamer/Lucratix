@@ -72,3 +72,24 @@ class ExecutiveDashboardRead(BaseModel):
     conversion_rate: MetricWithComparisonRead
     average_ticket: MetricWithComparisonRead
     recurrence_rate: MetricWithComparisonRead
+
+
+class MarketingAnalyticsRead(BaseModel):
+    """Métricas de campanha por intervalo de datas — ROAS, ROI, CTR, CPC,
+    CPM, CPL, CPA. Campanhas sem `start_date` nem `end_date` são excluídas
+    (não há como saber se rodaram dentro do intervalo — ver
+    `marketing/repository.py::list_campaigns_in_range`)."""
+
+    date_from: date
+    date_to: date
+    previous_date_from: date
+    previous_date_to: date
+    campaign_count: int
+
+    roas: MetricWithComparisonRead
+    roi: MetricWithComparisonRead
+    ctr: MetricWithComparisonRead
+    cpc: MetricWithComparisonRead
+    cpm: MetricWithComparisonRead
+    cpl: MetricWithComparisonRead
+    cpa: MetricWithComparisonRead

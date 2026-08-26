@@ -43,6 +43,21 @@ export interface ExecutiveDashboard {
   recurrence_rate: MetricWithComparison;
 }
 
+export interface MarketingAnalytics {
+  date_from: string;
+  date_to: string;
+  previous_date_from: string;
+  previous_date_to: string;
+  campaign_count: number;
+  roas: MetricWithComparison;
+  roi: MetricWithComparison;
+  ctr: MetricWithComparison;
+  cpc: MetricWithComparison;
+  cpm: MetricWithComparison;
+  cpl: MetricWithComparison;
+  cpa: MetricWithComparison;
+}
+
 /** Formata a variação percentual de uma comparação de período — "não
  * aplicável" quando não há dado suficiente em um dos dois lados (RN-003). */
 export function formatPercentChange(comparison: PeriodComparison): string {
