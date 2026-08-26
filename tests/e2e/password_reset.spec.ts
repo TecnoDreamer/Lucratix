@@ -9,7 +9,7 @@ test("fluxo completo: esqueci a senha -> redefinir -> logar com a senha nova", a
   await page.goto("/register");
   await page.getByLabel("Nome").fill("Usuário E2E");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Cadastrar" }).click();
   await page.waitForURL("**/login");
 
@@ -35,12 +35,12 @@ test("fluxo completo: esqueci a senha -> redefinir -> logar com a senha nova", a
 
   // Senha antiga nao funciona mais.
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByText("Credenciais invalidas")).toBeVisible();
 
   // Senha nova funciona.
-  await page.getByLabel("Senha").fill(NEW_PASSWORD);
+  await page.getByLabel("Senha", { exact: true }).fill(NEW_PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL("**/organizations");
   await expect(page.getByRole("heading", { name: "Suas empresas" })).toBeVisible();

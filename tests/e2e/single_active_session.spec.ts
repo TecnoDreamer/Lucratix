@@ -15,7 +15,7 @@ test("logar em um novo dispositivo encerra a sessao do dispositivo anterior", as
 
     await pageB.goto("/login");
     await pageB.getByLabel("E-mail").fill(email);
-    await pageB.getByLabel("Senha").fill(TEST_PASSWORD);
+    await pageB.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
     await pageB.getByRole("button", { name: "Entrar" }).click();
     await pageB.waitForURL("**/organizations");
     await expect(pageB.getByRole("heading", { name: "Suas empresas" })).toBeVisible();

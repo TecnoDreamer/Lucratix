@@ -25,7 +25,7 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     await viewerPage.goto("/register");
     await viewerPage.getByLabel("Nome").fill("Viewer E2E");
     await viewerPage.getByLabel("E-mail").fill(viewerEmail);
-    await viewerPage.getByLabel("Senha").fill(TEST_PASSWORD);
+    await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
     await viewerPage.getByRole("button", { name: "Cadastrar" }).click();
     await viewerPage.waitForURL("**/login");
 
@@ -37,7 +37,7 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     });
 
     await viewerPage.getByLabel("E-mail").fill(viewerEmail);
-    await viewerPage.getByLabel("Senha").fill(TEST_PASSWORD);
+    await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
     await viewerPage.getByRole("button", { name: "Entrar" }).click();
     await viewerPage.waitForURL("**/organizations");
 
