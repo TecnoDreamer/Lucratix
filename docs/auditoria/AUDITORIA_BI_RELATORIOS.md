@@ -87,12 +87,16 @@ Dado o stack (Next.js App Router, sem backend Node — API é FastAPI/Python) e 
 
 ---
 
-## Riscos e decisões que precisam do usuário
+## Decisões confirmadas com o usuário em 2026-08-26
 
-1. **Não existe dado de vendas transacional (produto × quantidade × data).** Sem isso, boa parte das seções 9-12 do prompt (ranking de produtos por receita/lucro real, prejuízo por produto, Pareto, matriz volume×margem, sazonalidade) não pode ser implementada de verdade — só simulada com dados estáticos de tabela de preço, o que o prompt proíbe explicitamente ("não invente métricas"). Preciso de uma decisão: construir o modelo de vendas do zero (feature grande, própria) ou escopar esta rodada para o que os dados atuais sustentam (dashboard/relatórios no nível de empresa/mês + métricas de campanha) e tratar vendas por produto como uma iniciativa futura separada.
-2. **Power BI**: sem confirmação de licença/workspace, a integração real fica bloqueada — só a arquitetura pode ser preparada e documentada agora, como o próprio prompt prevê como cenário válido ("Se licença... não estiverem disponíveis, deixe a arquitetura preparada e documente o bloqueio").
-3. **Permissões granulares** (`analytics:view`, `financial:view` etc.) não existem — hoje é só hierarquia de papel. Se o prompt realmente quer "custos/margens/lucro não expostos a usuários sem permissão" como algo independente do papel do usuário, isso é uma feature de autorização nova, não uma reutilização do que já existe.
-4. **Escopo é muito grande** — 33 seções cobrindo bugfix, nova área de BI inteira, filtros avançados, PDF, impressão e Power BI. Vou seguir a ordem de execução da seção 31 do prompt, entregando por PR, começando pelo bugfix do tooltip (rápido, isolado, sem dependência de decisão de escopo) enquanto a decisão do item 1 é tomada.
+1. **Sem modelo de vendas por produto.** ✅ Confirmado: escopar esta rodada para o que os dados atuais sustentam (dashboard/relatórios agregados por empresa/mês com filtro de datas e comparação temporal, métricas de campanha já computáveis pela engine, margem de produto como métrica de tabela de preço, deixada explicitamente como tal). Ranking/lucratividade/prejuízo por produto real fica para uma iniciativa futura, quando houver um modelo de vendas transacional.
+2. **Power BI.** ✅ Confirmado: sem licença/Azure AD App Registration disponível hoje, a entrega desta rodada é só arquitetura documentada (`docs/analytics/POWER_BI.md`, `docs/security/POWER_BI_SECURITY.md`) e pontos de extensão no backend — nenhuma integração real.
+3. **Permissões.** ✅ Confirmado: reaproveitar a hierarquia de papel existente (exigir `ANALYST`+ nos endpoints de lucratividade/custo) em vez de criar um sistema de permissões novo.
+
+## Riscos remanescentes
+
+1. **Escopo é muito grande** — 33 seções cobrindo bugfix, nova área de BI inteira, filtros avançados, PDF, impressão e Power BI. Vou seguir a ordem de execução da seção 31 do prompt, entregando por PR, começando pelo bugfix do tooltip.
+2. **12+ testes E2E existentes não podem quebrar** — qualquer mudança na navegação/layout do dashboard precisa ser validada contra a suíte inteira antes de mergear (mesmo cuidado já aplicado nas etapas anteriores deste projeto).
 
 ## Estratégia proposta (resumo)
 
