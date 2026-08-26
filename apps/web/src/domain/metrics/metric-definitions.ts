@@ -1,0 +1,245 @@
+import type { MetricDefinition } from "./metric-types";
+
+/**
+ * Catalogo central de definicoes de metricas.
+ *
+ * Fonte unica de verdade para tooltips (MetricHelp) e para o glossario —
+ * nunca duplicar estes textos em outro lugar do front-end.
+ *
+ * As formulas descritas aqui precisam corresponder exatamente as
+ * implementadas em `apps/api/app/modules/metrics/engine.py` (testadas em
+ * `tests/unit/test_metrics_engine.py`). Ao alterar uma formula la, atualize
+ * aqui tambem — ver teste de paridade em `metric-definitions.spec.ts`.
+ */
+export const METRIC_DEFINITIONS: MetricDefinition[] = [
+  {
+    id: "revenue",
+    name: "Receita",
+    category: "financeiro",
+    shortDescription: "Total de dinheiro que entrou com vendas no período.",
+    description:
+      "Soma de tudo que a empresa faturou num período, antes de descontar custos, despesas ou impostos.",
+    unit: "currency",
+    aliases: ["faturamento", "revenue"],
+  },
+  {
+    id: "profit",
+    name: "Lucro",
+    category: "financeiro",
+    shortDescription: "O que sobra da receita depois de custos, despesas e impostos.",
+    description:
+      "Quanto a empresa efetivamente ganhou no período, depois de pagar tudo que precisou pagar para operar.",
+    formula: "Lucro = Receita − Custos − Despesas − Impostos",
+    example: "Receita de R$ 58.200, custos de R$ 24.500, despesas de R$ 9.300 → Lucro ≈ R$ 24.400",
+    unit: "currency",
+    aliases: ["profit", "resultado"],
+  },
+  {
+    id: "margin",
+    name: "Margem de Lucro",
+    category: "financeiro",
+    shortDescription: "Qual fatia da receita virou lucro.",
+    description:
+      "Mostra a eficiência do negócio: de cada real que entra, quanto sobra depois de pagar tudo. Uma margem maior significa que a empresa converte receita em lucro de forma mais eficiente.",
+    formula: "Margem = Lucro / Receita",
+    example: "Lucro de R$ 24.400 sobre receita de R$ 58.200 → margem de ≈ 42%",
+    unit: "percent",
+    aliases: ["margem", "profit margin"],
+  },
+  {
+    id: "cac",
+    name: "Custo de Aquisição de Cliente",
+    acronym: "CAC",
+    category: "marketing",
+    shortDescription: "Quanto custa, em média, conquistar um cliente novo.",
+    description:
+      "Divide todo o investimento em marketing e vendas pelo número de clientes novos conquistados no período. Ajuda a saber se está caro demais atrair cada cliente.",
+    formula: "CAC = Investimento em Marketing / Novos Clientes",
+    example: "Investimento de R$ 8.400 e 63 novos clientes → CAC ≈ R$ 133",
+    unit: "currency",
+    aliases: ["custo de aquisicao", "customer acquisition cost"],
+  },
+  {
+    id: "ltv",
+    name: "Valor do Tempo de Vida do Cliente",
+    acronym: "LTV",
+    category: "clientes",
+    shortDescription: "Quanto um cliente costuma gerar de receita enquanto continua ativo.",
+    description:
+      "Estima o valor total que um cliente traz para a empresa ao longo de todo o tempo em que continua comprando. Comparar LTV com CAC ajuda a saber se vale a pena o custo de conquistar cada cliente.",
+    formula: "LTV = Ticket Médio × Frequência de Compra × Tempo de Retenção",
+    example: "Ticket médio de R$ 135, compra 2x/ano, retenção de 3 anos → LTV = R$ 810",
+    unit: "currency",
+    aliases: ["lifetime value", "valor vitalicio"],
+  },
+  {
+    id: "roi",
+    name: "Retorno sobre Investimento",
+    acronym: "ROI",
+    category: "marketing",
+    shortDescription: "Quanto se ganhou (ou perdeu) em relação ao que foi investido.",
+    description:
+      "Compara o retorno de uma ação com o quanto foi gasto nela. Um ROI de 100% significa que o retorno foi o dobro do investimento; ROI negativo significa prejuízo.",
+    formula: "ROI = (Receita Atribuída − Investimento) / Investimento",
+    example: "Investiu R$ 1.000 e a campanha gerou R$ 1.800 → ROI = 80%",
+    unit: "percent",
+    aliases: ["return on investment", "retorno"],
+  },
+  {
+    id: "roas",
+    name: "Retorno sobre Investimento em Publicidade",
+    acronym: "ROAS",
+    category: "marketing",
+    shortDescription: "Quanto cada real investido em anúncios trouxe de volta em receita.",
+    description:
+      "Parecido com o ROI, mas focado especificamente em campanhas de mídia paga. Um ROAS de 4 significa que cada R$ 1 investido em anúncios gerou R$ 4 de receita atribuída.",
+    formula: "ROAS = Receita Atribuída / Investimento",
+    example: "Investiu R$ 3.200 em anúncios e atribuiu R$ 9.800 de receita → ROAS = 3,06",
+    unit: "ratio",
+    aliases: ["return on ad spend"],
+  },
+  {
+    id: "average_ticket",
+    name: "Ticket Médio",
+    category: "vendas",
+    shortDescription: "Valor médio de cada venda ou pedido.",
+    description: "Divide a receita total pelo número de vendas para saber quanto, em média, cada venda vale.",
+    formula: "Ticket Médio = Receita / Número de Vendas",
+    example: "Receita de R$ 58.200 em 63 vendas → ticket médio ≈ R$ 924",
+    unit: "currency",
+    aliases: ["average order value", "ticket"],
+  },
+  {
+    id: "churn_rate",
+    name: "Taxa de Cancelamento",
+    acronym: "Churn",
+    category: "clientes",
+    shortDescription: "Percentual de clientes que deixaram de comprar/assinar no período.",
+    description:
+      "Mostra o quanto a base de clientes está encolhendo. Quanto menor o churn, mais clientes a empresa está conseguindo reter ao longo do tempo.",
+    formula: "Churn = 1 − (Clientes Ativos no Fim / Clientes Ativos no Início)",
+    example: "Começou o mês com 100 clientes ativos e terminou com 92 → churn de 8%",
+    unit: "percent",
+    aliases: ["cancelamento", "taxa de churn"],
+  },
+  {
+    id: "retention_rate",
+    name: "Taxa de Retenção",
+    category: "clientes",
+    shortDescription: "Percentual de clientes que a empresa conseguiu manter no período.",
+    description: "O inverso do churn: mostra a fatia da base de clientes que continuou ativa.",
+    formula: "Retenção = Clientes Ativos no Fim / Clientes Ativos no Início",
+    example: "100 clientes no início, 92 no fim → retenção de 92%",
+    unit: "percent",
+    aliases: ["retencao"],
+  },
+  {
+    id: "recurrence_rate",
+    name: "Taxa de Recorrência",
+    category: "clientes",
+    shortDescription: "Percentual de clientes que voltaram a comprar mais de uma vez.",
+    description:
+      "Mede fidelização: de todos os clientes, quantos não compraram só uma vez, mas voltaram a comprar de novo.",
+    formula: "Recorrência = Clientes que Recompraram / Total de Clientes",
+    example: "63 clientes no total, 21 recompraram → recorrência de 33%",
+    unit: "percent",
+    aliases: ["recompra", "fidelizacao"],
+  },
+  {
+    id: "conversion_rate",
+    name: "Taxa de Conversão",
+    category: "marketing",
+    shortDescription: "Percentual de pessoas que completaram a ação desejada.",
+    description:
+      "Mede a eficiência de um funil: de todas as pessoas que entraram (visitantes, leads), quantas avançaram para a próxima etapa (compra, cadastro, etc.).",
+    formula: "Conversão = Conversões / Base (visitantes, leads, etc.)",
+    example: "1.850 cliques e 44 conversões → taxa de conversão ≈ 2,4%",
+    unit: "percent",
+    aliases: ["taxa de conversao", "conversao"],
+  },
+  {
+    id: "mrr",
+    name: "Receita Recorrente Mensal",
+    acronym: "MRR",
+    category: "crescimento",
+    shortDescription: "Quanto a empresa fatura, previsivelmente, todo mês, com assinaturas/planos recorrentes.",
+    description:
+      "Soma a receita recorrente (assinaturas, planos) de todos os clientes ativos num mês. É o indicador mais usado para acompanhar crescimento em negócios de assinatura.",
+    formula: "MRR = soma da receita recorrente mensal de todos os clientes ativos",
+    unit: "currency",
+    aliases: ["monthly recurring revenue", "receita recorrente"],
+    note: "Ainda nao calculado automaticamente por nenhuma tela do sistema — cadastrado aqui para fins educacionais.",
+  },
+  {
+    id: "arr",
+    name: "Receita Recorrente Anual",
+    acronym: "ARR",
+    category: "crescimento",
+    shortDescription: "O MRR projetado para um ano inteiro.",
+    description:
+      "Multiplica o MRR por 12 para estimar a receita recorrente anualizada. Usado para comparar tamanho/crescimento de negócios de assinatura ano a ano.",
+    formula: "ARR = MRR × 12",
+    unit: "currency",
+    aliases: ["annual recurring revenue"],
+    note: "Ainda nao calculado automaticamente por nenhuma tela do sistema — cadastrado aqui para fins educacionais.",
+  },
+  {
+    id: "cpl",
+    name: "Custo por Lead",
+    acronym: "CPL",
+    category: "marketing",
+    shortDescription: "Quanto custa, em média, gerar um lead (contato interessado).",
+    formula: "CPL = Investimento / Número de Leads",
+    description:
+      "Divide o investimento em uma campanha pelo número de leads (pessoas que demonstraram interesse) gerados.",
+    example: "Investimento de R$ 2.600 e 145 leads → CPL ≈ R$ 18",
+    unit: "currency",
+    aliases: ["custo por lead", "cost per lead"],
+  },
+  {
+    id: "cpa",
+    name: "Custo por Aquisição",
+    acronym: "CPA",
+    category: "marketing",
+    shortDescription: "Quanto custa, em média, gerar uma conversão (venda, cadastro, etc.).",
+    description:
+      "Parecido com o CAC, mas mede o custo de uma conversão específica de uma campanha, não necessariamente um cliente novo pagante.",
+    formula: "CPA = Investimento / Conversões",
+    unit: "currency",
+    aliases: ["custo por acao", "cost per acquisition"],
+  },
+  {
+    id: "ctr",
+    name: "Taxa de Cliques",
+    acronym: "CTR",
+    category: "marketing",
+    shortDescription: "Percentual de pessoas que clicaram num anúncio depois de vê-lo.",
+    description: "Mede o quão atrativo um anúncio é: de todas as vezes que apareceu, quantas geraram clique.",
+    formula: "CTR = Cliques / Impressões",
+    example: "120.000 impressões e 1.850 cliques → CTR ≈ 1,5%",
+    unit: "percent",
+    aliases: ["click-through rate", "taxa de cliques"],
+  },
+  {
+    id: "cpc",
+    name: "Custo por Clique",
+    acronym: "CPC",
+    category: "marketing",
+    shortDescription: "Quanto custa, em média, cada clique num anúncio.",
+    formula: "CPC = Investimento / Cliques",
+    description: "Divide o investimento total pelo número de cliques recebidos.",
+    unit: "currency",
+    aliases: ["cost per click", "custo por clique"],
+  },
+  {
+    id: "cpm",
+    name: "Custo por Mil Impressões",
+    acronym: "CPM",
+    category: "marketing",
+    shortDescription: "Quanto custa, em média, cada mil vezes que o anúncio foi exibido.",
+    description: "Métrica clássica de mídia: mostra o custo de alcance, independente de cliques ou conversões.",
+    formula: "CPM = (Investimento / Impressões) × 1000",
+    unit: "currency_per_1000",
+    aliases: ["custo por mil", "cost per mille"],
+  },
+];
