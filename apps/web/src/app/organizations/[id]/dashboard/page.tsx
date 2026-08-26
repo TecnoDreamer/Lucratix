@@ -6,6 +6,7 @@ import { api, ApiError } from "@/lib/api";
 import { formatMetric, type Dashboard, type PeriodComparison } from "@/lib/metrics";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
+import { MetricHelp } from "@/components/metric-help";
 import {
   IconDollar,
   IconFunnel,
@@ -133,8 +134,9 @@ export default function DashboardPage() {
                     style={{ animationDelay: `${i * 40}ms` }}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {label}
+                        <MetricHelp metric={key} />
                       </p>
                       <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
                         <Icon className="h-3.5 w-3.5" />
