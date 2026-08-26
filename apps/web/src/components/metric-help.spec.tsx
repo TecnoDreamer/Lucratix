@@ -1,10 +1,23 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MetricHelp } from "./metric-help";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "org-123" }),
 }));
+
+// jsdom nao implementa matchMedia — o componente usa para decidir entre o
+// popover de desktop e o bottom sheet de mobile (ver metric-help.tsx).
+// `matches: false` simula viewport de desktop, o caso exercitado por estes
+// testes.
+beforeEach(() => {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+});
 
 afterEach(() => {
   cleanup();
