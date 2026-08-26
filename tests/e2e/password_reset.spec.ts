@@ -25,7 +25,9 @@ test("fluxo completo: esqueci a senha -> redefinir -> logar com a senha nova", a
   await continueLink.click();
   await page.waitForURL(/\/redefinir-senha\?token=/);
 
-  await page.getByLabel("Nova senha").fill(NEW_PASSWORD);
+  // exact: true, senao "Nova senha" tambem casa com "Confirmar nova senha"
+  // (substring).
+  await page.getByLabel("Nova senha", { exact: true }).fill(NEW_PASSWORD);
   await page.getByLabel("Confirmar nova senha").fill(NEW_PASSWORD);
   await page.getByRole("button", { name: "Redefinir senha" }).click();
 
