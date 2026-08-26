@@ -25,4 +25,11 @@ EXPOSE 8000
 # o processo escute nela; 8000 e o fallback para docker-compose local.
 # --reload so em desenvolvimento (ENV=development, como no docker-compose.yml
 # local) — nunca em producao, onde so aumenta uso de recursos sem beneficio.
-CMD ["sh", "-c", "if [ \"$ENV\" = \"development\" ]; then exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload; else exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]
+#
+# `alembic upgrade head` roda sempre, antes do servidor subir: antes disso,
+# migrations em producao dependiam de alguem lembrar de rodar `npm run
+# migrate` manualmente apos o deploy — a migration 0007 (tabela `sessions`)
+# ficou pendente em producao dessa forma e todo login passou a falhar com
+# 500 (INSERT numa tabela inexistente). Idempotente (no-op se ja estiver em
+# head), entao rodar em todo start, dev ou producao, e seguro.
+CMD ["sh", "-c", "alembic upgrade head && if [ \"$ENV\" = \"development\" ]; then exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload; else exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]

@@ -32,6 +32,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/marketing_platform_test
       TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/marketing_platform_test
       JWT_SECRET_KEY: ci-only-secret-never-used-in-production
     steps:
@@ -52,6 +53,16 @@ jobs:
       - name: Type check (mypy)
         working-directory: apps/api
         run: mypy app
+
+      # Prova que a cadeia de migrations aplica de ponta a ponta antes do
+      # merge — sem isso, uma migration com erro (ou simplesmente nunca
+      # aplicada em producao) so aparece quando o app ja esta no ar. Foi
+      # exatamente o que aconteceu com a migration 0007 (tabela `sessions`):
+      # os testes usam Base.metadata.create_all, nao alembic, entao passavam
+      # mesmo com a migration nunca tendo sido validada de verdade.
+      - name: Apply migrations (alembic upgrade head)
+        working-directory: apps/api
+        run: alembic upgrade head
 
       - name: Tests (unit, integration, api, security)
         run: pytest --cov=app --cov-report=term-missing
