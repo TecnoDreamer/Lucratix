@@ -65,6 +65,26 @@ Then o sistema retorna valor do baseline, valor atual, variação absoluta e var
 And a interface não afirma que a variação foi causada pelas ações de marketing sem qualificação
 ```
 
+## RF-023 — Visualizar dashboard executivo (intervalo de datas)
+```
+Given uma organização com dados financeiros e de funil registrados em varios meses
+When um usuário solicita o dashboard executivo para um intervalo de datas que cobre esses meses
+Then o sistema agrega os meses do intervalo e retorna cada métrica com seu valor atual e a comparação contra o período anterior equivalente de mesma duração
+
+Given um intervalo de datas em que só parte dos meses tem dado financeiro registrado
+When o sistema calcula o dashboard executivo desse intervalo
+Then o sistema soma apenas os meses com dado (nunca trata mês ausente como zero) E informa explicitamente quantos meses do intervalo têm dado, para a interface nunca apresentar um total parcial como se fosse o intervalo inteiro
+
+Given um intervalo de datas sem nenhum dado financeiro ou de funil registrado
+When o sistema calcula o dashboard executivo desse intervalo
+Then cada métrica retorna "não aplicável", nunca "0" e nunca um erro não tratado
+
+Given uma data inicial posterior à data final
+When um usuário solicita o dashboard executivo com esse intervalo
+Then o sistema rejeita a requisição com um erro de validação, sem tentar calcular nada
+```
+Nota: cobre receita, lucro, margem, CAC, conversão, ticket médio e recorrência — ROAS e LTV (citados na descrição original do RF-023) dependem de métricas de campanha ainda não expostas por nenhum endpoint (ver `docs/auditoria/AUDITORIA_BI_RELATORIOS.md`, seção 3) e ficam para uma iteração futura.
+
 ## RF-025 — Experimento não declara vencedor automaticamente
 ```
 Given um experimento com duas variantes e poucas conversões registradas

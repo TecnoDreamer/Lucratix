@@ -20,12 +20,14 @@ import {
   IconPackage,
   IconSettings,
   IconShieldCheck,
+  IconTrendingUp,
   IconX,
 } from "@/components/icons";
 import type { Organization } from "@/lib/types";
 
 const NAV_ITEMS = [
   { href: "dashboard", label: "Dashboard", icon: IconGrid },
+  { href: "analytics", label: "Analytics", icon: IconTrendingUp },
   { href: "products", label: "Produtos", icon: IconPackage },
   { href: "financials", label: "Financeiro", icon: IconDollar },
   { href: "marketing", label: "Marketing", icon: IconMegaphone },

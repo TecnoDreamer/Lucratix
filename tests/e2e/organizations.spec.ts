@@ -19,7 +19,15 @@ test("usuario ve navegacao para todas as areas da empresa", async ({ page }) => 
   await page.getByRole("link", { name: /Empresa Nav/ }).click();
   await page.waitForURL("**/organizations/**");
 
-  for (const label of ["Dashboard", "Produtos", "Financeiro", "Marketing", "Funil", "Experimentos"]) {
+  for (const label of [
+    "Dashboard",
+    "Analytics",
+    "Produtos",
+    "Financeiro",
+    "Marketing",
+    "Funil",
+    "Experimentos",
+  ]) {
     await expect(page.getByRole("link", { name: label })).toBeVisible();
   }
 });

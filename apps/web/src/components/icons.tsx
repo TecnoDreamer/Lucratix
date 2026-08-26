@@ -193,6 +193,15 @@ export function IconTrendingUp(props: IconProps) {
   );
 }
 
+export function IconTrendingDown(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 7l6 6 4-4 8 8" />
+      <path d="M15 17h6v-6" />
+    </svg>
+  );
+}
+
 export function IconClock(props: IconProps) {
   return (
     <svg {...base(props)}>

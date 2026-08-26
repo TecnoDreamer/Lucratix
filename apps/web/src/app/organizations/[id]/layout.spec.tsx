@@ -63,6 +63,7 @@ describe("OrganizationLayout — sidebar", () => {
 
     for (const label of [
       "Dashboard",
+      "Analytics",
       "Produtos",
       "Financeiro",
       "Marketing",

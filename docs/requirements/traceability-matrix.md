@@ -26,7 +26,7 @@ Relaciona requisito funcional → história de usuário → critério de aceite 
 | RF-020 | US-13 | — (a detalhar) | 7. Informar etapas do funil | Unitário + API |
 | RF-021 | US-14 | [RF-021](acceptance-criteria.md#rf-021--motor-de-métricas-divisão-por-zero-e-dado-ausente) | 8. Visualizar métricas calculadas | Unitário (crítico) |
 | RF-022 | US-15 | [RF-022](acceptance-criteria.md#rf-022--comparação-antes--depois) | 9. Comparar períodos / 10. Comparar baseline × atual | Unitário + API |
-| RF-023 | US-14 | — (a detalhar) | 11. Visualizar dashboard | API + E2E |
+| RF-023 | US-14 | [RF-023](acceptance-criteria.md#rf-023--visualizar-dashboard-executivo-intervalo-de-datas) | 11. Visualizar dashboard | Unitário + API + E2E |
 | RF-024 | US-16 | — (a detalhar) | 12. Criar experimento | API |
 | RF-025 | US-17 | [RF-025](acceptance-criteria.md#rf-025--experimento-não-declara-vencedor-automaticamente) | 12. Criar experimento | Unitário |
 | RF-026 | US-18 | — (a detalhar) | 13. Gerar relatório básico | API + E2E |

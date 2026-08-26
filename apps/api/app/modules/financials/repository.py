@@ -15,6 +15,25 @@ def list_financial_periods(db: Session, organization_id: uuid.UUID) -> list[Fina
     )
 
 
+def list_financial_periods_in_range(
+    db: Session, organization_id: uuid.UUID, date_from: date, date_to: date
+) -> list[FinancialPeriod]:
+    """RF-023 (filtro de intervalo de datas): `period` marca o mes (dia 1),
+    entao um `date_to` no meio de um mes ainda inclui aquele mes inteiro —
+    os dados so existem no grao mensal, nao ha como recortar dentro do mes.
+    """
+    return (
+        db.query(FinancialPeriod)
+        .filter(
+            FinancialPeriod.organization_id == organization_id,
+            FinancialPeriod.period >= date_from.replace(day=1),
+            FinancialPeriod.period <= date_to,
+        )
+        .order_by(FinancialPeriod.period.asc())
+        .all()
+    )
+
+
 def get_financial_period(
     db: Session, organization_id: uuid.UUID, period: date
 ) -> FinancialPeriod | None:
