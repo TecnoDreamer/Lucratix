@@ -72,7 +72,7 @@ def test_marketing_analytics_aggregates_campaigns_in_range(client):
     body = resp.json()
 
     assert body["campaign_count"] == 2
-    assert body["roas"]["current"]["value"] == 4000 / 2500  # 10000/2500
+    assert body["roas"]["current"]["value"] == 10000 / 2500
     assert body["ctr"]["current"]["value"] == 1300 / 30000
 
 
