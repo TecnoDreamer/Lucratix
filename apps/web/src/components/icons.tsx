@@ -211,3 +211,29 @@ export function IconHelpCircle(props: IconProps) {
     </svg>
   );
 }
+
+export function IconSearch(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.2-3.2" />
+    </svg>
+  );
+}
+
+export function IconChevronDown(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+export function IconBookOpen(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 6.5c-1.5-1.3-3.5-2-6-2-.6 0-1 .4-1 1v11c0 .6.4 1 1 1 2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2 .6 0 1-.4 1-1v-11c0-.6-.4-1-1-1-2.5 0-4.5.7-6 2Z" />
+      <path d="M12 6.5v13" />
+    </svg>
+  );
+}
