@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Troca a variante `dark:` do Tailwind de media-query para classe, para dar
+   suporte a "Claro / Escuro / Sistema" escolhido pelo usuario (Configuracoes
+   > Aparencia), em vez de seguir cegamente prefers-color-scheme. Zero
+   mudanca necessaria nas classes dark: ja usadas em todo o app. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -89,13 +95,11 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617;
-    --foreground: #f1f5f9;
-    --surface: #0f172a;
-    --surface-muted: #1e293b;
-  }
+:root.dark {
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
 }
 
 html {

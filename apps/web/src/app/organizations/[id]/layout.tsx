@@ -18,6 +18,7 @@ import {
   IconMegaphone,
   IconMenu,
   IconPackage,
+  IconSettings,
   IconShieldCheck,
   IconX,
 } from "@/components/icons";
@@ -168,6 +169,21 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
           );
         })}
       </nav>
+
+      <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
+        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+          Conta
+        </p>
+        <nav className="mt-2 flex flex-col gap-0.5">
+          <Link
+            href="/conta/configuracoes"
+            className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          >
+            <IconSettings className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300" />
+            Configurações
+          </Link>
+        </nav>
+      </div>
     </>
   );
 
