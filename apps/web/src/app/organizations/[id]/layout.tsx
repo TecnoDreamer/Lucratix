@@ -191,13 +191,13 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
 
   return (
     <div className="lg:flex lg:flex-1 lg:items-start">
-      {/* Sidebar fixa — desktop (lg: e acima) */}
-      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-slate-200 lg:bg-white lg:px-4 lg:py-5 dark:lg:border-slate-800 dark:lg:bg-slate-950">
+      {/* Sidebar fixa — desktop (lg: e acima). Oculta na impressao/PDF. */}
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-slate-200 lg:bg-white lg:px-4 lg:py-5 print:hidden dark:lg:border-slate-800 dark:lg:bg-slate-950">
         {sidebarContent}
       </aside>
 
-      {/* Topbar + drawer — mobile/tablet (abaixo de lg) */}
-      <div className="lg:hidden">
+      {/* Topbar + drawer — mobile/tablet (abaixo de lg). Oculta na impressao/PDF. */}
+      <div className="print:hidden lg:hidden">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80">
           <button
             type="button"
@@ -240,7 +240,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">{children}</div>
+        <div className="mx-auto w-full max-w-5xl px-4 print:max-w-none print:px-0 sm:px-6">{children}</div>
       </div>
     </div>
   );
