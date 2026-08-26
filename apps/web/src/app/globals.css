@@ -210,6 +210,34 @@ body {
   }
 }
 
+/* Relatórios com impressão/PDF: HTML + Print CSS, sem dependência nova —
+   ver docs/adr/0007-relatorios-html-print-css.md. O navegador já sabe
+   salvar como PDF a partir de uma tela bem formatada para impressão
+   (Ctrl+P), então a mesma folha de estilo resolve os dois pedidos. */
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* Papel não tem tema escuro: força a paleta clara mesmo se o usuário
+     estiver com o app no modo escuro, independente da classe .dark. */
+  :root,
+  :root.dark {
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --surface: #ffffff;
+    --surface-muted: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border: #cbd5e1;
+  }
+
+  body {
+    background: white !important;
+  }
+}
+
 .bg-shimmer {
   background-image: linear-gradient(
     90deg,
