@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 from app.modules.metrics.engine import MetricResult, PeriodComparison
@@ -37,3 +39,36 @@ class PeriodComparisonRead(BaseModel):
             absolute_change=comparison.absolute_change,
             percent_change=comparison.percent_change,
         )
+
+
+class MetricWithComparisonRead(BaseModel):
+    """Um KPI do periodo atual, com sua comparacao contra o periodo anterior
+    equivalente (secao 6 do prompt de BI). Quando o periodo atual ou o
+    anterior nao tem dado para essa metrica, `comparison.absolute_change`/
+    `percent_change` ficam None (RN-003: nunca vira "0% de variacao")."""
+
+    current: MetricResultRead
+    comparison: PeriodComparisonRead
+
+
+class ExecutiveDashboardRead(BaseModel):
+    """RF-023: visao executiva por intervalo de datas (nao mais so um mes),
+    com comparacao periodo-contra-periodo em cada KPI e transparencia sobre
+    quantos meses do intervalo realmente tem dado (RN-003: nunca apresentar
+    dado parcial como se fosse o intervalo inteiro sem avisar)."""
+
+    date_from: date
+    date_to: date
+    previous_date_from: date
+    previous_date_to: date
+    months_in_range: int
+    months_with_financial_data: int
+    months_with_funnel_data: int
+
+    revenue: MetricWithComparisonRead
+    profit: MetricWithComparisonRead
+    margin: MetricWithComparisonRead
+    cac: MetricWithComparisonRead
+    conversion_rate: MetricWithComparisonRead
+    average_ticket: MetricWithComparisonRead
+    recurrence_rate: MetricWithComparisonRead

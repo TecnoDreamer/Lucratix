@@ -19,23 +19,26 @@ export function Alert({
   tone = "error",
   children,
 }: {
-  tone?: "error" | "success";
+  tone?: "error" | "success" | "warning";
   children: ReactNode;
 }) {
-  const isError = tone === "error";
+  const toneClass = {
+    error:
+      "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300",
+    success:
+      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300",
+    warning:
+      "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300",
+  }[tone];
   return (
     <p
-      role={isError ? "alert" : undefined}
-      className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm animate-fade-in-up ${
-        isError
-          ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
-      }`}
+      role={tone === "error" ? "alert" : undefined}
+      className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm animate-fade-in-up ${toneClass}`}
     >
-      {isError ? (
-        <IconAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-      ) : (
+      {tone === "success" ? (
         <IconCheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      ) : (
+        <IconAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
       )}
       <span>{children}</span>
     </p>

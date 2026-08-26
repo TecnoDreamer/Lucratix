@@ -15,6 +15,21 @@ def list_funnel_snapshots(db: Session, organization_id: uuid.UUID) -> list[Funne
     )
 
 
+def list_funnel_snapshots_in_range(
+    db: Session, organization_id: uuid.UUID, date_from: date, date_to: date
+) -> list[FunnelSnapshot]:
+    return (
+        db.query(FunnelSnapshot)
+        .filter(
+            FunnelSnapshot.organization_id == organization_id,
+            FunnelSnapshot.period >= date_from.replace(day=1),
+            FunnelSnapshot.period <= date_to,
+        )
+        .order_by(FunnelSnapshot.period.asc())
+        .all()
+    )
+
+
 def get_funnel_snapshot(db: Session, organization_id: uuid.UUID, period: date) -> FunnelSnapshot | None:
     return (
         db.query(FunnelSnapshot)

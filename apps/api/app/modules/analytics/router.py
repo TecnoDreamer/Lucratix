@@ -6,16 +6,36 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context
-from app.modules.analytics.service import compute_dashboard_metrics
+from app.modules.analytics.date_ranges import months_in_range, previous_equivalent_range
+from app.modules.analytics.service import (
+    aggregate_financials,
+    aggregate_funnels,
+    compute_dashboard_metrics,
+)
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
 from app.modules.metrics.engine import compare_periods
-from app.schemas.metrics import DashboardRead, MetricResultRead, PeriodComparisonRead
+from app.schemas.metrics import (
+    DashboardRead,
+    ExecutiveDashboardRead,
+    MetricResultRead,
+    MetricWithComparisonRead,
+    PeriodComparisonRead,
+)
 
 router = APIRouter(prefix="/api/v1/organizations/{organization_id}", tags=["analytics"])
 
 _BaselineMetric = Literal["revenue", "profit", "margin", "cac"]
+_DASHBOARD_METRIC_KEYS = (
+    "revenue",
+    "profit",
+    "margin",
+    "cac",
+    "conversion_rate",
+    "average_ticket",
+    "recurrence_rate",
+)
 
 
 @router.get("/dashboard")
@@ -58,3 +78,63 @@ def compare_to_baseline(
 
     comparison = compare_periods(baseline_value, current_value)
     return PeriodComparisonRead.from_comparison(comparison)
+
+
+@router.get("/analytics/executive")
+def get_executive_dashboard(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(get_organization_context),
+    db: Session = Depends(get_db),
+) -> ExecutiveDashboardRead:
+    """RF-023, secoes 5-7 do prompt de BI: visao executiva por intervalo de
+    datas arbitrario (nao so um mes de calendario), com cada KPI comparado
+    contra o periodo anterior equivalente de mesma duracao.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    current_metrics = compute_dashboard_metrics(
+        aggregate_financials(financials), aggregate_funnels(funnels)
+    )
+
+    previous_date_from, previous_date_to = previous_equivalent_range(date_from, date_to)
+    previous_financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_metrics = compute_dashboard_metrics(
+        aggregate_financials(previous_financials), aggregate_funnels(previous_funnels)
+    )
+
+    metrics_with_comparison = {
+        key: MetricWithComparisonRead(
+            current=MetricResultRead.from_result(current_metrics[key]),
+            comparison=PeriodComparisonRead.from_comparison(
+                compare_periods(previous_metrics[key].value, current_metrics[key].value)
+            ),
+        )
+        for key in _DASHBOARD_METRIC_KEYS
+    }
+
+    return ExecutiveDashboardRead(
+        date_from=date_from,
+        date_to=date_to,
+        previous_date_from=previous_date_from,
+        previous_date_to=previous_date_to,
+        months_in_range=months_in_range(date_from, date_to),
+        months_with_financial_data=len(financials),
+        months_with_funnel_data=len(funnels),
+        **metrics_with_comparison,
+    )

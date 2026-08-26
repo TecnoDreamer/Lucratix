@@ -21,6 +21,37 @@ export interface PeriodComparison {
   percent_change: number | null;
 }
 
+export interface MetricWithComparison {
+  current: MetricResult;
+  comparison: PeriodComparison;
+}
+
+export interface ExecutiveDashboard {
+  date_from: string;
+  date_to: string;
+  previous_date_from: string;
+  previous_date_to: string;
+  months_in_range: number;
+  months_with_financial_data: number;
+  months_with_funnel_data: number;
+  revenue: MetricWithComparison;
+  profit: MetricWithComparison;
+  margin: MetricWithComparison;
+  cac: MetricWithComparison;
+  conversion_rate: MetricWithComparison;
+  average_ticket: MetricWithComparison;
+  recurrence_rate: MetricWithComparison;
+}
+
+/** Formata a variação percentual de uma comparação de período — "não
+ * aplicável" quando não há dado suficiente em um dos dois lados (RN-003). */
+export function formatPercentChange(comparison: PeriodComparison): string {
+  if (comparison.percent_change === null) return "não aplicável";
+  const pct = comparison.percent_change * 100;
+  const sign = pct > 0 ? "+" : "";
+  return `${sign}${pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+}
+
 export function formatMetric(metric: MetricResult, options?: { percent?: boolean }): string {
   if (!metric.is_applicable || metric.value === null) {
     return "não aplicável";

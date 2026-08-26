@@ -9,6 +9,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - Redesign da experiência de autenticação: mostrar/ocultar senha, aviso de Caps Lock, recuperação de senha completa no frontend (`/esqueci-senha`, `/redefinir-senha` — o backend já existia, faltava a UI), rate limiting em `POST /auth/password-reset/request` (não existia). Ver `docs/design/AUTH_UI_UX.md` e `docs/security/AUTHENTICATION.md`.
 - Auditoria completa de Business Intelligence/Power BI/Relatórios (`docs/auditoria/AUDITORIA_BI_RELATORIOS.md`), com decisões de escopo confirmadas.
 - Sessão única por conta, com validação server-side: login em um novo dispositivo revoga a sessão ativa anterior, com garantia atômica no banco (índice único parcial).
+- Analytics — Visão Executiva (RF-023): novo `GET /analytics/executive?date_from=&date_to=`, dashboard por intervalo de datas arbitrário (não mais só um mês), com cada KPI comparado contra o período anterior equivalente e transparência quando o período tem dado incompleto. Nova página `/organizations/[id]/analytics` com filtro de intervalo (presets mensais — ver `docs/adr/0006-estrategia-filtros-analytics.md`).
 
 ### Fixed
 - Tooltip de métricas (ícone "?") renderizava atrás de cards seguintes do grid do dashboard/relatórios. Causa raiz: hover no ícone também aciona o `transform` de hover do card ancestral, criando um novo *stacking context* que isola o `z-index` do tooltip. Corrigido renderizando o painel via `createPortal` em `document.body`.
