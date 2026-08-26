@@ -15,9 +15,12 @@ from fastapi import Cookie, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import InvalidTokenError, TokenType, decode_token
+from app.core.security import SESSION_REVOKED_DETAIL, InvalidTokenError, TokenType, decode_token
+from app.core.sessions import SessionInvalidError, SessionRevokedError, get_active_session
 from app.models.membership import Membership, MembershipRole, MembershipStatus, role_rank
 from app.models.user import User
+
+_INVALID_SESSION_DETAIL = "Sessao invalida ou expirada"
 
 
 def get_current_user(
@@ -29,16 +32,27 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Nao autenticado"
         )
     try:
-        user_id = decode_token(access_token, TokenType.ACCESS)
+        payload = decode_token(access_token, TokenType.ACCESS)
     except InvalidTokenError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=_INVALID_SESSION_DETAIL
         ) from exc
 
-    user = db.get(User, user_id)
+    try:
+        get_active_session(db, payload.session_id)
+    except SessionRevokedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_REVOKED_DETAIL
+        ) from exc
+    except SessionInvalidError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=_INVALID_SESSION_DETAIL
+        ) from exc
+
+    user = db.get(User, payload.user_id)
     if user is None or not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=_INVALID_SESSION_DETAIL
         )
     return user
 

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatMetric, type Dashboard, type PeriodComparison } from "@/lib/metrics";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -79,7 +79,7 @@ export default function DashboardPage() {
       .catch((err: unknown) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");

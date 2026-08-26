@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonGhost, buttonPrimary, cardHover, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { IconBuilding, IconChevronRight, IconLogOut, IconPlus, IconSparkles } from "@/components/icons";
@@ -31,7 +31,7 @@ export default function OrganizationsPage() {
         setOrganizations(orgs);
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");

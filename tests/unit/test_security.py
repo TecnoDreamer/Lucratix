@@ -37,13 +37,26 @@ def test_verify_password_rejects_malformed_hash_without_raising():
 
 def test_access_token_roundtrip():
     user_id = uuid.uuid4()
-    token = create_access_token(user_id)
-    assert decode_token(token, TokenType.ACCESS) == user_id
+    session_id = uuid.uuid4()
+    token = create_access_token(user_id, session_id)
+    payload = decode_token(token, TokenType.ACCESS)
+    assert payload.user_id == user_id
+    assert payload.session_id == session_id
+
+
+def test_refresh_token_roundtrip():
+    user_id = uuid.uuid4()
+    session_id = uuid.uuid4()
+    token = create_refresh_token(user_id, session_id)
+    payload = decode_token(token, TokenType.REFRESH)
+    assert payload.user_id == user_id
+    assert payload.session_id == session_id
 
 
 def test_refresh_token_rejected_as_access_token():
     user_id = uuid.uuid4()
-    refresh = create_refresh_token(user_id)
+    session_id = uuid.uuid4()
+    refresh = create_refresh_token(user_id, session_id)
     with pytest.raises(InvalidTokenError):
         decode_token(refresh, TokenType.ACCESS)
 
@@ -51,3 +64,22 @@ def test_refresh_token_rejected_as_access_token():
 def test_garbage_token_is_rejected():
     with pytest.raises(InvalidTokenError):
         decode_token("nao-e-um-jwt-valido", TokenType.ACCESS)
+
+
+def test_token_without_session_claim_is_rejected():
+    # Um token assinado com o mesmo segredo mas sem a claim "sid" (ex.: gerado
+    # por uma versao antiga do codigo) nao deve ser aceito como valido -
+    # decode_token exige "sid" tanto quanto exige "sub" (RN-013).
+    import jwt as pyjwt
+
+    from app.core.security import settings as security_settings
+
+    now_payload = {
+        "sub": str(uuid.uuid4()),
+        "type": TokenType.ACCESS.value,
+    }
+    token = pyjwt.encode(
+        now_payload, security_settings.jwt_secret_key, algorithm=security_settings.jwt_algorithm
+    )
+    with pytest.raises(InvalidTokenError):
+        decode_token(token, TokenType.ACCESS)

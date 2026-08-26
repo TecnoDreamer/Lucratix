@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
+import { api, ApiError, SESSION_REVOKED_MESSAGE } from "@/lib/api";
 import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
 import { Alert } from "@/components/ui";
 import { IconLock, IconMail, IconShieldCheck } from "@/components/icons";
@@ -11,7 +11,17 @@ import { AuthHero } from "@/components/auth-hero";
 import type { User } from "@/lib/types";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionRevoked = searchParams.get("reason") === "session_revoked";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +60,12 @@ export default function LoginPage() {
           <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
             Marketing Analytics, Growth &amp; BI Platform
           </p>
+
+          {sessionRevoked && !error && (
+            <div className="mt-5">
+              <Alert>{SESSION_REVOKED_MESSAGE} Entre novamente para continuar.</Alert>
+            </div>
+          )}
 
           <form
             onSubmit={handleSubmit}

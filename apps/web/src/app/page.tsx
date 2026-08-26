@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonPrimary } from "@/lib/ui";
 import { IconAlertCircle, IconBuilding } from "@/components/icons";
 import type { User } from "@/lib/types";
@@ -26,7 +26,7 @@ export default function Home() {
       } catch (err) {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.replace("/login");
+          router.replace(loginRedirectPath(err));
           return;
         }
         // Erro de rede (API fora do ar, CORS, etc.) — nao e um 401 de verdade,
