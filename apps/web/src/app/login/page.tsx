@@ -55,7 +55,7 @@ function LoginContent() {
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
         <div className="w-full max-w-sm animate-fade-in-up">
-          <BrandLogo variant="wordmark" priority className="h-8 w-auto lg:hidden" />
+          <BrandLogo variant="wordmark" priority className="mx-auto block h-16 w-auto lg:hidden" />
           <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
             Bem-vindo de volta
           </h1>
