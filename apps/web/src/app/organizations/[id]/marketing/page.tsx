@@ -40,8 +40,14 @@ export default function MarketingPage() {
   const [channelName, setChannelName] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [channelId, setChannelId] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [investment, setInvestment] = useState("");
   const [attributedRevenue, setAttributedRevenue] = useState("");
+  const [impressions, setImpressions] = useState("");
+  const [clicks, setClicks] = useState("");
+  const [leads, setLeads] = useState("");
+  const [customers, setCustomers] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -92,13 +98,25 @@ export default function MarketingPage() {
       const campaign = await api.post<Campaign>(`/api/v1/organizations/${id}/campaigns`, {
         channel_id: channelId,
         name: campaignName,
+        start_date: startDate || null,
+        end_date: endDate || null,
         investment: investment ? Number(investment) : null,
         attributed_revenue: attributedRevenue ? Number(attributedRevenue) : null,
+        impressions: impressions ? Number(impressions) : null,
+        clicks: clicks ? Number(clicks) : null,
+        leads: leads ? Number(leads) : null,
+        customers: customers ? Number(customers) : null,
       });
       setCampaigns((prev) => [...prev, campaign]);
       setCampaignName("");
+      setStartDate("");
+      setEndDate("");
       setInvestment("");
       setAttributedRevenue("");
+      setImpressions("");
+      setClicks("");
+      setLeads("");
+      setCustomers("");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Não foi possível criar a campanha.");
     } finally {
@@ -171,6 +189,7 @@ export default function MarketingPage() {
                 <thead>
                   <tr className={tableHead}>
                     <th className="px-4 py-2.5">Nome</th>
+                    <th className="px-4 py-2.5">Período</th>
                     <th className="px-4 py-2.5">Investimento</th>
                     <th className="px-4 py-2.5">Receita atribuída</th>
                     <th className="px-4 py-2.5">ROAS</th>
@@ -181,6 +200,9 @@ export default function MarketingPage() {
                     <tr key={c.id} className={tableRow}>
                       <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
                         {c.name}
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                        {c.start_date || c.end_date ? `${c.start_date ?? "?"} – ${c.end_date ?? "?"}` : "—"}
                       </td>
                       <td className="px-4 py-2.5">{formatValue(c.investment)}</td>
                       <td className="px-4 py-2.5">{formatValue(c.attributed_revenue)}</td>
@@ -223,6 +245,24 @@ export default function MarketingPage() {
               />
             </label>
             <label className={label}>
+              Início
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={input}
+              />
+            </label>
+            <label className={label}>
+              Fim
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className={input}
+              />
+            </label>
+            <label className={label}>
               Investimento
               <input
                 type="number"
@@ -240,6 +280,42 @@ export default function MarketingPage() {
                 value={attributedRevenue}
                 onChange={(e) => setAttributedRevenue(e.target.value)}
                 className={`${input} w-28`}
+              />
+            </label>
+            <label className={label}>
+              Impressões
+              <input
+                type="number"
+                value={impressions}
+                onChange={(e) => setImpressions(e.target.value)}
+                className={`${input} w-24`}
+              />
+            </label>
+            <label className={label}>
+              Cliques
+              <input
+                type="number"
+                value={clicks}
+                onChange={(e) => setClicks(e.target.value)}
+                className={`${input} w-24`}
+              />
+            </label>
+            <label className={label}>
+              Leads
+              <input
+                type="number"
+                value={leads}
+                onChange={(e) => setLeads(e.target.value)}
+                className={`${input} w-24`}
+              />
+            </label>
+            <label className={label}>
+              Clientes
+              <input
+                type="number"
+                value={customers}
+                onChange={(e) => setCustomers(e.target.value)}
+                className={`${input} w-24`}
               />
             </label>
             <button

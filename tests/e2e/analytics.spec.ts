@@ -43,3 +43,40 @@ test("analytics mostra os KPIs do mes com dados financeiros lancados", async ({ 
   // Sem mes anterior lancado, a comparacao e "n/d", nunca "0%".
   await expect(page.getByText(/n\/d/).first()).toBeVisible();
 });
+
+test("analytics mostra os KPIs de marketing de uma campanha do mes atual", async ({ page }) => {
+  await registerAndLogin(page, "analytics-marketing-e2e");
+  const orgName = `Empresa Analytics Marketing E2E ${Date.now()}`;
+  await createOrganization(page, orgName);
+  await page.getByRole("link", { name: orgName }).click();
+  await page.waitForURL("**/organizations/**");
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+  await page.getByRole("link", { name: "Marketing" }).click();
+  await page.waitForURL("**/marketing");
+
+  await page.getByLabel("Novo canal").fill("Google Ads");
+  await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: "Google Ads" })).toBeVisible();
+
+  await page.getByRole("combobox").selectOption({ label: "Google Ads" });
+  await page.getByLabel("Nome da campanha").fill("Campanha Deste Mês");
+  await page.getByLabel("Início", { exact: true }).fill(monthStart);
+  await page.getByLabel("Fim", { exact: true }).fill(monthEnd);
+  await page.getByLabel("Investimento").fill("1000");
+  await page.getByLabel("Receita atribuída").fill("4000");
+  await page.getByLabel("Impressões").fill("10000");
+  await page.getByLabel("Cliques").fill("500");
+  await page.getByRole("button", { name: "Adicionar campanha" }).click();
+  await expect(page.getByRole("cell", { name: "Campanha Deste Mês" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Analytics" }).click();
+  await page.waitForURL("**/analytics");
+
+  await expect(page.getByRole("heading", { name: "Marketing" })).toBeVisible();
+  // ROAS = 4000/1000 = 4.
+  await expect(page.getByText("4", { exact: true })).toBeVisible();
+});

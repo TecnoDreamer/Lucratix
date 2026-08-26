@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context
 from app.modules.analytics.date_ranges import months_in_range, previous_equivalent_range
+from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import (
     aggregate_financials,
     aggregate_funnels,
@@ -15,10 +16,12 @@ from app.modules.analytics.service import (
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
+from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
 from app.schemas.metrics import (
     DashboardRead,
     ExecutiveDashboardRead,
+    MarketingAnalyticsRead,
     MetricResultRead,
     MetricWithComparisonRead,
     PeriodComparisonRead,
@@ -36,6 +39,7 @@ _DASHBOARD_METRIC_KEYS = (
     "average_ticket",
     "recurrence_rate",
 )
+_MARKETING_METRIC_KEYS = ("roas", "roi", "ctr", "cpc", "cpm", "cpl", "cpa")
 
 
 @router.get("/dashboard")
@@ -136,5 +140,51 @@ def get_executive_dashboard(
         months_in_range=months_in_range(date_from, date_to),
         months_with_financial_data=len(financials),
         months_with_funnel_data=len(funnels),
+        **metrics_with_comparison,
+    )
+
+
+@router.get("/analytics/marketing")
+def get_marketing_analytics(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(get_organization_context),
+    db: Session = Depends(get_db),
+) -> MarketingAnalyticsRead:
+    """Métricas de campanha (ROAS, ROI, CTR, CPC, CPM, CPL, CPA) por
+    intervalo de datas — dado já existente em `campaigns`, sem endpoint
+    próprio até agora (ver docs/auditoria/AUDITORIA_BI_RELATORIOS.md).
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    campaigns = marketing_repository.list_campaigns_in_range(db, ctx.organization_id, date_from, date_to)
+    current_metrics = compute_marketing_metrics(aggregate_campaigns(campaigns))
+
+    previous_date_from, previous_date_to = previous_equivalent_range(date_from, date_to)
+    previous_campaigns = marketing_repository.list_campaigns_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_metrics = compute_marketing_metrics(aggregate_campaigns(previous_campaigns))
+
+    metrics_with_comparison = {
+        key: MetricWithComparisonRead(
+            current=MetricResultRead.from_result(current_metrics[key]),
+            comparison=PeriodComparisonRead.from_comparison(
+                compare_periods(previous_metrics[key].value, current_metrics[key].value)
+            ),
+        )
+        for key in _MARKETING_METRIC_KEYS
+    }
+
+    return MarketingAnalyticsRead(
+        date_from=date_from,
+        date_to=date_to,
+        previous_date_from=previous_date_from,
+        previous_date_to=previous_date_to,
+        campaign_count=len(campaigns),
         **metrics_with_comparison,
     )
