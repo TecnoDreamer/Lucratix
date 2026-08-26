@@ -8,13 +8,12 @@ import { getMetricById } from "@/domain/metrics/metric-utils";
 import { IconHelpCircle } from "@/components/icons";
 
 // Largura do painel em desktop/tablet (equivalente a `w-72`). Fixa porque a
-// posicao e calculada em JS (getBoundingClientRect), nao mais via CSS
-// `sm:absolute` — ver docs/design/Z_INDEX_LAYERS.md para o porque do Portal.
+// posicao e escrita direto no estilo do node (ver useLayoutEffect abaixo),
+// nao mais via CSS `sm:absolute` — ver docs/design/Z_INDEX_LAYERS.md para o
+// porque do Portal.
 const PANEL_WIDTH = 288;
 const VIEWPORT_MARGIN = 16;
-const MOBILE_BREAKPOINT = 640; // Tailwind `sm`
-
-type Position = { top: number; left: number };
+const MOBILE_QUERY = "(max-width: 639px)"; // abaixo do breakpoint `sm` do Tailwind
 
 /**
  * Ajuda contextual discreta para uma metrica/sigla — ver secao 4-7 do prompt
@@ -23,12 +22,13 @@ type Position = { top: number; left: number };
  * central (nunca duplicar texto de metrica em outro componente).
  *
  * O painel e renderizado via Portal em `document.body`: qualquer card que
- * contenha este componente (ex.: grid do dashboard) e um item de CSS Grid/
- * Flex, e todo item desses vira, por especificacao, seu proprio stacking
- * context — um z-index alto aplicado a um descendente nao escapa desse
- * stacking context local. Sem o Portal, o painel de um card "cedo" no grid
- * perde para o conteudo de um card posterior, nao importa o z-index (causa
- * raiz documentada em docs/auditoria/AUDITORIA_BI_RELATORIOS.md, secao 1).
+ * contenha este componente (ex.: grid do dashboard) e um item de CSS Grid,
+ * e passar o mouse no gatilho tambem aciona o `:hover` do card ancestral
+ * (`hover:-translate-y-0.5`) — um `transform` cria um novo stacking context
+ * que isola o `z-index` do painel dentro do proprio card, que por sua vez
+ * perde para cards seguintes no grid (causa raiz documentada em
+ * docs/auditoria/AUDITORIA_BI_RELATORIOS.md, secao 1). Aumentar o z-index
+ * nao resolveria — o Portal tira o painel de qualquer stacking context local.
  */
 export function MetricHelp({ metric }: { metric: string }) {
   const definition = getMetricById(metric);
@@ -38,8 +38,6 @@ export function MetricHelp({ metric }: { metric: string }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [position, setPosition] = useState<Position | null>(null);
   const containerRef = useRef<HTMLSpanElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -50,65 +48,49 @@ export function MetricHelp({ metric }: { metric: string }) {
 
   const isOpen = hovered || focused || pinned;
 
-  // Posiciona o painel ANTES da pintura (useLayoutEffect, nao useEffect) para
-  // nao haver layout shift/flash num canto errado da tela. Roda de novo ao
-  // abrir e, numa segunda passada, apos o painel montar (para corrigir a
-  // posicao vertical com a altura real, ver useLayoutEffect abaixo).
+  // Posiciona o painel escrevendo direto no estilo do node via ref — nunca
+  // atraves de state do React. Isso mantem o calculo (que depende de medir o
+  // DOM real, getBoundingClientRect/offsetHeight) fora do ciclo de render e
+  // evita qualquer layout shift: roda em useLayoutEffect, antes da pintura,
+  // e o painel ja nasce na posicao certa desde o primeiro frame visivel.
   useLayoutEffect(() => {
-    if (!isOpen) {
-      setPosition(null);
-      return;
-    }
-    const mobile = window.innerWidth < MOBILE_BREAKPOINT;
-    setIsMobile(mobile);
-    if (mobile || !triggerRef.current) return;
+    if (!isOpen) return;
+    const panel = panelRef.current;
+    const trigger = triggerRef.current;
+    if (!panel || !trigger) return;
 
-    const rect = triggerRef.current.getBoundingClientRect();
-    const left = Math.min(
-      Math.max(rect.left + rect.width / 2 - PANEL_WIDTH / 2, VIEWPORT_MARGIN),
-      window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN
-    );
-    setPosition({ top: rect.bottom + 8, left });
-  }, [isOpen]);
-
-  // Segunda passada: com o painel ja montado (panelRef existe), corrige a
-  // posicao vertical se ele estourar a borda inferior da viewport, abrindo
-  // para cima do gatilho em vez de para baixo.
-  useLayoutEffect(() => {
-    if (!isOpen || isMobile || !position || !triggerRef.current || !panelRef.current) return;
-    const panelHeight = panelRef.current.offsetHeight;
-    const overflowsBottom = position.top + panelHeight > window.innerHeight - VIEWPORT_MARGIN;
-    if (!overflowsBottom) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const flippedTop = rect.top - panelHeight - 8;
-    if (flippedTop !== position.top) {
-      setPosition((prev) => (prev ? { ...prev, top: flippedTop } : prev));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isMobile, position?.left]);
-
-  useEffect(() => {
-    if (!isOpen || isMobile) return;
     function reposition() {
-      if (!triggerRef.current) return;
-      if (window.innerWidth < MOBILE_BREAKPOINT) {
-        setIsMobile(true);
+      if (window.matchMedia(MOBILE_QUERY).matches) {
+        // Mobile usa o bottom-sheet fixo por CSS (classes abaixo) — remove
+        // qualquer coordenada calculada anteriormente para nao competir com
+        // a classe.
+        panel!.style.removeProperty("top");
+        panel!.style.removeProperty("left");
         return;
       }
-      const rect = triggerRef.current.getBoundingClientRect();
+      const rect = trigger!.getBoundingClientRect();
       const left = Math.min(
         Math.max(rect.left + rect.width / 2 - PANEL_WIDTH / 2, VIEWPORT_MARGIN),
         window.innerWidth - PANEL_WIDTH - VIEWPORT_MARGIN
       );
-      setPosition({ top: rect.bottom + 8, left });
+      let top = rect.bottom + 8;
+      const panelHeight = panel!.offsetHeight;
+      // Estoura a borda inferior da viewport: abre para cima do gatilho.
+      if (panelHeight && top + panelHeight > window.innerHeight - VIEWPORT_MARGIN) {
+        top = rect.top - panelHeight - 8;
+      }
+      panel!.style.top = `${top}px`;
+      panel!.style.left = `${left}px`;
     }
+
+    reposition();
     window.addEventListener("scroll", reposition, true);
     window.addEventListener("resize", reposition);
     return () => {
       window.removeEventListener("scroll", reposition, true);
       window.removeEventListener("resize", reposition);
     };
-  }, [isOpen, isMobile]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -145,16 +127,7 @@ export function MetricHelp({ metric }: { metric: string }) {
       ref={panelRef}
       id={panelId}
       role="tooltip"
-      style={
-        isMobile
-          ? undefined
-          : { top: position?.top ?? 0, left: position?.left ?? 0, width: PANEL_WIDTH, visibility: position ? "visible" : "hidden" }
-      }
-      className={
-        isMobile
-          ? "fixed inset-x-4 bottom-4 z-50 animate-fade-in-up rounded-xl border border-slate-200 bg-white p-4 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900"
-          : "fixed z-50 animate-fade-in-up rounded-xl border border-slate-200 bg-white p-4 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900"
-      }
+      className="fixed inset-x-4 bottom-4 z-50 animate-fade-in-up rounded-xl border border-slate-200 bg-white p-4 text-left shadow-lg sm:inset-x-auto sm:bottom-auto sm:w-72 dark:border-slate-700 dark:bg-slate-900"
     >
       <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
         {definition.acronym ? `${definition.acronym} — ${definition.name}` : definition.name}
