@@ -6,9 +6,10 @@ import { Suspense, useState, type FormEvent } from "react";
 import { api, ApiError, SESSION_REVOKED_MESSAGE } from "@/lib/api";
 import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
 import { Alert } from "@/components/ui";
-import { IconLock, IconMail, IconShieldCheck } from "@/components/icons";
+import { IconMail, IconShieldCheck } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
 import { BrandLogo } from "@/components/brand-logo";
+import { PasswordInput } from "@/components/password-input";
 import type { User } from "@/lib/types";
 
 export default function LoginPage() {
@@ -81,25 +82,25 @@ function LoginContent() {
                   type="email"
                   required
                   autoFocus
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={`${input} pl-9`}
                 />
               </span>
             </label>
-            <label className={labelClass}>
-              Senha
-              <span className="relative">
-                <IconLock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`${input} pl-9`}
-                />
-              </span>
-            </label>
+            <PasswordInput
+              label="Senha"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+            />
+            <Link
+              href="/esqueci-senha"
+              className={`-mt-2 self-end text-xs ${linkClass}`}
+            >
+              Esqueci minha senha
+            </Link>
 
             {error && <Alert>{error}</Alert>}
 

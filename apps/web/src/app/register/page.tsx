@@ -6,9 +6,10 @@ import { useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
 import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
 import { Alert } from "@/components/ui";
-import { IconLock, IconMail, IconUser } from "@/components/icons";
+import { IconMail, IconUser } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
 import { BrandLogo } from "@/components/brand-logo";
+import { PasswordInput } from "@/components/password-input";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -64,6 +65,7 @@ export default function RegisterPage() {
                 <input
                   required
                   autoFocus
+                  autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={`${input} pl-9`}
@@ -77,26 +79,20 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={`${input} pl-9`}
                 />
               </span>
             </label>
-            <label className={labelClass}>
-              Senha
-              <span className="relative">
-                <IconLock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`${input} pl-9`}
-                />
-              </span>
-            </label>
+            <PasswordInput
+              label="Senha"
+              value={password}
+              onChange={setPassword}
+              autoComplete="new-password"
+              minLength={8}
+            />
 
             {error && <Alert>{error}</Alert>}
             {message && <Alert tone="success">{message}</Alert>}

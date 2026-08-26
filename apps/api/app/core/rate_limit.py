@@ -35,3 +35,9 @@ class RateLimiter:
 
 
 login_rate_limiter = RateLimiter(max_attempts=10, window_seconds=60)
+# RN-013/seção 21 do prompt de redesign de autenticação: sem isso,
+# /password-reset/request podia ser chamado sem limite — nao vaza se um
+# e-mail existe (resposta sempre generica), mas sem limite de tentativas
+# um endpoint que aciona envio de e-mail (quando essa integracao existir)
+# vira vetor de spam/abuso contra a caixa de entrada de terceiros.
+password_reset_rate_limiter = RateLimiter(max_attempts=5, window_seconds=300)

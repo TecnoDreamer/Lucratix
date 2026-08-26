@@ -15,7 +15,7 @@ from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.rate_limit import login_rate_limiter
+from app.core.rate_limit import login_rate_limiter, password_reset_rate_limiter
 from app.core.security import (
     SESSION_REVOKED_DETAIL,
     InvalidTokenError,
@@ -209,8 +209,18 @@ _RESET_REQUEST_MESSAGE = (
 
 @router.post("/password-reset/request")
 def request_password_reset_route(
-    data: PasswordResetRequest, db: Session = Depends(get_db)
+    data: PasswordResetRequest, request: Request, db: Session = Depends(get_db)
 ) -> dict[str, str]:
+    # RNF-005: mesmo raciocinio do rate limit de login (IP + e-mail alvo) —
+    # sem isso, o endpoint vira vetor de abuso/spam (ver core/rate_limit.py).
+    client_host = request.client.host if request.client else "unknown"
+    rate_limit_key = f"{client_host}:{data.email}"
+    if not password_reset_rate_limiter.check(rate_limit_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas. Tente novamente em instantes.",
+        )
+
     raw_token = request_password_reset(db, data.email)
     db.commit()
 
