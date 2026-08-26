@@ -8,6 +8,7 @@ never read from `localStorage` by any frontend code.
 import hashlib
 import secrets
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
@@ -42,10 +43,13 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return False
 
 
-def _create_token(subject: str, token_type: TokenType, expires_delta: timedelta) -> str:
+def _create_token(
+    subject: str, session_id: uuid.UUID, token_type: TokenType, expires_delta: timedelta
+) -> str:
     now = datetime.now(UTC)
     payload: dict[str, Any] = {
         "sub": subject,
+        "sid": str(session_id),
         "type": token_type.value,
         "iat": now,
         "exp": now + expires_delta,
@@ -54,17 +58,19 @@ def _create_token(subject: str, token_type: TokenType, expires_delta: timedelta)
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_access_token(user_id: uuid.UUID) -> str:
+def create_access_token(user_id: uuid.UUID, session_id: uuid.UUID) -> str:
     return _create_token(
         str(user_id),
+        session_id,
         TokenType.ACCESS,
         timedelta(minutes=settings.access_token_expire_minutes),
     )
 
 
-def create_refresh_token(user_id: uuid.UUID) -> str:
+def create_refresh_token(user_id: uuid.UUID, session_id: uuid.UUID) -> str:
     return _create_token(
         str(user_id),
+        session_id,
         TokenType.REFRESH,
         timedelta(days=settings.refresh_token_expire_days),
     )
@@ -74,7 +80,24 @@ class InvalidTokenError(Exception):
     pass
 
 
-def decode_token(token: str, expected_type: TokenType) -> uuid.UUID:
+# Mensagem exibida ao usuario quando a sessao referenciada pelo token existe
+# mas foi revogada por um login em outro dispositivo (RN-013) — distinta da
+# mensagem generica de token invalido/expirado, para que o front-end (ver
+# apps/web/src/lib/api.ts) saiba mostrar a explicacao correta em vez de um
+# "sessao expirada" enganoso. O texto e comparado por igualdade exata no
+# front-end; qualquer mudanca aqui precisa ser espelhada la.
+SESSION_REVOKED_DETAIL = (
+    "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo."
+)
+
+
+@dataclass(frozen=True)
+class TokenPayload:
+    user_id: uuid.UUID
+    session_id: uuid.UUID
+
+
+def decode_token(token: str, expected_type: TokenType) -> TokenPayload:
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except jwt.PyJWTError as exc:
@@ -84,9 +107,11 @@ def decode_token(token: str, expected_type: TokenType) -> uuid.UUID:
         raise InvalidTokenError("Tipo de token inesperado")
 
     try:
-        return uuid.UUID(payload["sub"])
+        user_id = uuid.UUID(payload["sub"])
+        session_id = uuid.UUID(payload["sid"])
     except (KeyError, ValueError) as exc:
         raise InvalidTokenError("Token sem sujeito valido") from exc
+    return TokenPayload(user_id=user_id, session_id=session_id)
 
 
 def generate_password_reset_token() -> tuple[str, str]:

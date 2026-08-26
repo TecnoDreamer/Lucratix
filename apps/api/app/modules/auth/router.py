@@ -1,11 +1,11 @@
 """Rotas de autenticacao.
 
-Limitacao conhecida (MVP): a revogacao imediata de refresh token no servidor
-(ex.: "derrubar sessao de um usuario agora") ainda nao esta implementada —
-os tokens sao JWT stateless e expiram naturalmente (ver ADR-0004). Logout
-limpa os cookies no cliente. Revogacao server-side fica para uma issue de
-hardening quando houver um store de sessao (ex.: Redis ou tabela dedicada).
-Ver issue #24.
+RN-013 (sessao unica por conta, ver app/core/sessions.py): login cria uma
+sessao nova e revoga qualquer sessao ativa anterior do mesmo usuario;
+logout e /refresh validam/revogam essa sessao no servidor — os tokens JWT
+continuam stateless quanto a assinatura/expiracao, mas cada um carrega a
+claim `sid` (ver core/security.py) que e checada contra a tabela `sessions`
+em toda request autenticada (core/deps.py::get_current_user).
 """
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
@@ -17,11 +17,19 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.rate_limit import login_rate_limiter
 from app.core.security import (
+    SESSION_REVOKED_DETAIL,
     InvalidTokenError,
     TokenType,
     create_access_token,
     create_refresh_token,
     decode_token,
+)
+from app.core.sessions import (
+    SessionInvalidError,
+    SessionRevokedError,
+    create_session,
+    get_active_session,
+    revoke_session,
 )
 from app.models.user import User
 from app.modules.auth.service import (
@@ -59,9 +67,13 @@ def _set_cookie(response: Response, name: str, value: str, max_age: int) -> None
     )
 
 
-def _set_auth_cookies(response: Response, user: User) -> None:
-    access_token = create_access_token(user.id)
-    refresh_token = create_refresh_token(user.id)
+def _set_auth_cookies(response: Response, db: Session, user: User) -> None:
+    # RN-013: revoga qualquer sessao ativa anterior do usuario e cria uma
+    # nova; o `sid` da sessao criada aqui e o que fica embutido em ambos os
+    # tokens (ver core/sessions.py::create_session).
+    session = create_session(db, user.id)
+    access_token = create_access_token(user.id, session.id)
+    refresh_token = create_refresh_token(user.id, session.id)
     _set_cookie(
         response, _ACCESS_COOKIE, access_token, settings.access_token_expire_minutes * 60
     )
@@ -108,7 +120,7 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais invalidas"
         )
-    _set_auth_cookies(response, user)
+    _set_auth_cookies(response, db, user)
     record_audit(db, action="user.login", entity="user", entity_id=user.id, user_id=user.id)
     db.commit()
     return UserRead.model_validate(user)
@@ -125,33 +137,61 @@ def refresh(
     Sem isso, a sessao do usuario expirava apos `access_token_expire_minutes`
     (15 min) mesmo com um `refresh_token` valido (7 dias) ainda no cookie —
     o cookie era emitido no login mas nunca lido em nenhuma rota. Nao rotaciona
-    o refresh token (mantem o mesmo ate expirar); revogacao server-side
-    continua sendo limitacao conhecida (issue #24).
+    o refresh token (mantem o mesmo ate expirar), mas o `sid` que ele carrega
+    e validado contra a tabela `sessions` a cada chamada (RN-013): um
+    refresh_token assinado e nao-expirado nao basta se a sessao foi revogada
+    por um login em outro dispositivo.
     """
     if refresh_token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
         )
     try:
-        user_id = decode_token(refresh_token, TokenType.REFRESH)
+        payload = decode_token(refresh_token, TokenType.REFRESH)
     except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
         ) from exc
 
-    user = db.get(User, user_id)
+    try:
+        get_active_session(db, payload.session_id)
+    except SessionRevokedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_REVOKED_DETAIL
+        ) from exc
+    except SessionInvalidError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
+        ) from exc
+
+    user = db.get(User, payload.user_id)
     if user is None or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
         )
 
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(user.id, payload.session_id)
     _set_cookie(response, _ACCESS_COOKIE, access_token, settings.access_token_expire_minutes * 60)
     return UserRead.model_validate(user)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(response: Response, current_user: User = Depends(get_current_user)) -> None:
+def logout(
+    response: Response,
+    access_token: str | None = Cookie(default=None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    # Revoga a sessao no servidor imediatamente (RN-013), em vez de so
+    # limpar os cookies no cliente: um access_token eventualmente vazado
+    # antes de expirar (15 min) nao deve continuar valendo apos o logout.
+    if access_token is not None:
+        try:
+            payload = decode_token(access_token, TokenType.ACCESS)
+            revoke_session(db, payload.session_id)
+            db.commit()
+        except InvalidTokenError:
+            pass
     response.delete_cookie(_ACCESS_COOKIE, path="/")
     response.delete_cookie(_REFRESH_COOKIE, path="/")
 

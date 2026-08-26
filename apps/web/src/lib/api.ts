@@ -13,6 +13,24 @@ export class ApiError extends Error {
   }
 }
 
+// Precisa ser identico ao texto de SESSION_REVOKED_DETAIL em
+// apps/api/app/core/security.py — comparado por igualdade exata para
+// distinguir "sessao encerrada por login em outro dispositivo" (RN-013)
+// de qualquer outro 401 generico. Ver loginRedirectPath abaixo.
+export const SESSION_REVOKED_MESSAGE =
+  "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo.";
+
+export function isSessionRevokedError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 401 && err.message === SESSION_REVOKED_MESSAGE;
+}
+
+/** Rota de login a usar ao redirecionar apos um 401: preserva o motivo
+ * quando a sessao foi encerrada por login em outro dispositivo, para que
+ * /login mostre a mensagem amigavel em vez de uma tela de login generica. */
+export function loginRedirectPath(err: unknown): string {
+  return isSessionRevokedError(err) ? "/login?reason=session_revoked" : "/login";
+}
+
 const _REFRESH_PATH = "/api/v1/auth/refresh";
 const _AUTH_PATHS_WITHOUT_RETRY = new Set(["/api/v1/auth/login", _REFRESH_PATH]);
 

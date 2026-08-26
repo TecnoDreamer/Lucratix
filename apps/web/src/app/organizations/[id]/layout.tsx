@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
 import {
@@ -62,7 +62,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       .catch((err: unknown) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         if (err instanceof ApiError && err.status === 404) {

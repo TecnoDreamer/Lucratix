@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { IconShieldCheck } from "@/components/icons";
@@ -38,7 +38,7 @@ export default function AuditPage() {
       .catch((err: unknown) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         if (err instanceof ApiError && err.status === 403) {

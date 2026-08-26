@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import type { Experiment, ExperimentResult } from "@/lib/business";
 import { buttonPrimary, buttonSecondary, input, label, select as selectClass, sectionTitle } from "@/lib/ui";
 import { Alert, Badge, Card, EmptyState, Skeleton } from "@/components/ui";
@@ -41,7 +41,7 @@ export default function ExperimentsPage() {
       .catch((err: unknown) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");

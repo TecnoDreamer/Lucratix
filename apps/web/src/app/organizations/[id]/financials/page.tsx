@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type FinancialPeriod } from "@/lib/business";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
@@ -41,7 +41,7 @@ export default function FinancialsPage() {
       .catch((err: unknown) => {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
-          router.push("/login");
+          router.push(loginRedirectPath(err));
           return;
         }
         setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
