@@ -46,15 +46,34 @@ export function AuthHero({
       />
 
       <div className="relative animate-fade-in-up">
-        <BrandLogo variant="wordmark" priority className="h-9 w-auto drop-shadow-lg" />
+        <BrandLogo variant="wordmark" className="h-9 w-auto drop-shadow-lg" />
       </div>
 
       <div className="relative animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-        <p className="text-sm font-medium uppercase tracking-wider text-blue-200">{eyebrow}</p>
-        <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
-          {title}
-        </h2>
-        <p className="mt-4 max-w-sm text-sm leading-relaxed text-blue-100">{description}</p>
+        <div className="xl:flex xl:items-center xl:gap-8">
+          <div className="xl:flex-1">
+            <p className="text-sm font-medium uppercase tracking-wider text-blue-200">{eyebrow}</p>
+            <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
+              {title}
+            </h2>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-blue-100">{description}</p>
+          </div>
+
+          {/* Troféu completo — maior presença visual (seção 6-7 do prompt de
+              layout). object-fit implícito do next/image com width/height
+              reais preserva a proporção inteira, sem cortar/distorcer. */}
+          <div
+            className="relative mt-8 flex justify-center xl:mt-0 xl:block xl:shrink-0"
+            aria-hidden
+          >
+            <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[color:var(--brand-glow)]/25 blur-3xl" />
+            <BrandLogo
+              variant="mark"
+              priority
+              className="trophy-mark h-auto w-[clamp(170px,14vw,300px)] drop-shadow-2xl"
+            />
+          </div>
+        </div>
 
         <ul className="mt-8 flex flex-col gap-3">
           {POINTS.map(({ icon: Icon, text }, i) => (

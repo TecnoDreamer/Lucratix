@@ -27,6 +27,32 @@ test.describe("logotipo não é cortado", () => {
     expect(natural.naturalHeight).toBeGreaterThan(0);
   });
 
+  test("desktop: troféu grande do painel de marca não é cortado pelo overflow-hidden", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/login");
+
+    const allLogos = page.locator('img[alt="Lucratix"]:visible');
+    await expect(allLogos).toHaveCount(2); // wordmark pequeno + troféu grande
+
+    const trophy = allLogos.nth(1);
+    const trophyBox = await trophy.boundingBox();
+    expect(trophyBox).not.toBeNull();
+    expect(trophyBox!.width).toBeGreaterThan(100);
+    expect(trophyBox!.height).toBeGreaterThan(100);
+
+    const heroPanel = page.locator(".overflow-hidden.bg-gradient-to-br");
+    const heroBox = await heroPanel.boundingBox();
+    expect(heroBox).not.toBeNull();
+
+    // O troféu precisa caber inteiro dentro do painel — se ultrapassar, o
+    // `overflow-hidden` do painel corta a imagem (mesma classe de bug do
+    // recorte antigo, agora em outra camada).
+    expect(trophyBox!.x).toBeGreaterThanOrEqual(heroBox!.x);
+    expect(trophyBox!.x + trophyBox!.width).toBeLessThanOrEqual(heroBox!.x + heroBox!.width + 1);
+    expect(trophyBox!.y).toBeGreaterThanOrEqual(heroBox!.y);
+    expect(trophyBox!.y + trophyBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height + 1);
+  });
+
   test("mobile: logo permanece visível e íntegro", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/login");
