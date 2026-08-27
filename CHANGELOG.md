@@ -19,6 +19,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - Login em produção retornava 500 para credenciais válidas: a migration da tabela `sessions` nunca tinha sido aplicada ao banco de produção. O container agora roda `alembic upgrade head` automaticamente a cada deploy, e o CI passou a validar a cadeia de migrations do zero.
 - Logo mobile pequeno (32px) e desalinhado à esquerda em login/cadastro — agora 64px, centralizado.
 - `CampaignRead.roas`/`.ctr` reimplementavam a fórmula inline em vez de usar `app/modules/metrics/engine.py` — corrigido para delegar ao motor de métricas (mesmo valor calculado, agora com fonte única).
+- Logotipo (troféu) aparecia cortado em todas as telas de autenticação e na home. Causa raiz: `lucratix-wordmark.png` era um recorte malfeito do troféu completo que capturava uma fatia truncada da haste/colar da taça na borda superior do quadro — não um bug de CSS/container. Recorte refeito a partir de `lucratix-mark.png` (faixa y=[1100,1522], só base + coroa de louros). Ver `docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md`.
 
 ## Antes desta entrada
 
