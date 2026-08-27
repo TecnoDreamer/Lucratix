@@ -102,6 +102,13 @@ export default function ForgotPasswordPage() {
               </Link>
             </form>
           )}
+
+          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+            Ainda não conhece a Lucratix?{" "}
+            <Link href="/sobre" className={linkClass}>
+              Conheça a aplicação
+            </Link>
+          </p>
         </div>
       </div>
     </div>

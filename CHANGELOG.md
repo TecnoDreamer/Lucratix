@@ -4,6 +4,9 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-08-27
 
+### Added
+- Página pública `/sobre`, acessível sem login (mesmo nível de `/login`/`/register`, fora do gate de autenticação): visão geral da Lucratix, benefícios, funcionalidades (espelhando o menu real da área logada), pontos fortes, "como funciona", stack de tecnologias, glossário de termos da aplicação (Organização, Baseline, Funil, Experimento, Papel, Auditoria, Sessão única, Comparação de período) e FAQ com 12 perguntas — glossário e FAQ em acordeão (`AccordionItem`, mesmo padrão botão+`aria-expanded`+chevron já usado no glossário de métricas). Conteúdo levantado por análise real do código (`docs/product/vision.md`, `NAV_ITEMS`, modelos de papel/membership, motor de métricas, dependências do projeto), sem funcionalidade inventada — integração com Power BI é descrita como arquitetura documentada, não como recurso disponível. Link "Conheça a aplicação" adicionado nas 4 telas de autenticação (login, cadastro, esqueci/redefinir senha).
+
 ### Changed
 - RN-010 (VIEWER é somente leitura) refinada: a decisão de exigir `ANALYST`+ nos endpoints de lucratividade (tomada em bloco na auditoria de BI) entrava em conflito com a regra já documentada de que VIEWER vê dashboard/relatórios. Resolvido tela por tela com o usuário: VIEWER continua vendo `GET /dashboard`/`GET /dashboard/compare-to-baseline`; `GET /analytics/executive`, `GET /analytics/marketing` e `GET /reports/basic` passam a exigir `ANALYST`+. Ver `docs/requirements/business-rules.md`.
 

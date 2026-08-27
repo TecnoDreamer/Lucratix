@@ -124,6 +124,12 @@ function LoginContent() {
               Cadastre-se
             </Link>
           </p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Ainda não conhece a Lucratix?{" "}
+            <Link href="/sobre" className={linkClass}>
+              Conheça a aplicação
+            </Link>
+          </p>
         </div>
       </div>
     </div>
