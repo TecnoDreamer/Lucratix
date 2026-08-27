@@ -30,6 +30,45 @@ def test_viewer_cannot_write_to_organization(client_factory):
     assert resp.status_code == 403
 
 
+def test_viewer_access_split_between_dashboard_and_analytics_reports(client_factory):
+    """Decisao confirmada com o usuario, tela por tela (2026-08-27): VIEWER
+    continua vendo o Dashboard (RN-010 original), mas Analytics (executivo e
+    marketing) e o Relatorio exigem ANALYST+."""
+    owner = client_factory()
+    viewer_client = client_factory()
+
+    _register_and_login(owner, "Ana", "owner.viewersplit@example.com")
+    _register_and_login(viewer_client, "Vitor", "viewersplit@example.com")
+
+    org = owner.post("/api/v1/organizations", json={"name": "Empresa Split RBAC"}).json()
+    owner.post(
+        f"/api/v1/organizations/{org['id']}/memberships",
+        json={"email": "viewersplit@example.com", "role": "VIEWER"},
+    )
+
+    dashboard_resp = viewer_client.get(
+        f"/api/v1/organizations/{org['id']}/dashboard", params={"period": "2026-08-01"}
+    )
+    assert dashboard_resp.status_code == 200
+
+    executive_resp = viewer_client.get(
+        f"/api/v1/organizations/{org['id']}/analytics/executive",
+        params={"date_from": "2026-08-01", "date_to": "2026-08-31"},
+    )
+    assert executive_resp.status_code == 403
+
+    marketing_resp = viewer_client.get(
+        f"/api/v1/organizations/{org['id']}/analytics/marketing",
+        params={"date_from": "2026-08-01", "date_to": "2026-08-31"},
+    )
+    assert marketing_resp.status_code == 403
+
+    report_resp = viewer_client.get(
+        f"/api/v1/organizations/{org['id']}/reports/basic", params={"period": "2026-08-01"}
+    )
+    assert report_resp.status_code == 403
+
+
 def test_analyst_cannot_promote_self_to_owner(client_factory):
     owner = client_factory()
     analyst_client = client_factory()

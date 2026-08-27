@@ -28,7 +28,12 @@ Um usuário sem nenhuma membership ativa não pode selecionar/operar em nenhuma 
 `PLATFORM_ADMIN` > `ORGANIZATION_OWNER` > `ORGANIZATION_ADMIN` > `ANALYST` > `VIEWER`. Um papel só pode atribuir a outro usuário um papel igual ou inferior ao seu próprio dentro da mesma organização (exceto `PLATFORM_ADMIN`, que é global e concedido fora do escopo de uma organização).
 
 ### RN-010 — `VIEWER` é somente leitura
-Usuários com papel `VIEWER` não podem criar, alterar ou excluir nenhum dado — apenas visualizar dashboard, métricas, relatórios e comparação de períodos.
+Usuários com papel `VIEWER` não podem criar, alterar ou excluir nenhum dado. Para leitura, a regra não é uniforme entre todas as telas — decisão confirmada com o usuário em 2026-08-27, tela por tela (ver `docs/auditoria/AUDITORIA_BI_RELATORIOS.md`):
+
+- **`VIEWER` pode ver**: Dashboard (`GET /dashboard`, `GET /dashboard/compare-to-baseline`).
+- **`VIEWER` não pode ver, exige `ANALYST`+**: Analytics — Visão Executiva (`GET /analytics/executive`), Analytics — Marketing (`GET /analytics/marketing`), Relatório Executivo (`GET /reports/basic`).
+
+A diferença não é sobre o tipo de dado (todas mostram receita/lucro/margem em algum grau) — é uma escolha de produto por tela, não uma regra geral automatizável. Ao adicionar uma nova tela de analytics/relatório, confirmar com o responsável pelo produto em qual dos dois grupos ela se encaixa, em vez de assumir.
 
 ### RN-011 — E-mail é identificador único de usuário
 Não pode haver dois usuários com o mesmo e-mail na plataforma.

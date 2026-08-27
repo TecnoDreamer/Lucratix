@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import OrganizationContext, get_organization_context
+from app.core.deps import OrganizationContext, require_role
+from app.models.membership import MembershipRole
 from app.modules.analytics.service import compute_dashboard_metrics
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
@@ -26,7 +27,9 @@ router = APIRouter(prefix="/api/v1/organizations/{organization_id}/reports", tag
 @router.get("/basic")
 def get_basic_report(
     period: date,
-    ctx: OrganizationContext = Depends(get_organization_context),
+    # ANALYST+ apenas — decisao confirmada com o usuario em 2026-08-27, ver
+    # docs/requirements/business-rules.md, RN-010.
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> BasicReportRead:
     organization = organizations_repository.get_organization(db, ctx.organization_id)

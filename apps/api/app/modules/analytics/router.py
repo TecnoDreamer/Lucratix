@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import OrganizationContext, get_organization_context
+from app.core.deps import OrganizationContext, get_organization_context, require_role
+from app.models.membership import MembershipRole
 from app.modules.analytics.date_ranges import months_in_range, previous_equivalent_range
 from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import (
@@ -28,6 +29,14 @@ from app.schemas.metrics import (
 )
 
 router = APIRouter(prefix="/api/v1/organizations/{organization_id}", tags=["analytics"])
+
+# Decisao confirmada com o usuario em 2026-08-27, tela por tela (RN-010 dizia
+# que VIEWER ve dashboard/relatorios; a auditoria de BI queria ANALYST+ em
+# tudo — nenhuma das duas valia sozinha, o usuario decidiu por tela):
+# - /dashboard e /dashboard/compare-to-baseline: VIEWER continua vendo (RN-010
+#   original, sem mudanca).
+# - /analytics/executive e /analytics/marketing: ANALYST+ apenas.
+# Ver docs/requirements/business-rules.md, RN-010.
 
 _BaselineMetric = Literal["revenue", "profit", "margin", "cac"]
 _DASHBOARD_METRIC_KEYS = (
@@ -88,7 +97,7 @@ def compare_to_baseline(
 def get_executive_dashboard(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(get_organization_context),
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> ExecutiveDashboardRead:
     """RF-023, secoes 5-7 do prompt de BI: visao executiva por intervalo de
@@ -148,7 +157,7 @@ def get_executive_dashboard(
 def get_marketing_analytics(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(get_organization_context),
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> MarketingAnalyticsRead:
     """Métricas de campanha (ROAS, ROI, CTR, CPC, CPM, CPL, CPA) por
