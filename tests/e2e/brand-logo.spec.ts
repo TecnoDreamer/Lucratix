@@ -53,7 +53,7 @@ test.describe("logotipo não é cortado", () => {
     expect(trophyBox!.y + trophyBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height + 1);
   });
 
-  test("mobile: logo permanece visível e íntegro", async ({ page }) => {
+  test("mobile: logo usa o troféu completo (mark), não o recorte compacto (wordmark)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/login");
 
@@ -64,5 +64,40 @@ test.describe("logotipo não é cortado", () => {
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThan(0);
     expect(box!.height).toBeGreaterThan(0);
+
+    const src = await logo.evaluate((img: HTMLImageElement) => img.currentSrc);
+    expect(src).toContain("lucratix-mark.png");
+  });
+
+  for (const width of [320, 375, 390, 430]) {
+    test(`mobile ${width}px: sem scroll horizontal e logo cabe na tela`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto("/login");
+
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+      );
+      expect(overflow).toBe(false);
+
+      const logo = page.locator('img[alt="Lucratix"]:visible').first();
+      const box = await logo.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    });
+  }
+
+  test("cadastro/recuperação de senha: mesmo tratamento do logo mobile (consistência entre telas)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+
+    for (const path of ["/register", "/esqueci-senha"]) {
+      await page.goto(path);
+      const logo = page.locator('img[alt="Lucratix"]:visible').first();
+      await expect(logo).toBeVisible();
+      const src = await logo.evaluate((img: HTMLImageElement) => img.currentSrc);
+      expect(src).toContain("lucratix-mark.png");
+    }
   });
 });

@@ -58,7 +58,11 @@ function ResetPasswordContent() {
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
         <div className="w-full max-w-sm animate-fade-in-up">
-          <BrandLogo variant="wordmark" priority className="mx-auto block h-16 w-auto lg:hidden" />
+          <BrandLogo
+            variant="mark"
+            priority
+            className="mx-auto block h-auto w-auto max-w-[120px] object-contain sm:max-w-[150px] lg:hidden"
+          />
 
           {!token ? (
             <>

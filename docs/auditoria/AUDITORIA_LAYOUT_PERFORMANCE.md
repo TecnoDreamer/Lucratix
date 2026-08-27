@@ -79,3 +79,11 @@ Achados adicionais de código (sem servidor rodando, revisão estática + 1 agen
 - Qualquer mudança no wordmark/mark afeta 6 pontos de uso simultaneamente — precisa de verificação visual em todos (desktop/mobile) antes de mergear.
 - Efeito de rotação 360° é o item com maior chance de ficar "gamer demais" se mal calibrado — a Lucratix pede estética fintech/BI/SaaS premium, não gaming.
 - Sem Lighthouse real rodado ainda (só Resource Timing) — números de LCP/CLS "antes" formais ficam pendentes de uma medição dedicada antes do PR de performance.
+
+## 6. Follow-up (2026-08-27) — logo mobile ainda usava o recorte, não o troféu completo
+
+O item 1 do plano acima ("substituir os pontos de uso do wordmark pelo `mark`") foi feito só para o painel de marca desktop (`auth-hero.tsx`, PR #69) — o logo mobile duplicado (`lg:hidden` nas 4 telas de auth) continuou em `variant="wordmark"`. Como o crop já tinha sido corrigido (PR #68, sem mais a fatia truncada da haste), isso não era mais um bug de CSS — mas o usuário ainda via só a base do troféu no mobile (sem coroa/taça/fitas), o que lia como "logo incompleto".
+
+**Causa raiz**: escolha de asset, não container/CSS. Confirmado ponto a ponto (seção 25 do novo prompt de responsividade): sem `overflow-hidden`, sem `object-fit` incorreto, sem tamanho fixo incompatível — só `variant="wordmark"` onde deveria ser `variant="mark"`.
+
+**Correção**: `variant="mark"` nas 4 telas, com `w-auto h-auto max-w-[120px] object-contain sm:max-w-[150px]` (largura responsiva, não altura fixa — a proporção do `mark` é retrato, diferente do `wordmark`, que é paisagem). Verificado sem overflow horizontal em 320/375/750/1440px e sem regressão no desktop (`AuthHero` intocado, `display:none`/`block` corretos em cada breakpoint via `getComputedStyle`, já que `getBoundingClientRect` não é confiável nesta sessão em abas em segundo plano — ver limitação já registrada no início desta auditoria).
