@@ -7,6 +7,9 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 ### Changed
 - RN-010 (VIEWER é somente leitura) refinada: a decisão de exigir `ANALYST`+ nos endpoints de lucratividade (tomada em bloco na auditoria de BI) entrava em conflito com a regra já documentada de que VIEWER vê dashboard/relatórios. Resolvido tela por tela com o usuário: VIEWER continua vendo `GET /dashboard`/`GET /dashboard/compare-to-baseline`; `GET /analytics/executive`, `GET /analytics/marketing` e `GET /reports/basic` passam a exigir `ANALYST`+. Ver `docs/requirements/business-rules.md`.
 
+### Fixed
+- Logo mobile nas 4 telas de autenticação (login, cadastro, esqueci/redefinir senha) usava `variant="wordmark"` — um recorte que mostra só a base do troféu (sem coroa, taça ou fitas), não um bug de CSS. Trocado para `variant="mark"` (troféu completo), com largura responsiva (`max-w-[120px] sm:max-w-[150px]`, já que a proporção do mark é retrato, diferente do wordmark). Sem regressão no desktop — `AuthHero` (logo pequeno + painel azul) continua intocado.
+
 ## 2026-08-26
 
 ### Added
