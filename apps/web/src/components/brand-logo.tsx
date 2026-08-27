@@ -30,6 +30,13 @@ export function BrandLogo({
     variant === "mark" ? "/brand/lucratix-mark.png" : "/brand/lucratix-wordmark.png";
   const width = 1024;
   const height = variant === "mark" ? 1522 : 422;
+  // Maior largura renderizada real de cada variante em todo o app hoje —
+  // "mark" chega a 300px (clamp em auth-hero.tsx), "wordmark" no máximo a
+  // ~155px (h-16). Sem isso, o next/image mira a largura intrínseca inteira
+  // (1024px) e serve uma imagem ~7-12x maior que o necessário (medido:
+  // 57KB/584ms para um logo exibido a 64px de altura — ver
+  // docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md, seção 4).
+  const sizes = variant === "mark" ? "320px" : "160px";
 
   return (
     <Image
@@ -38,6 +45,7 @@ export function BrandLogo({
       width={width}
       height={height}
       priority={priority}
+      sizes={sizes}
       className={className}
     />
   );
