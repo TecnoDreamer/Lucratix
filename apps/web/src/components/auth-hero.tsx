@@ -45,8 +45,15 @@ export function AuthHero({
         }}
       />
 
+      {/* Wordmark em texto, não imagem — abaixo de ~28px de altura o recorte
+          do logo perde legibilidade (ver brand-logo.tsx); nesse tamanho o
+          próprio guia da marca já recomenda texto estilizado com as cores da
+          marca em vez do logo. */}
       <div className="relative animate-fade-in-up">
-        <BrandLogo variant="wordmark" className="h-9 w-auto drop-shadow-lg" />
+        <p className="text-2xl font-bold tracking-tight drop-shadow-lg">
+          <span className="text-blue-400">Lucra</span>
+          <span className="text-[color:var(--brand-glow)]">tix</span>
+        </p>
       </div>
 
       <div className="relative animate-fade-in-up" style={{ animationDelay: "80ms" }}>
