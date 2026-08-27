@@ -6,6 +6,7 @@ on:
       - "apps/api/**"
       - "tests/**"
       - "pytest.ini"
+      - "ruff.toml"
       - ".github/workflows/backend-ci.yml"
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - "apps/api/**"
       - "tests/**"
       - "pytest.ini"
+      - "ruff.toml"
 
 jobs:
   backend:
@@ -46,8 +48,11 @@ jobs:
         working-directory: apps/api
         run: pip install -e ".[dev]"
 
+      # Roda da raiz do repo: um unico `ruff check .` cobre apps/api/** (via
+      # apps/api/pyproject.toml, por proximidade) e a suite tests/** (via
+      # ruff.toml da raiz, que herda o mesmo conjunto de regras). Antes a etapa
+      # rodava com working-directory: apps/api e nunca lintava tests/**.
       - name: Lint (ruff)
-        working-directory: apps/api
         run: ruff check .
 
       - name: Type check (mypy)

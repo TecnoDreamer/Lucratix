@@ -9,8 +9,12 @@ from app.modules.analytics.marketing_service import (
 
 def test_aggregate_campaigns_sums_multiple_campaigns():
     campaigns = [
-        Campaign(investment=1000, impressions=10000, clicks=500, leads=50, customers=10, attributed_revenue=4000),
-        Campaign(investment=1500, impressions=20000, clicks=800, leads=70, customers=15, attributed_revenue=6000),
+        Campaign(
+            investment=1000, impressions=10000, clicks=500, leads=50, customers=10, attributed_revenue=4000
+        ),
+        Campaign(
+            investment=1500, impressions=20000, clicks=800, leads=70, customers=15, attributed_revenue=6000
+        ),
     ]
     aggregated = aggregate_campaigns(campaigns)
     assert aggregated.investment == 2500

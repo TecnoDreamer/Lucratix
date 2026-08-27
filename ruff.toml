@@ -1,0 +1,21 @@
+# Config de lint da raiz do repo. O codigo da API tem seu proprio
+# apps/api/pyproject.toml, que continua valendo para apps/api/** por
+# proximidade (config hierarquica do ruff). Aqui herdamos exatamente o mesmo
+# conjunto de regras para que um unico `ruff check .` na raiz cubra tanto
+# apps/api/** quanto a suite de testes em tests/** com os mesmos criterios --
+# antes tests/** nunca era lintado porque a CI so rodava `ruff check .` de
+# dentro de apps/api.
+extend = "apps/api/pyproject.toml"
+
+[lint.isort]
+# Rodando da raiz o ruff nao acha o pacote `app` (mora em apps/api/app), entao
+# sem isto ele jogaria os imports de `app.*` no grupo de terceiros e brigaria
+# com a separacao stdlib / terceiros / primeira-parte que apps/api ja usa.
+known-first-party = ["app"]
+
+[lint.per-file-ignores]
+# Testes usam segredos de mentira: senhas de fixture e hashes dummy, nunca
+# valores reais. Os avisos de credencial hardcoded do bandit (S105-S107) sao
+# ruido neste contexto (mesma logica do per-file-ignore de S105 ja aplicado a
+# app/core/config.py e app/seed.py no pyproject da API).
+"tests/**" = ["S105", "S106", "S107"]
