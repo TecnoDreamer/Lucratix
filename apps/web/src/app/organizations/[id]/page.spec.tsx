@@ -126,6 +126,16 @@ describe("OrganizationDetailPage — página inicial da empresa", () => {
     }
   });
 
+  it("esconde o atalho de Analytics para VIEWER (exige ANALYST+ no backend)", async () => {
+    mockApiGet({ comparison: null });
+    renderWithOrg({ my_role: "VIEWER" });
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: /Financeiro/ })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("link", { name: /Analytics/ })).not.toBeInTheDocument();
+  });
+
   it("mostra ações rápidas para ANALYST, mas esconde para VIEWER", async () => {
     mockApiGet({ comparison: null });
     const { unmount } = renderWithOrg({ my_role: "ANALYST" });

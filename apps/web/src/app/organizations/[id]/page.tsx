@@ -10,7 +10,7 @@ import { QuickAccessCard } from "@/components/quick-access-card";
 import { useOrganization } from "@/contexts/organization-context";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { currentMonthPeriod, formatMetric } from "@/lib/metrics";
-import { canPerformActions, roleLabel } from "@/lib/roles";
+import { canPerformActions, hasMinimumRole, roleLabel } from "@/lib/roles";
 import {
   IconClock,
   IconDollar,
@@ -35,13 +35,23 @@ function formatTrackingSince(date: string): string {
 
 // PARTE 4 do prompt de redesign de UX (2026-08-27): 4-6 atalhos principais,
 // não todos os módulos da sidebar (isso já existe na navegação completa).
-function quickAccessItems(id: string) {
+// `minRole`: mesmo critério da sidebar (ver layout.tsx) — Analytics exige
+// ANALYST+ no backend, então não faz sentido oferecer o atalho pra quem só
+// vai receber um 403 ao clicar.
+function quickAccessItems(id: string): {
+  href: string;
+  icon: typeof IconTrendingUp;
+  title: string;
+  description: string;
+  minRole?: "ANALYST";
+}[] {
   return [
     {
       href: `/organizations/${id}/analytics`,
       icon: IconTrendingUp,
       title: "Analytics",
       description: "Acompanhe métricas, tendências e desempenho.",
+      minRole: "ANALYST",
     },
     {
       href: `/organizations/${id}/financials`,
@@ -258,9 +268,11 @@ export default function OrganizationDetailPage() {
       <section className="mt-6">
         <h2 className={sectionTitle}>Acesso rápido</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {quickAccessItems(id).map((item) => (
-            <QuickAccessCard key={item.href} {...item} />
-          ))}
+          {quickAccessItems(id)
+            .filter((item) => !item.minRole || hasMinimumRole(organization?.my_role, item.minRole))
+            .map(({ href, icon, title, description }) => (
+              <QuickAccessCard key={href} href={href} icon={icon} title={title} description={description} />
+            ))}
         </div>
       </section>
 

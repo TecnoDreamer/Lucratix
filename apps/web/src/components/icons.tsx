@@ -16,6 +16,15 @@ function base(props: IconProps) {
   };
 }
 
+export function IconHome(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10v9a1 1 0 0 0 1 1H9v-6h6v6h2.5a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+
 export function IconBuilding(props: IconProps) {
   return (
     <svg {...base(props)}>
