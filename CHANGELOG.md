@@ -21,6 +21,8 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - Logo mobile pequeno (32px) e desalinhado à esquerda em login/cadastro — agora 64px, centralizado.
 - `CampaignRead.roas`/`.ctr` reimplementavam a fórmula inline em vez de usar `app/modules/metrics/engine.py` — corrigido para delegar ao motor de métricas (mesmo valor calculado, agora com fonte única).
 - Logotipo (troféu) aparecia cortado em todas as telas de autenticação e na home. Causa raiz: `lucratix-wordmark.png` era um recorte malfeito do troféu completo que capturava uma fatia truncada da haste/colar da taça na borda superior do quadro — não um bug de CSS/container. Recorte refeito a partir de `lucratix-mark.png` (faixa y=[1100,1522], só base + coroa de louros). Ver `docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md`.
+- Logo (`BrandLogo`) servia imagens ~7-12× maiores que o necessário: sem `sizes` no `next/image`, o Next mirava a resolução intrínseca inteira (1024px) em vez do tamanho exibido (no máximo 300px). Medido em produção: 58KB/584ms para um logo de 64px de altura. Corrigido com `sizes` por variante.
+- `/` (raiz) baixava o bundle inteiro, hidratava e só então chamava `/auth/me` para decidir o redirecionamento — agora é um Server Component que decide pela presença do cookie de sessão, sem round-trip de rede no cliente.
 
 ## Antes desta entrada
 
