@@ -117,6 +117,23 @@ describe("OrganizationLayout — sidebar", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("trava o scroll do body enquanto o drawer mobile esta aberto", async () => {
+    vi.mocked(api.get).mockResolvedValue(FAKE_ORG);
+    render(
+      <OrganizationLayout>
+        <p>conteudo</p>
+      </OrganizationLayout>
+    );
+
+    expect(document.body.style.overflow).not.toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menu" }));
+    expect(document.body.style.overflow).toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: "Fechar menu" }));
+    expect(document.body.style.overflow).not.toBe("hidden");
+  });
+
   it("Escape fecha o drawer mobile", async () => {
     vi.mocked(api.get).mockResolvedValue(FAKE_ORG);
     render(

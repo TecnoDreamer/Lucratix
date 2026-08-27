@@ -1,3 +1,11 @@
+/** Primeiro dia do mês corrente, no formato usado pelos endpoints de
+ * dashboard/analytics (YYYY-MM-01). Usado tanto pelo Dashboard dedicado
+ * quanto pelo resumo de KPIs da página inicial da empresa. */
+export function currentMonthPeriod(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
 export interface MetricResult {
   value: number | null;
   is_applicable: boolean;

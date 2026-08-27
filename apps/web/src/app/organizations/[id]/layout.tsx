@@ -7,6 +7,7 @@ import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
 import { roleLabel } from "@/lib/roles";
+import { OrganizationProvider } from "@/contexts/organization-context";
 import {
   IconArrowLeft,
   IconBookOpen,
@@ -100,6 +101,17 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen]);
+
+  // Impede o scroll do conteudo de fundo enquanto o drawer mobile esta
+  // aberto (PARTE 8 do prompt de redesign de UX, 2026-08-27).
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [mobileNavOpen]);
 
   if (loadError) {
@@ -216,7 +228,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         {mobileNavOpen && (
           <div className="fixed inset-0 z-30">
             <div
-              className="absolute inset-0 bg-slate-900/40"
+              className="absolute inset-0 animate-fade-in bg-slate-900/40"
               onClick={() => setMobileNavOpen(false)}
               aria-hidden="true"
             />
@@ -224,7 +236,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
               role="dialog"
               aria-modal="true"
               aria-label="Menu de navegação"
-              className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-white px-4 py-5 shadow-xl dark:bg-slate-950"
+              className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-white px-4 py-5 shadow-xl dark:bg-slate-950"
             >
               <button
                 type="button"
@@ -241,7 +253,11 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-5xl px-4 print:max-w-none print:px-0 sm:px-6">{children}</div>
+        <div className="mx-auto w-full max-w-5xl px-4 print:max-w-none print:px-0 sm:px-6">
+          <OrganizationProvider value={{ organization, loading, error: loadError }}>
+            {children}
+          </OrganizationProvider>
+        </div>
       </div>
     </div>
   );

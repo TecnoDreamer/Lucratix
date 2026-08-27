@@ -1,12 +1,12 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { api, ApiError, loginRedirectPath } from "@/lib/api";
-import { formatMetric, type Dashboard, type PeriodComparison } from "@/lib/metrics";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+import { currentMonthPeriod, formatMetric, type Dashboard } from "@/lib/metrics";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { MetricHelp } from "@/components/metric-help";
+import { useDashboard } from "@/hooks/use-dashboard";
 import {
   IconDollar,
   IconFunnel,
@@ -14,36 +14,6 @@ import {
   IconPackage,
   IconTrendingUp,
 } from "@/components/icons";
-
-function currentMonthPeriod(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-}
-
-async function fetchRevenueComparison(id: string, period: string): Promise<PeriodComparison | null> {
-  try {
-    return await api.get<PeriodComparison>(
-      `/api/v1/organizations/${id}/dashboard/compare-to-baseline?period=${period}&metric=revenue`
-    );
-  } catch (err) {
-    // Sem baseline registrado ainda: comparacao fica indisponivel, painel segue funcional.
-    if (err instanceof ApiError && err.status === 404) return null;
-    throw err;
-  }
-}
-
-async function fetchDashboardData(
-  id: string,
-  period: string
-): Promise<{ dashboard: Dashboard; revenueComparison: PeriodComparison | null }> {
-  // Chamadas independentes entre si: rodam em paralelo em vez de em fila.
-  const [dashboard, revenueComparison] = await Promise.all([
-    api.get<Dashboard>(`/api/v1/organizations/${id}/dashboard?period=${period}`),
-    fetchRevenueComparison(id, period),
-  ]);
-
-  return { dashboard, revenueComparison };
-}
 
 const CARDS: { key: keyof Dashboard; label: string; percent?: boolean; icon: typeof IconDollar }[] = [
   { key: "revenue", label: "Receita", icon: IconDollar },
@@ -57,41 +27,8 @@ const CARDS: { key: keyof Dashboard; label: string; percent?: boolean; icon: typ
 
 export default function DashboardPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-
   const [period, setPeriod] = useState(currentMonthPeriod());
-  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
-  const [revenueComparison, setRevenueComparison] = useState<PeriodComparison | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void Promise.resolve().then(() => {
-      if (!cancelled) setLoading(true);
-    });
-    fetchDashboardData(id, period)
-      .then((result) => {
-        if (cancelled) return;
-        setDashboard(result.dashboard);
-        setRevenueComparison(result.revenueComparison);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 401) {
-          router.push(loginRedirectPath(err));
-          return;
-        }
-        setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, period]);
+  const { dashboard, revenueComparison, loading, error } = useDashboard(id, period);
 
   return (
     <div className="animate-fade-in-up py-8">
