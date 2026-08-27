@@ -2,6 +2,11 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-08-27
+
+### Changed
+- RN-010 (VIEWER é somente leitura) refinada: a decisão de exigir `ANALYST`+ nos endpoints de lucratividade (tomada em bloco na auditoria de BI) entrava em conflito com a regra já documentada de que VIEWER vê dashboard/relatórios. Resolvido tela por tela com o usuário: VIEWER continua vendo `GET /dashboard`/`GET /dashboard/compare-to-baseline`; `GET /analytics/executive`, `GET /analytics/marketing` e `GET /reports/basic` passam a exigir `ANALYST`+. Ver `docs/requirements/business-rules.md`.
+
 ## 2026-08-26
 
 ### Added

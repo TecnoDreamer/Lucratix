@@ -91,7 +91,7 @@ Dado o stack (Next.js App Router, sem backend Node — API é FastAPI/Python) e 
 
 1. **Sem modelo de vendas por produto.** ✅ Confirmado: escopar esta rodada para o que os dados atuais sustentam (dashboard/relatórios agregados por empresa/mês com filtro de datas e comparação temporal, métricas de campanha já computáveis pela engine, margem de produto como métrica de tabela de preço, deixada explicitamente como tal). Ranking/lucratividade/prejuízo por produto real fica para uma iniciativa futura, quando houver um modelo de vendas transacional.
 2. **Power BI.** ✅ Confirmado: sem licença/Azure AD App Registration disponível hoje, a entrega desta rodada é só arquitetura documentada (`docs/analytics/POWER_BI.md`, `docs/security/POWER_BI_SECURITY.md`) e pontos de extensão no backend — nenhuma integração real.
-3. **Permissões.** ✅ Confirmado: reaproveitar a hierarquia de papel existente (exigir `ANALYST`+ nos endpoints de lucratividade/custo) em vez de criar um sistema de permissões novo.
+3. **Permissões.** ✅ Confirmado: reaproveitar a hierarquia de papel existente em vez de criar um sistema de permissões novo. **Refinado em 2026-08-27**: esta decisão, tomada em bloco, entrou em conflito com uma regra já documentada (RN-010, que dizia VIEWER ver dashboard/relatórios) — o usuário resolveu tela por tela, não em bloco: VIEWER continua vendo o Dashboard; Analytics (executivo e marketing) e o Relatório Executivo exigem `ANALYST`+. Ver RN-010 atualizada em `docs/requirements/business-rules.md`.
 
 ## Riscos remanescentes
 
