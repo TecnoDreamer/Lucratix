@@ -50,7 +50,7 @@ describe("OrganizationLayout — sidebar", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Empresa Teste" })).toBeInTheDocument();
     });
-    expect(screen.getByText("Seu papel: ORGANIZATION_OWNER")).toBeInTheDocument();
+    expect(screen.getByText("Seu papel: Proprietário")).toBeInTheDocument();
   });
 
   it("sidebar mostra todos os itens de navegação, incluindo Glossário", async () => {

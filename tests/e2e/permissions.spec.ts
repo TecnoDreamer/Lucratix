@@ -42,7 +42,7 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     await viewerPage.waitForURL("**/organizations");
 
     await viewerPage.goto(orgUrl);
-    await expect(viewerPage.getByText("Seu papel: VIEWER")).toBeVisible();
+    await expect(viewerPage.getByText("Seu papel: Visualizador")).toBeVisible();
 
     await viewerPage.getByLabel("Receita").fill("999");
     await viewerPage.getByRole("button", { name: "Registrar baseline" }).click();

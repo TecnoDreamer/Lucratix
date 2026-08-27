@@ -1,20 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
-import { buttonGhost, buttonPrimary, cardHover, input, label, pageContainer } from "@/lib/ui";
+import { buttonGhost, buttonPrimary, card, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
-import {
-  IconAlertCircle,
-  IconBuilding,
-  IconChevronRight,
-  IconLogOut,
-  IconPlus,
-  IconSparkles,
-} from "@/components/icons";
+import { CompanyCard } from "@/components/company-card";
+import { IconAlertCircle, IconLogOut, IconPlus, IconSearch, IconSparkles } from "@/components/icons";
 import type { Organization, User } from "@/lib/types";
+
+// Abaixo desse número de empresas, a busca só adiciona ruído visual sem
+// ajudar em nada (Parte "Busca e organização" do prompt de redesign:
+// "não adicionar complexidade desnecessária caso haja poucas empresas").
+const SEARCH_THRESHOLD = 6;
 
 export default function OrganizationsPage() {
   const router = useRouter();
@@ -33,6 +31,7 @@ export default function OrganizationsPage() {
 
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,6 +83,16 @@ export default function OrganizationsPage() {
     router.push("/login");
   }
 
+  const filteredOrganizations = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return organizations;
+    return organizations.filter(
+      (org) =>
+        org.name.toLowerCase().includes(q) ||
+        (org.trade_name?.toLowerCase().includes(q) ?? false)
+    );
+  }, [organizations, query]);
+
   if (loadError && !loading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
@@ -122,11 +131,26 @@ export default function OrganizationsPage() {
         </button>
       </div>
 
+      {!loading && organizations.length > SEARCH_THRESHOLD && (
+        <label className="relative mt-6 block max-w-sm">
+          <span className="sr-only">Buscar empresa</span>
+          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar empresa..."
+            className={`${input} pl-9`}
+          />
+        </label>
+      )}
+
       <div className="mt-6">
         {loading ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full hidden lg:block" />
           </div>
         ) : organizations.length === 0 ? (
           <EmptyState
@@ -134,27 +158,17 @@ export default function OrganizationsPage() {
             title="Nenhuma empresa ainda. Cadastre a primeira abaixo."
             description="Cada empresa/cliente tem seus próprios dados, métricas e histórico, totalmente isolados dos demais."
           />
+        ) : filteredOrganizations.length === 0 ? (
+          <EmptyState
+            icon={<IconSearch className="h-5 w-5" />}
+            title="Nenhuma empresa encontrada."
+            description="Tente outro termo de busca."
+          />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {organizations.map((org, i) => (
-              <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
-                <Link
-                  href={`/organizations/${org.id}`}
-                  className={`${cardHover} group flex items-center justify-between gap-3 px-4 py-3.5`}
-                >
-                  <span className="flex items-center gap-3 min-w-0">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                      <IconBuilding className="h-[18px] w-[18px]" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium text-slate-900 dark:text-slate-50">
-                        {org.name}
-                      </span>
-                      <span className="block text-xs text-slate-500 dark:text-slate-400">{org.my_role}</span>
-                    </span>
-                  </span>
-                  <IconChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600" />
-                </Link>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredOrganizations.map((org, i) => (
+              <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
+                <CompanyCard organization={org} />
               </li>
             ))}
           </ul>
@@ -167,25 +181,28 @@ export default function OrganizationsPage() {
         </div>
       )}
 
-      <form
-        onSubmit={handleCreate}
-        className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 dark:border-slate-800 sm:flex-row sm:items-end"
-      >
-        <label className={`flex-1 ${label}`}>
-          Nova empresa
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nome da empresa/cliente"
-            className={input}
-          />
-        </label>
-        <button type="submit" disabled={creating} className={buttonPrimary}>
-          <IconPlus className="h-4 w-4" />
-          {creating ? "Criando..." : "Criar"}
-        </button>
-      </form>
+      <div className={`${card} mt-8 p-5`}>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Adicionar nova empresa</h2>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Cada empresa/cliente cadastrada aqui recebe seu próprio espaço, isolado dos demais.
+        </p>
+        <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className={`flex-1 ${label}`}>
+            Nova empresa
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nome da empresa/cliente"
+              className={input}
+            />
+          </label>
+          <button type="submit" disabled={creating} className={buttonPrimary}>
+            <IconPlus className="h-4 w-4" />
+            {creating ? "Criando..." : "Criar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
