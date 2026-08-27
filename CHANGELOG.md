@@ -23,6 +23,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - Logotipo (troféu) aparecia cortado em todas as telas de autenticação e na home. Causa raiz: `lucratix-wordmark.png` era um recorte malfeito do troféu completo que capturava uma fatia truncada da haste/colar da taça na borda superior do quadro — não um bug de CSS/container. Recorte refeito a partir de `lucratix-mark.png` (faixa y=[1100,1522], só base + coroa de louros). Ver `docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md`.
 - Logo (`BrandLogo`) servia imagens ~7-12× maiores que o necessário: sem `sizes` no `next/image`, o Next mirava a resolução intrínseca inteira (1024px) em vez do tamanho exibido (no máximo 300px). Medido em produção: 58KB/584ms para um logo de 64px de altura. Corrigido com `sizes` por variante.
 - `/` (raiz) baixava o bundle inteiro, hidratava e só então chamava `/auth/me` para decidir o redirecionamento — agora é um Server Component que decide pela presença do cookie de sessão, sem round-trip de rede no cliente.
+- A conversão de `/` para Server Component fez a tela dedicada de "API fora do ar, tentar novamente" desaparecer (a raiz não busca mais dado nenhum). Reintroduzida em `/organizations` — o primeiro lugar que de fato busca dado após o redirecionamento — distinguindo falha de conexão (mensagem genérica + retry) de um erro real do servidor (mensagem específica), em vez de misturar as duas com o alerta inline de "criar empresa".
 
 ## Antes desta entrada
 
