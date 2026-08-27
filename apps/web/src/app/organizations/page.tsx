@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonGhost, buttonPrimary, cardHover, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
-import { IconBuilding, IconChevronRight, IconLogOut, IconPlus, IconSparkles } from "@/components/icons";
+import {
+  IconAlertCircle,
+  IconBuilding,
+  IconChevronRight,
+  IconLogOut,
+  IconPlus,
+  IconSparkles,
+} from "@/components/icons";
 import type { Organization, User } from "@/lib/types";
 
 export default function OrganizationsPage() {
@@ -14,44 +21,59 @@ export default function OrganizationsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Falha ao carregar a lista inicial (rede/servidor) — leva a tela inteira
+  // a uma tela de retry dedicada em vez de mostrar a lista/formulário com
+  // dado que sabemos estar incompleto (ver docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md,
+  // "/" virou Server Component e não detecta mais API fora do ar; essa
+  // distinção volta a existir aqui, no primeiro lugar que de fato busca dado).
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Falha ao criar uma empresa — erro pontual do formulário, não esconde a
+  // lista já carregada com sucesso.
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        // Independentes entre si: rodam em paralelo em vez de em fila.
-        const [me, orgs] = await Promise.all([
-          api.get<User>("/api/v1/auth/me"),
-          api.get<Organization[]>("/api/v1/organizations"),
-        ]);
-        setUser(me);
-        setOrganizations(orgs);
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          router.push(loginRedirectPath(err));
-          return;
-        }
-        setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      // Independentes entre si: rodam em paralelo em vez de em fila.
+      const [me, orgs] = await Promise.all([
+        api.get<User>("/api/v1/auth/me"),
+        api.get<Organization[]>("/api/v1/organizations"),
+      ]);
+      setUser(me);
+      setOrganizations(orgs);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.push(loginRedirectPath(err));
+        return;
       }
+      // ApiError = servidor respondeu com um erro real (mensagem específica);
+      // qualquer outro erro (fetch rejeitado) = API inalcançável.
+      setLoadError(
+        err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor."
+      );
+    } finally {
+      setLoading(false);
     }
-    void load();
   }, [router]);
+
+  useEffect(() => {
+    void Promise.resolve().then(() => void load());
+  }, [load]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
+    setCreateError(null);
     setCreating(true);
     try {
       const org = await api.post<Organization>("/api/v1/organizations", { name });
       setOrganizations((prev) => [...prev, org]);
       setName("");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Nao foi possivel criar a empresa.");
+      setCreateError(err instanceof ApiError ? err.message : "Nao foi possivel criar a empresa.");
     } finally {
       setCreating(false);
     }
@@ -60,6 +82,25 @@ export default function OrganizationsPage() {
   async function handleLogout() {
     await api.post("/api/v1/auth/logout");
     router.push("/login");
+  }
+
+  if (loadError && !loading) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-600/30 animate-scale-in">
+          <IconAlertCircle className="h-7 w-7" />
+        </div>
+        <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+            Não foi possível carregar suas empresas
+          </h1>
+          <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{loadError}</p>
+        </div>
+        <button onClick={() => void load()} className={`${buttonPrimary} mt-1`}>
+          Tentar novamente
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -80,12 +121,6 @@ export default function OrganizationsPage() {
           <IconLogOut className="h-4 w-4" /> Sair
         </button>
       </div>
-
-      {error && (
-        <div className="mt-4">
-          <Alert>{error}</Alert>
-        </div>
-      )}
 
       <div className="mt-6">
         {loading ? (
@@ -125,6 +160,12 @@ export default function OrganizationsPage() {
           </ul>
         )}
       </div>
+
+      {createError && (
+        <div className="mt-6">
+          <Alert>{createError}</Alert>
+        </div>
+      )}
 
       <form
         onSubmit={handleCreate}
