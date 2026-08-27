@@ -61,7 +61,14 @@ describe("OrganizationLayout — sidebar", () => {
       </OrganizationLayout>
     );
 
+    // Os itens com minRole só aparecem depois que o papel do usuário é
+    // conhecido (a empresa ainda está carregando no primeiro render).
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Analytics" })).toBeInTheDocument();
+    });
+
     for (const label of [
+      "Início",
       "Dashboard",
       "Analytics",
       "Produtos",
@@ -77,6 +84,40 @@ describe("OrganizationLayout — sidebar", () => {
     }
   });
 
+  it("esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém o resto", async () => {
+    vi.mocked(api.get).mockResolvedValue({ ...FAKE_ORG, my_role: "VIEWER" });
+    render(
+      <OrganizationLayout>
+        <p>conteudo</p>
+      </OrganizationLayout>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Início" })).toBeVisible();
+    });
+    for (const label of ["Dashboard", "Produtos", "Financeiro", "Marketing", "Funil", "Experimentos", "Glossário"]) {
+      expect(screen.getByRole("link", { name: label })).toBeVisible();
+    }
+    for (const label of ["Analytics", "Relatório", "Auditoria"]) {
+      expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();
+    }
+  });
+
+  it("esconde só Auditoria para ANALYST", async () => {
+    vi.mocked(api.get).mockResolvedValue({ ...FAKE_ORG, my_role: "ANALYST" });
+    render(
+      <OrganizationLayout>
+        <p>conteudo</p>
+      </OrganizationLayout>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Analytics" })).toBeVisible();
+    });
+    expect(screen.getByRole("link", { name: "Relatório" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Auditoria" })).not.toBeInTheDocument();
+  });
+
   it("marca a rota ativa com aria-current", async () => {
     mockPathname = "/organizations/org-123/financials";
     vi.mocked(api.get).mockResolvedValue(FAKE_ORG);
@@ -87,6 +128,20 @@ describe("OrganizationLayout — sidebar", () => {
     );
 
     expect(screen.getByRole("link", { name: "Financeiro" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Início" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("marca Início como rota ativa quando na raiz da empresa", async () => {
+    mockPathname = "/organizations/org-123";
+    vi.mocked(api.get).mockResolvedValue(FAKE_ORG);
+    render(
+      <OrganizationLayout>
+        <p>conteudo</p>
+      </OrganizationLayout>
+    );
+
+    expect(screen.getByRole("link", { name: "Início" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
   });
 

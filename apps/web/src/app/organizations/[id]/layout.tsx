@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
-import { roleLabel } from "@/lib/roles";
+import { hasMinimumRole, roleLabel } from "@/lib/roles";
 import { OrganizationProvider } from "@/contexts/organization-context";
 import {
   IconArrowLeft,
@@ -17,6 +17,7 @@ import {
   IconFlask,
   IconFunnel,
   IconGrid,
+  IconHome,
   IconMegaphone,
   IconMenu,
   IconPackage,
@@ -25,18 +26,32 @@ import {
   IconTrendingUp,
   IconX,
 } from "@/components/icons";
-import type { Organization } from "@/lib/types";
+import type { MembershipRole, Organization } from "@/lib/types";
 
-const NAV_ITEMS = [
+// `href: null` = raiz da empresa (organizations/[id], sem sub-rota) — a
+// "Início" pedida explicitamente para ser sempre visível e sempre a
+// primeira opção (é a central operacional da empresa: cabeçalho, KPIs,
+// acesso rápido, ações rápidas). `minRole`, quando presente, esconde o
+// item para quem não tem papel suficiente — espelha exatamente o que cada
+// endpoint já exige no backend (ver routers de analytics/reports/audit);
+// a UI só evita oferecer um link que vai terminar em 403, a autorização de
+// verdade continua sendo decidida pelo backend.
+const NAV_ITEMS: {
+  href: string | null;
+  label: string;
+  icon: typeof IconHome;
+  minRole?: MembershipRole;
+}[] = [
+  { href: null, label: "Início", icon: IconHome },
   { href: "dashboard", label: "Dashboard", icon: IconGrid },
-  { href: "analytics", label: "Analytics", icon: IconTrendingUp },
+  { href: "analytics", label: "Analytics", icon: IconTrendingUp, minRole: "ANALYST" },
   { href: "products", label: "Produtos", icon: IconPackage },
   { href: "financials", label: "Financeiro", icon: IconDollar },
   { href: "marketing", label: "Marketing", icon: IconMegaphone },
   { href: "funnel", label: "Funil", icon: IconFunnel },
   { href: "experiments", label: "Experimentos", icon: IconFlask },
-  { href: "reports", label: "Relatório", icon: IconFileText },
-  { href: "audit", label: "Auditoria", icon: IconShieldCheck },
+  { href: "reports", label: "Relatório", icon: IconFileText, minRole: "ANALYST" },
+  { href: "audit", label: "Auditoria", icon: IconShieldCheck, minRole: "ORGANIZATION_ADMIN" },
   { href: "glossario", label: "Glossário", icon: IconBookOpen },
 ];
 
@@ -125,6 +140,10 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
     );
   }
 
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !item.minRole || hasMinimumRole(organization?.my_role, item.minRole)
+  );
+
   const sidebarContent = (
     <>
       <Link
@@ -158,12 +177,12 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </div>
 
       <nav className="mt-6 flex flex-col gap-0.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const target = `/organizations/${id}/${href}`;
+        {visibleNavItems.map(({ href, label, icon: Icon }) => {
+          const target = href ? `/organizations/${id}/${href}` : `/organizations/${id}`;
           const active = pathname === target;
           return (
             <Link
-              key={href}
+              key={href ?? "home"}
               href={target}
               aria-current={active ? "page" : undefined}
               className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${

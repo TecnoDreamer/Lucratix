@@ -54,3 +54,56 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     await viewerContext.close();
   }
 });
+
+/**
+ * A UI nao esconde os formularios (teste acima), mas deve evitar oferecer
+ * na sidebar um link que o proprio VIEWER nao consegue abrir sem tomar um
+ * 403 (Analytics e Relatorio exigem ANALYST+; Auditoria exige
+ * ORGANIZATION_ADMIN+ — ver routers de analytics/reports/audit).
+ */
+test("sidebar esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém o resto", async ({ browser }) => {
+  const ownerContext = await browser.newContext();
+  const viewerContext = await browser.newContext();
+  const ownerPage = await ownerContext.newPage();
+  const viewerPage = await viewerContext.newPage();
+
+  try {
+    await registerAndLogin(ownerPage, "rbac-nav-owner-e2e");
+    const orgName = `Empresa RBAC Nav E2E ${Date.now()}`;
+    await createOrganization(ownerPage, orgName);
+    await ownerPage.getByRole("link", { name: orgName }).click();
+    await ownerPage.waitForURL("**/organizations/**");
+    const orgUrl = ownerPage.url();
+
+    const viewerEmail = uniqueEmail("rbac-nav-viewer-e2e");
+    await viewerPage.goto("/register");
+    await viewerPage.getByLabel("Nome").fill("Viewer Nav E2E");
+    await viewerPage.getByLabel("E-mail").fill(viewerEmail);
+    await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
+    await viewerPage.getByRole("button", { name: "Cadastrar" }).click();
+    await viewerPage.waitForURL("**/login");
+
+    await ownerPage.request.post(`http://localhost:8000/api/v1/organizations/${orgUrl.split("/").pop()}/memberships`, {
+      data: { email: viewerEmail, role: "VIEWER" },
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+
+    await viewerPage.getByLabel("E-mail").fill(viewerEmail);
+    await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
+    await viewerPage.getByRole("button", { name: "Entrar" }).click();
+    await viewerPage.waitForURL("**/organizations");
+
+    await viewerPage.goto(orgUrl);
+    await expect(viewerPage.getByText("Seu papel: Visualizador")).toBeVisible();
+
+    for (const label of ["Início", "Dashboard", "Produtos", "Financeiro", "Marketing", "Funil", "Experimentos", "Glossário"]) {
+      await expect(viewerPage.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    for (const label of ["Analytics", "Relatório", "Auditoria"]) {
+      await expect(viewerPage.getByRole("link", { name: label, exact: true })).toHaveCount(0);
+    }
+  } finally {
+    await ownerContext.close();
+    await viewerContext.close();
+  }
+});

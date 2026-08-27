@@ -23,3 +23,23 @@ export function roleLabel(role: MembershipRole | null | undefined): string | nul
 export function canPerformActions(role: MembershipRole | null | undefined): boolean {
   return role != null && role !== "VIEWER";
 }
+
+// Espelha ROLE_HIERARCHY/role_rank de apps/api/app/models/membership.py
+// (RN-009) — menor número = mais privilégio. Usado só para decidir o que
+// mostrar na UI (esconder um item de navegação que o usuário não pode
+// abrir); a autorização de verdade continua sendo decidida pelo backend via
+// `require_role`, nunca por este valor.
+const ROLE_RANK: Record<MembershipRole, number> = {
+  ORGANIZATION_OWNER: 0,
+  ORGANIZATION_ADMIN: 1,
+  ANALYST: 2,
+  VIEWER: 3,
+};
+
+export function hasMinimumRole(
+  role: MembershipRole | null | undefined,
+  minimumRole: MembershipRole
+): boolean {
+  if (!role) return false;
+  return ROLE_RANK[role] <= ROLE_RANK[minimumRole];
+}
