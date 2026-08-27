@@ -57,7 +57,8 @@ def test_baseline_of_one_organization_is_not_visible_from_another(client_factory
     client_b = client_factory()
 
     org_a = _register_login_and_create_org(client_a, "baseline.a@example.com", "Empresa A")
-    org_b = _register_login_and_create_org(client_b, "baseline.b@example.com", "Empresa B")
+    # client_b precisa existir e estar autenticado; o id da org dele nao e usado.
+    _org_b = _register_login_and_create_org(client_b, "baseline.b@example.com", "Empresa B")
 
     client_a.post(f"/api/v1/organizations/{org_a}/baselines", json={"revenue": 1000})
 
