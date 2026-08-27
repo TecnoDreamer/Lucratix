@@ -3,6 +3,7 @@ import { cardHover } from "@/lib/ui";
 import { Badge } from "@/components/ui";
 import { IconBuilding, IconChevronRight, IconClock } from "@/components/icons";
 import { roleLabel } from "@/lib/roles";
+import { formatMetric, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
 
 function formatCreatedAt(createdAt: string): string {
@@ -14,14 +15,21 @@ function formatCreatedAt(createdAt: string): string {
 }
 
 // Card da tela "Suas empresas" — Parte 1 do prompt de redesign (2026-08-27).
-// Mostra só identificação e metadados reais (nome, nome fantasia, segmento,
-// papel do usuário, data de criação). Não inclui KPIs (receita/leads/CAC
-// etc.): a API de listagem (`GET /organizations`) não retorna essas métricas
-// hoje — buscá-las por empresa aqui significaria uma chamada extra por card
-// (N+1), o que é justamente a regressão de performance que a Parte 15 do
-// prompt pede para evitar. Documentado como pendência de backend no relatório
-// de entrega em vez de inventar dado ou buscar de forma cara.
-export function CompanyCard({ organization }: { organization: Organization }) {
+// Identificação e metadados (nome, nome fantasia, segmento, papel do
+// usuário, data de criação) sempre presentes. Indicadores (Receita, Leads,
+// Conversão, CAC — mesmas 4 métricas do mockup do próprio prompt) só
+// aparecem quando `summary` é passado pela página: vem de
+// GET /organizations/summary, um único request para todas as empresas do
+// usuário (evita N+1 de rede/banco — ver apps/api/app/modules/organizations/router.py).
+// Ausente/undefined (ainda carregando ou a chamada falhou) = card some a
+// seção de indicadores, sem loading infinito nem dado inventado no lugar.
+export function CompanyCard({
+  organization,
+  summary,
+}: {
+  organization: Organization;
+  summary?: OrganizationSummary;
+}) {
   const role = roleLabel(organization.my_role);
 
   return (
@@ -52,6 +60,24 @@ export function CompanyCard({ organization }: { organization: Organization }) {
         <div className="flex flex-wrap gap-1.5">
           {role && <Badge tone="blue">{role}</Badge>}
           {organization.segment && <Badge tone="slate">{organization.segment}</Badge>}
+        </div>
+      )}
+
+      {summary && (
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/60">
+          {[
+            { label: "Receita", value: formatMetric(summary.revenue) },
+            { label: "Leads", value: summary.leads === null ? "não aplicável" : summary.leads.toLocaleString("pt-BR") },
+            { label: "Conversão", value: formatMetric(summary.conversion_rate, { percent: true }) },
+            { label: "CAC", value: formatMetric(summary.cac) },
+          ].map(({ label: metricLabel, value }) => (
+            <div key={metricLabel} className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                {metricLabel}
+              </p>
+              <p className="truncate text-xs font-semibold text-slate-700 dark:text-slate-200">{value}</p>
+            </div>
+          ))}
         </div>
       )}
 

@@ -7,6 +7,7 @@ import { buttonGhost, buttonPrimary, card, input, label, pageContainer } from "@
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { CompanyCard } from "@/components/company-card";
 import { IconAlertCircle, IconLogOut, IconPlus, IconSearch, IconSparkles } from "@/components/icons";
+import { currentMonthPeriod, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization, User } from "@/lib/types";
 
 // Abaixo desse número de empresas, a busca só adiciona ruído visual sem
@@ -18,6 +19,10 @@ export default function OrganizationsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  // Indicadores rápidos por empresa (Receita/Leads/Conversão/CAC), por
+  // organization_id — dado complementar: se essa chamada falhar, os cards
+  // continuam mostrando o resto normalmente, sem indicador nenhum.
+  const [summaries, setSummaries] = useState<Record<string, OrganizationSummary>>({});
   const [loading, setLoading] = useState(true);
   // Falha ao carregar a lista inicial (rede/servidor) — leva a tela inteira
   // a uma tela de retry dedicada em vez de mostrar a lista/formulário com
@@ -54,8 +59,21 @@ export default function OrganizationsPage() {
       setLoadError(
         err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor."
       );
+      return;
     } finally {
       setLoading(false);
+    }
+
+    // Dado complementar, buscado à parte (só depois que a lista principal
+    // já carregou com sucesso): uma falha aqui não deve derrubar a tela
+    // inteira para a tela de erro, nem atrasar a lista em si.
+    try {
+      const summaryList = await api.get<OrganizationSummary[]>(
+        `/api/v1/organizations/summary?period=${currentMonthPeriod()}`
+      );
+      setSummaries(Object.fromEntries(summaryList.map((s) => [s.organization_id, s])));
+    } catch {
+      // Silencioso de propósito — ver comentário do estado `summaries` acima.
     }
   }, [router]);
 
@@ -168,7 +186,7 @@ export default function OrganizationsPage() {
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredOrganizations.map((org, i) => (
               <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
-                <CompanyCard organization={org} />
+                <CompanyCard organization={org} summary={summaries[org.id]} />
               </li>
             ))}
           </ul>

@@ -41,6 +41,26 @@ def get_funnel_snapshot(db: Session, organization_id: uuid.UUID, period: date) -
     )
 
 
+def list_funnel_snapshots_for_organizations(
+    db: Session, organization_ids: list[uuid.UUID], period: date
+) -> dict[uuid.UUID, FunnelSnapshot]:
+    """Igual a `get_funnel_snapshot`, mas para varias organizacoes de uma vez
+    em uma unica query — usado pelo resumo de `GET /organizations/summary`
+    (lista "Suas empresas") para nao virar N+1 (uma query por empresa).
+    """
+    if not organization_ids:
+        return {}
+    rows = (
+        db.query(FunnelSnapshot)
+        .filter(
+            FunnelSnapshot.organization_id.in_(organization_ids),
+            FunnelSnapshot.period == period,
+        )
+        .all()
+    )
+    return {row.organization_id: row for row in rows}
+
+
 def upsert_funnel_snapshot(
     db: Session, *, organization_id: uuid.UUID, period: date, **fields: object
 ) -> FunnelSnapshot:

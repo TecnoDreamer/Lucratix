@@ -3,6 +3,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.metrics import MetricResultRead
+
 
 class OrganizationCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
@@ -40,3 +42,21 @@ class OrganizationRead(BaseModel):
     notes: str | None
     created_at: datetime
     my_role: str | None = None
+
+
+class OrganizationSummaryRead(BaseModel):
+    """Resumo de indicadores de uma organizacao para um periodo — usado pela
+    lista "Suas empresas" (GET /organizations/summary) para mostrar 3-5
+    metricas por card sem uma chamada por empresa (RF novo, seguindo o
+    prompt de redesign de UX de 2026-08-27, PARTE 1: "Indicadores rapidos").
+    Mesmas metricas/motor de calculo do Dashboard (compute_dashboard_metrics)
+    — nenhuma formula nova, so reaproveitado em lote.
+    """
+
+    organization_id: uuid.UUID
+    revenue: MetricResultRead
+    conversion_rate: MetricResultRead
+    cac: MetricResultRead
+    # Nao e um MetricResult (nao passa pelo motor de metricas) — e a
+    # contagem bruta de FunnelSnapshot.leads do periodo, quando existe.
+    leads: int | None

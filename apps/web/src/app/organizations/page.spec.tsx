@@ -55,6 +55,7 @@ describe("OrganizationsPage", () => {
   it("mostra as empresas em cards depois de carregar", async () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
       return Promise.resolve([fakeOrg({ name: "Empresa A" }), fakeOrg({ name: "Empresa B" })]);
     });
 
@@ -69,6 +70,7 @@ describe("OrganizationsPage", () => {
   it("mostra o estado vazio quando não há empresas", async () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
       return Promise.resolve([]);
     });
 
@@ -83,6 +85,7 @@ describe("OrganizationsPage", () => {
     const manyOrgs = Array.from({ length: 7 }, (_, i) => fakeOrg({ name: `Empresa ${i + 1}` }));
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
       return Promise.resolve(manyOrgs);
     });
 
@@ -103,6 +106,7 @@ describe("OrganizationsPage", () => {
   it("permite criar uma nova empresa pelo formulário", async () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
       return Promise.resolve([]);
     });
     vi.mocked(api.post).mockResolvedValue(fakeOrg({ name: "Nova Empresa Criada" }));
@@ -124,5 +128,46 @@ describe("OrganizationsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Nova Empresa Criada")).toBeInTheDocument();
     });
+  });
+
+  it("mostra os indicadores de cada empresa vindos de GET /organizations/summary", async () => {
+    const orgA = fakeOrg({ name: "Empresa A" });
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) {
+        return Promise.resolve([
+          {
+            organization_id: orgA.id,
+            revenue: { value: 42850, is_applicable: true, reason: null },
+            conversion_rate: { value: 0.084, is_applicable: true, reason: null },
+            cac: { value: 145.5, is_applicable: true, reason: null },
+            leads: 328,
+          },
+        ]);
+      }
+      return Promise.resolve([orgA]);
+    });
+
+    render(<OrganizationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("42.850")).toBeInTheDocument();
+    });
+    expect(screen.getByText("328")).toBeInTheDocument();
+  });
+
+  it("continua mostrando a lista normalmente se GET /organizations/summary falhar", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.reject(new Error("falhou"));
+      return Promise.resolve([fakeOrg({ name: "Empresa Sem Resumo" })]);
+    });
+
+    render(<OrganizationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Empresa Sem Resumo")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Receita")).not.toBeInTheDocument();
   });
 });
