@@ -120,6 +120,33 @@
   }
 }
 
+/* Efeito 360° do troféu no painel de marca — seções 9-10 do prompt de
+   layout/performance. Rotação única na entrada (não contínua) + repetição
+   no hover. 360deg é visualmente idêntico a 0deg, então a animação de
+   entrada termina no mesmo estado visual de repouso do hover — sem "pulo".
+   Reduced motion já é tratado pela regra global acima (força
+   animation-duration/transition-duration para 0.01ms), então não precisa
+   de @media (prefers-reduced-motion) duplicado aqui. */
+@keyframes trophy-spin-in {
+  from {
+    transform: rotate(0deg) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.trophy-mark {
+  animation: trophy-spin-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trophy-mark:hover {
+  transform: rotate(360deg);
+}
+
 @keyframes shake {
   10%,
   90% {
