@@ -10,6 +10,9 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 ### Fixed
 - Logo mobile nas 4 telas de autenticação (login, cadastro, esqueci/redefinir senha) usava `variant="wordmark"` — um recorte que mostra só a base do troféu (sem coroa, taça ou fitas), não um bug de CSS. Trocado para `variant="mark"` (troféu completo), com largura responsiva (`max-w-[120px] sm:max-w-[150px]`, já que a proporção do mark é retrato, diferente do wordmark). Sem regressão no desktop — `AuthHero` (logo pequeno + painel azul) continua intocado.
 
+### Changed
+- Wordmark pequeno do painel de marca (canto superior esquerdo do login/cadastro/recuperação de senha) trocado de imagem para texto estilizado ("Lucra" em azul + "tix" em dourado, `--brand-glow`) — o mesmo padrão já documentado em `brand-logo.tsx` para tamanhos abaixo de ~28px de altura, onde o recorte do logo perde legibilidade.
+
 ## 2026-08-26
 
 ### Added

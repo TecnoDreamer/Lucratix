@@ -31,10 +31,12 @@ test.describe("logotipo não é cortado", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/login");
 
+    // O wordmark pequeno virou texto ("Lucra"+"tix", ver auth-hero.tsx) —
+    // só o troféu grande é <img> no painel de marca.
     const allLogos = page.locator('img[alt="Lucratix"]:visible');
-    await expect(allLogos).toHaveCount(2); // wordmark pequeno + troféu grande
+    await expect(allLogos).toHaveCount(1);
 
-    const trophy = allLogos.nth(1);
+    const trophy = allLogos.first();
     const trophyBox = await trophy.boundingBox();
     expect(trophyBox).not.toBeNull();
     expect(trophyBox!.width).toBeGreaterThan(100);
@@ -51,6 +53,25 @@ test.describe("logotipo não é cortado", () => {
     expect(trophyBox!.x + trophyBox!.width).toBeLessThanOrEqual(heroBox!.x + heroBox!.width + 1);
     expect(trophyBox!.y).toBeGreaterThanOrEqual(heroBox!.y);
     expect(trophyBox!.y + trophyBox!.height).toBeLessThanOrEqual(heroBox!.y + heroBox!.height + 1);
+  });
+
+  test("desktop: wordmark pequeno é texto ('Lucra' azul + 'tix' dourado), não mais imagem", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/login");
+
+    const wordmark = page.getByText("Lucratix", { exact: true }).first();
+    await expect(wordmark).toBeVisible();
+
+    const lucra = wordmark.getByText("Lucra", { exact: true });
+    const tix = wordmark.getByText("tix", { exact: true });
+    await expect(lucra).toBeVisible();
+    await expect(tix).toBeVisible();
+
+    const lucraColor = await lucra.evaluate((el) => getComputedStyle(el).color);
+    const tixColor = await tix.evaluate((el) => getComputedStyle(el).color);
+    expect(lucraColor).not.toBe(tixColor);
   });
 
   test("mobile: logo usa o troféu completo (mark), não o recorte compacto (wordmark)", async ({ page }) => {
