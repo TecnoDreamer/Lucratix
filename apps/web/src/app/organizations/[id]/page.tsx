@@ -1,20 +1,106 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
-import { buttonPrimary, input, label, sectionTitle } from "@/lib/ui";
-import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
-import { IconClock, IconGrid, IconTrendingUp } from "@/components/icons";
+import { buttonPrimary, card, cardHover, input, label, link as linkClass, sectionTitle } from "@/lib/ui";
+import { Alert, Badge, Card, EmptyState, Skeleton } from "@/components/ui";
+import { QuickAccessCard } from "@/components/quick-access-card";
+import { useOrganization } from "@/contexts/organization-context";
+import { useDashboard } from "@/hooks/use-dashboard";
+import { currentMonthPeriod, formatMetric } from "@/lib/metrics";
+import { canPerformActions, roleLabel } from "@/lib/roles";
+import {
+  IconClock,
+  IconDollar,
+  IconFileText,
+  IconFlask,
+  IconFunnel,
+  IconGrid,
+  IconMegaphone,
+  IconPackage,
+  IconTrendingDown,
+  IconTrendingUp,
+} from "@/components/icons";
 import type { Baseline } from "@/lib/types";
 
 function formatNumber(value: number | null): string {
   return value === null ? "não aplicável" : value.toLocaleString("pt-BR");
 }
 
+function formatTrackingSince(date: string): string {
+  return new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// PARTE 4 do prompt de redesign de UX (2026-08-27): 4-6 atalhos principais,
+// não todos os módulos da sidebar (isso já existe na navegação completa).
+function quickAccessItems(id: string) {
+  return [
+    {
+      href: `/organizations/${id}/analytics`,
+      icon: IconTrendingUp,
+      title: "Analytics",
+      description: "Acompanhe métricas, tendências e desempenho.",
+    },
+    {
+      href: `/organizations/${id}/financials`,
+      icon: IconDollar,
+      title: "Financeiro",
+      description: "Visualize receitas, custos e indicadores financeiros.",
+    },
+    {
+      href: `/organizations/${id}/marketing`,
+      icon: IconMegaphone,
+      title: "Marketing",
+      description: "Acompanhe campanhas, canais e performance.",
+    },
+    {
+      href: `/organizations/${id}/funnel`,
+      icon: IconFunnel,
+      title: "Funil",
+      description: "Analise conversões e etapas do funil.",
+    },
+    {
+      href: `/organizations/${id}/products`,
+      icon: IconPackage,
+      title: "Produtos",
+      description: "Consulte produtos, serviços e desempenho.",
+    },
+    {
+      href: `/organizations/${id}/experiments`,
+      icon: IconFlask,
+      title: "Experimentos",
+      description: "Acompanhe testes, hipóteses e resultados.",
+    },
+  ];
+}
+
+// PARTE 6: ações rápidas — sempre para rotas já existentes (nenhum fluxo
+// novo criado só para isso). Escondidas por completo para VIEWER (RN-010:
+// papel somente leitura, ver lib/roles.ts).
+function quickActionItems(id: string) {
+  return [
+    { href: `/organizations/${id}/financials`, icon: IconDollar, label: "Registrar receita/despesa" },
+    { href: `/organizations/${id}/marketing`, icon: IconMegaphone, label: "Criar campanha" },
+    { href: `/organizations/${id}/products`, icon: IconPackage, label: "Adicionar produto" },
+    { href: `/organizations/${id}/experiments`, icon: IconFlask, label: "Criar experimento" },
+    { href: `/organizations/${id}/reports`, icon: IconFileText, label: "Gerar relatório" },
+  ];
+}
+
+const SUMMARY_CARDS: { key: "revenue" | "profit" | "margin" | "cac"; label: string; percent?: boolean; icon: typeof IconDollar }[] = [
+  { key: "revenue", label: "Receita", icon: IconDollar },
+  { key: "profit", label: "Lucro", icon: IconTrendingUp },
+  { key: "margin", label: "Margem", percent: true, icon: IconGrid },
+  { key: "cac", label: "CAC", icon: IconPackage },
+];
+
 export default function OrganizationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { organization, loading: orgLoading } = useOrganization();
+  const { dashboard, revenueComparison, loading: dashboardLoading } = useDashboard(id, currentMonthPeriod());
 
   const [baselines, setBaselines] = useState<Baseline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,15 +159,143 @@ export default function OrganizationDetailPage() {
     }
   }
 
+  const showActions = canPerformActions(organization?.my_role);
+
+  // Único sinal derivado de dado real para o painel de atenção — a ausência
+  // de baseline já é comunicada pelo empty state do histórico logo abaixo,
+  // então não é repetida aqui (PARTE 7: "não criar regras arbitrárias sem
+  // dados reais"; evitar redundância de mensagens).
+  const revenueDropAlert =
+    revenueComparison && revenueComparison.percent_change !== null && revenueComparison.percent_change < -0.05
+      ? `Receita caiu ${Math.abs(revenueComparison.percent_change * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% em relação ao baseline neste mês.`
+      : null;
+
   return (
     <div className="animate-fade-in-up py-8">
+      {/* Cabeçalho da empresa — PARTE 3. O nome já é o <h1> da sidebar (ver
+          layout.tsx); aqui ele reaparece como texto estilizado, não como
+          heading, para não duplicar o mesmo heading na página (um <h1> por
+          página) nem quebrar `getByRole("heading", {name: orgName})` nos
+          testes existentes, que já apontam para o da sidebar. */}
+      <div className={`${card} p-5`}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+              Você está em
+            </p>
+            {orgLoading ? (
+              <Skeleton className="mt-1.5 h-7 w-48" />
+            ) : (
+              <p className="mt-0.5 truncate text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                {organization?.name}
+              </p>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {organization?.my_role && <Badge tone="blue">{roleLabel(organization.my_role)}</Badge>}
+              {organization?.segment && <Badge tone="slate">{organization.segment}</Badge>}
+              {organization?.tracking_start_date && (
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  Dados desde {formatTrackingSince(organization.tracking_start_date)}
+                </span>
+              )}
+            </div>
+          </div>
+          <Link href="/organizations" className={`shrink-0 text-sm ${linkClass}`}>
+            Trocar empresa
+          </Link>
+        </div>
+      </div>
+
+      {/* Resumo de KPIs — PARTE 5. Reusa o mesmo hook/endpoint do Dashboard
+          dedicado (useDashboard), sem duplicar a lógica de busca. */}
+      <section className="mt-6">
+        <h2 className={sectionTitle}>Resumo do mês</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {dashboardLoading
+            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
+            : dashboard &&
+              SUMMARY_CARDS.map(({ key, label: metricLabel, percent, icon: Icon }) => {
+                const metric = dashboard[key];
+                return (
+                  <Card key={key} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {metricLabel}
+                      </p>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                      {formatMetric(metric, { percent })}
+                    </p>
+                  </Card>
+                );
+              })}
+        </div>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+          <Link href={`/organizations/${id}/dashboard`} className={linkClass}>
+            Ver indicadores completos, com filtro de período
+          </Link>
+        </p>
+      </section>
+
+      {/* Alertas — PARTE 7. Só aparece quando há um sinal real derivado de
+          dado já buscado; nunca um alerta fabricado. */}
+      {revenueDropAlert && (
+        <section className="mt-6">
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <IconTrendingDown className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Atenção</p>
+              <p className="mt-0.5">{revenueDropAlert}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Acesso rápido — PARTE 4. */}
+      <section className="mt-6">
+        <h2 className={sectionTitle}>Acesso rápido</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {quickAccessItems(id).map((item) => (
+            <QuickAccessCard key={item.href} {...item} />
+          ))}
+        </div>
+      </section>
+
+      {/* Ações rápidas — PARTE 6. Escondido por completo para VIEWER
+          (somente leitura, RN-010) — não recebe atalho para ação que não
+          pode executar. */}
+      {showActions && (
+        <section className="mt-6">
+          <h2 className={sectionTitle}>Ações rápidas</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {quickActionItems(id).map(({ href, icon: Icon, label: actionLabel }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`${cardHover} inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200`}
+              >
+                <Icon className="h-4 w-4 text-slate-400" />
+                {actionLabel}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {error && (
-        <div className="mb-6">
+        <div className="mt-6">
           <Alert>{error}</Alert>
         </div>
       )}
 
-      <section>
+      {/* Histórico de baseline — conteúdo já existente antes do redesign,
+          preservado sem mudança de rótulos/textos (testes e2e dependem
+          deles: "Nenhum baseline registrado ainda.", label "Receita",
+          botão "Registrar baseline"). */}
+      <section id="registrar-baseline" className="mt-8">
         <div className="flex items-center gap-2">
           <IconClock className="h-4 w-4 text-slate-400" />
           <h2 className={sectionTitle}>Historico de baseline</h2>

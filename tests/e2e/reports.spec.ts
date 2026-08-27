@@ -8,7 +8,9 @@ test("relatorio executivo mostra KPIs e o botao de impressao oculta a navegacao"
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
 
-  await page.getByRole("link", { name: "Financeiro" }).click();
+  // exact: true - o grid de "Acesso rapido" da pagina inicial da empresa
+  // tambem tem um link cujo texto comeca com o mesmo rotulo.
+  await page.getByRole("link", { name: "Financeiro", exact: true }).click();
   await page.waitForURL("**/financials");
   await page.getByLabel("Receita").fill("58200");
   await page.getByLabel("Custos").fill("21500");
@@ -45,7 +47,9 @@ test("relatorio executivo inclui metricas de marketing de campanhas do periodo",
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  await page.getByRole("link", { name: "Marketing" }).click();
+  // exact: true - o grid de "Acesso rapido" da pagina inicial da empresa
+  // tambem tem um link cujo texto comeca com o mesmo rotulo.
+  await page.getByRole("link", { name: "Marketing", exact: true }).click();
   await page.waitForURL("**/marketing");
   await page.getByLabel("Novo canal").fill("Google Ads");
   await page.getByRole("button", { name: "Adicionar", exact: true }).click();

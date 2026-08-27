@@ -28,6 +28,10 @@ test("usuario ve navegacao para todas as areas da empresa", async ({ page }) => 
     "Funil",
     "Experimentos",
   ]) {
-    await expect(page.getByRole("link", { name: label })).toBeVisible();
+    // exact: true - a partir do redesign da pagina inicial da empresa, o
+    // grid de "Acesso rapido" tambem tem um link cujo texto comeca com o
+    // mesmo rotulo (ex.: "Financeiro Visualize receitas..."), entao uma
+    // busca nao-exata bate em dois elementos.
+    await expect(page.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
 });
