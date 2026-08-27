@@ -10,7 +10,7 @@ test("usuario cria uma empresa e ve seu papel de owner", async ({ page }) => {
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
   await expect(page.getByRole("heading", { name: orgName })).toBeVisible();
-  await expect(page.getByText("Seu papel: ORGANIZATION_OWNER")).toBeVisible();
+  await expect(page.getByText("Seu papel: Proprietário")).toBeVisible();
 });
 
 test("usuario ve navegacao para todas as areas da empresa", async ({ page }) => {

@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
+import { roleLabel } from "@/lib/roles";
 import {
   IconArrowLeft,
   IconBookOpen,
@@ -137,7 +138,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
             </h1>
             {organization?.my_role && (
               <p className="mt-0.5 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-                Seu papel: {organization.my_role}
+                Seu papel: {roleLabel(organization.my_role)}
               </p>
             )}
           </div>
