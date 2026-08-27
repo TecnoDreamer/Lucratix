@@ -112,6 +112,12 @@ export default function RegisterPage() {
               Entrar
             </Link>
           </p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Quer entender melhor antes de cadastrar?{" "}
+            <Link href="/sobre" className={linkClass}>
+              Conheça a aplicação
+            </Link>
+          </p>
         </div>
       </div>
     </div>
