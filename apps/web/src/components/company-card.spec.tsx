@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CompanyCard } from "./company-card";
+import type { OrganizationSummary } from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
 
 const BASE_ORG: Organization = {
@@ -64,5 +65,43 @@ describe("CompanyCard", () => {
 
     rerender(<CompanyCard organization={{ ...BASE_ORG, my_role: "ORGANIZATION_ADMIN" }} />);
     expect(screen.getByText("Administrador")).toBeInTheDocument();
+  });
+
+  it("não mostra a seção de indicadores quando summary não é passado", () => {
+    render(<CompanyCard organization={BASE_ORG} />);
+    expect(screen.queryByText("Receita")).not.toBeInTheDocument();
+  });
+
+  it("mostra Receita, Leads, Conversão e CAC quando summary está disponível", () => {
+    const summary: OrganizationSummary = {
+      organization_id: "org-123",
+      revenue: { value: 42850, is_applicable: true, reason: null },
+      conversion_rate: { value: 0.084, is_applicable: true, reason: null },
+      cac: { value: 145.5, is_applicable: true, reason: null },
+      leads: 328,
+    };
+    render(<CompanyCard organization={BASE_ORG} summary={summary} />);
+
+    expect(screen.getByText("Receita")).toBeInTheDocument();
+    expect(screen.getByText("42.850")).toBeInTheDocument();
+    expect(screen.getByText("Leads")).toBeInTheDocument();
+    expect(screen.getByText("328")).toBeInTheDocument();
+    expect(screen.getByText("Conversão")).toBeInTheDocument();
+    expect(screen.getByText("8,4%")).toBeInTheDocument();
+    expect(screen.getByText("CAC")).toBeInTheDocument();
+    expect(screen.getByText("145,5")).toBeInTheDocument();
+  });
+
+  it("mostra 'não aplicável' quando uma métrica não tem dado no período", () => {
+    const summary: OrganizationSummary = {
+      organization_id: "org-123",
+      revenue: { value: null, is_applicable: false, reason: "sem dado financeiro no periodo" },
+      conversion_rate: { value: null, is_applicable: false, reason: null },
+      cac: { value: null, is_applicable: false, reason: null },
+      leads: null,
+    };
+    render(<CompanyCard organization={BASE_ORG} summary={summary} />);
+
+    expect(screen.getAllByText("não aplicável")).toHaveLength(4);
   });
 });

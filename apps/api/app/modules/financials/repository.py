@@ -47,6 +47,26 @@ def get_financial_period(
     )
 
 
+def list_financial_periods_for_organizations(
+    db: Session, organization_ids: list[uuid.UUID], period: date
+) -> dict[uuid.UUID, FinancialPeriod]:
+    """Igual a `get_financial_period`, mas para varias organizacoes de uma
+    vez em uma unica query — usado pelo resumo de `GET /organizations/summary`
+    (lista "Suas empresas") para nao virar N+1 (uma query por empresa).
+    """
+    if not organization_ids:
+        return {}
+    rows = (
+        db.query(FinancialPeriod)
+        .filter(
+            FinancialPeriod.organization_id.in_(organization_ids),
+            FinancialPeriod.period == period,
+        )
+        .all()
+    )
+    return {row.organization_id: row for row in rows}
+
+
 def upsert_financial_period(
     db: Session, *, organization_id: uuid.UUID, period: date, **fields: object
 ) -> FinancialPeriod:

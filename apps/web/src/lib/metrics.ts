@@ -51,6 +51,18 @@ export interface ExecutiveDashboard {
   recurrence_rate: MetricWithComparison;
 }
 
+/** Resumo de indicadores de uma empresa para um período — GET
+ * /organizations/summary, usado pelos cards da tela "Suas empresas".
+ * `leads` é a contagem bruta do funil (não passa pelo motor de métricas,
+ * por isso não é um MetricResult). */
+export interface OrganizationSummary {
+  organization_id: string;
+  revenue: MetricResult;
+  conversion_rate: MetricResult;
+  cac: MetricResult;
+  leads: number | null;
+}
+
 export interface MarketingAnalytics {
   date_from: string;
   date_to: string;

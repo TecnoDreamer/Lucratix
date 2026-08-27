@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -11,8 +13,17 @@ from app.core.deps import (
 )
 from app.models.membership import MembershipRole
 from app.models.user import User
+from app.modules.analytics.service import compute_dashboard_metrics
+from app.modules.financials import repository as financials_repository
+from app.modules.funnels import repository as funnels_repository
 from app.modules.organizations import repository
-from app.schemas.organization import OrganizationCreate, OrganizationRead, OrganizationUpdate
+from app.schemas.metrics import MetricResultRead
+from app.schemas.organization import (
+    OrganizationCreate,
+    OrganizationRead,
+    OrganizationSummaryRead,
+    OrganizationUpdate,
+)
 
 router = APIRouter(prefix="/api/v1/organizations", tags=["organizations"])
 
@@ -51,6 +62,50 @@ def list_my_organizations(
         item = OrganizationRead.model_validate(org)
         item.my_role = role.value
         results.append(item)
+    return results
+
+
+@router.get("/summary")
+def list_my_organizations_summary(
+    period: date,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[OrganizationSummaryRead]:
+    """Indicadores rapidos por empresa para a lista "Suas empresas" (PARTE 1
+    do prompt de redesign de UX de 2026-08-27) — receita, conversao, CAC
+    (mesmo motor de calculo do Dashboard) e leads (contagem bruta), num
+    unico request para todas as organizacoes do usuario em vez de uma
+    chamada por card (evita N+1 de rede) e com no maximo 3 queries no banco
+    independente de quantas empresas o usuario tenha (evita N+1 de banco).
+
+    Precisa vir antes de `/{organization_id}` no arquivo: "summary" nao e
+    um UUID valido, e sem essa ordem o FastAPI tentaria casar essa rota
+    contra o path param daquela primeiro.
+    """
+    rows = repository.list_organizations_for_user(db, current_user.id)
+    organization_ids = [org.id for org, _role in rows]
+
+    financials_by_org = financials_repository.list_financial_periods_for_organizations(
+        db, organization_ids, period
+    )
+    funnels_by_org = funnels_repository.list_funnel_snapshots_for_organizations(
+        db, organization_ids, period
+    )
+
+    results = []
+    for org, _role in rows:
+        financial = financials_by_org.get(org.id)
+        funnel = funnels_by_org.get(org.id)
+        metrics = compute_dashboard_metrics(financial, funnel)
+        results.append(
+            OrganizationSummaryRead(
+                organization_id=org.id,
+                revenue=MetricResultRead.from_result(metrics["revenue"]),
+                conversion_rate=MetricResultRead.from_result(metrics["conversion_rate"]),
+                cac=MetricResultRead.from_result(metrics["cac"]),
+                leads=funnel.leads if funnel else None,
+            )
+        )
     return results
 
 
