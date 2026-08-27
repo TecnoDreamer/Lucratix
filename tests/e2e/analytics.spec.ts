@@ -8,7 +8,7 @@ test("analytics exibe nao aplicavel sem dados, sem quebrar a pagina", async ({ p
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
 
-  await page.getByRole("link", { name: "Analytics" }).click();
+  await page.getByRole("link", { name: "Analytics", exact: true }).click();
   await page.waitForURL("**/analytics");
 
   await expect(page.getByRole("heading", { name: "Visão Executiva" })).toBeVisible();
@@ -26,7 +26,7 @@ test("analytics mostra os KPIs do mes com dados financeiros lancados", async ({ 
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
 
-  await page.getByRole("link", { name: "Financeiro" }).click();
+  await page.getByRole("link", { name: "Financeiro", exact: true }).click();
   await page.waitForURL("**/financials");
   await page.getByLabel("Receita").fill("58200");
   await page.getByLabel("Custos").fill("21500");
@@ -35,7 +35,7 @@ test("analytics mostra os KPIs do mes com dados financeiros lancados", async ({ 
   await page.getByRole("button", { name: "Salvar período" }).click();
   await expect(page.getByText("58.200")).toBeVisible();
 
-  await page.getByRole("link", { name: "Analytics" }).click();
+  await page.getByRole("link", { name: "Analytics", exact: true }).click();
   await page.waitForURL("**/analytics");
 
   // Preset padrao "Este mes" coincide com o mes recem-lancado.
@@ -55,7 +55,7 @@ test("analytics mostra os KPIs de marketing de uma campanha do mes atual", async
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  await page.getByRole("link", { name: "Marketing" }).click();
+  await page.getByRole("link", { name: "Marketing", exact: true }).click();
   await page.waitForURL("**/marketing");
 
   await page.getByLabel("Novo canal").fill("Google Ads");
@@ -73,7 +73,7 @@ test("analytics mostra os KPIs de marketing de uma campanha do mes atual", async
   await page.getByRole("button", { name: "Adicionar campanha" }).click();
   await expect(page.getByRole("cell", { name: "Campanha Deste Mês" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Analytics" }).click();
+  await page.getByRole("link", { name: "Analytics", exact: true }).click();
   await page.waitForURL("**/analytics");
 
   await expect(page.getByRole("heading", { name: "Marketing", exact: true })).toBeVisible();

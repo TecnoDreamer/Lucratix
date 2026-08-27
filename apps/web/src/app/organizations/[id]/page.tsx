@@ -234,11 +234,9 @@ export default function OrganizationDetailPage() {
               })}
         </div>
         <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-          Indicadores completos, com filtro de período, em{" "}
           <Link href={`/organizations/${id}/dashboard`} className={linkClass}>
-            Dashboard
+            Ver indicadores completos, com filtro de período
           </Link>
-          .
         </p>
       </section>
 

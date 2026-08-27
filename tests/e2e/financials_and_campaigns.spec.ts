@@ -12,7 +12,9 @@ test("usuario registra dados financeiros de um periodo", async ({ page }) => {
   await createOrganization(page, orgName);
   await openOrganization(page, orgName);
 
-  await page.getByRole("link", { name: "Financeiro" }).click();
+  // exact: true - o grid de "Acesso rapido" da pagina inicial da empresa
+  // tambem tem um link cujo texto comeca com o mesmo rotulo.
+  await page.getByRole("link", { name: "Financeiro", exact: true }).click();
   await page.waitForURL("**/financials");
 
   await page.getByLabel("Receita").fill("20000");
@@ -28,7 +30,9 @@ test("usuario cria um canal e uma campanha de marketing", async ({ page }) => {
   await createOrganization(page, orgName);
   await openOrganization(page, orgName);
 
-  await page.getByRole("link", { name: "Marketing" }).click();
+  // exact: true - o grid de "Acesso rapido" da pagina inicial da empresa
+  // tambem tem um link cujo texto comeca com o mesmo rotulo.
+  await page.getByRole("link", { name: "Marketing", exact: true }).click();
   await page.waitForURL("**/marketing");
 
   await page.getByLabel("Novo canal").fill("Google Ads");

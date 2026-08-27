@@ -25,7 +25,7 @@ test("dashboard exibe as metricas do periodo sem quebrar quando nao ha dados", a
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
 
-  await page.getByRole("link", { name: "Dashboard" }).click();
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
   await page.waitForURL("**/dashboard");
 
   for (const label of ["Receita", "Lucro", "Margem", "CAC", "Conversao", "Conversão"]) {
