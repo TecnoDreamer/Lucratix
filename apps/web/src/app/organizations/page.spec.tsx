@@ -128,6 +128,11 @@ describe("OrganizationsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Nova Empresa Criada")).toBeInTheDocument();
     });
+    // A empresa recém-criada não tem dado no período — o resumo aparece
+    // como "não aplicável" imediatamente, sem esperar um novo carregamento
+    // da página (GET /organizations/summary não é chamado de novo aqui).
+    expect(screen.getByText("Receita")).toBeInTheDocument();
+    expect(screen.getAllByText("não aplicável")).toHaveLength(4);
   });
 
   it("mostra os indicadores de cada empresa vindos de GET /organizations/summary", async () => {

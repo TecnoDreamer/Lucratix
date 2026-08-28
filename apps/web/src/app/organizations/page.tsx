@@ -88,6 +88,20 @@ export default function OrganizationsPage() {
     try {
       const org = await api.post<Organization>("/api/v1/organizations", { name });
       setOrganizations((prev) => [...prev, org]);
+      // Empresa recém-criada não tem dado financeiro/funil neste período —
+      // preenche o resumo localmente com "não aplicável" em vez de deixar o
+      // card sem a seção de indicadores até o próximo carregamento da
+      // página (mesmo resultado que GET /organizations/summary devolveria).
+      setSummaries((prev) => ({
+        ...prev,
+        [org.id]: {
+          organization_id: org.id,
+          revenue: { value: null, is_applicable: false, reason: null },
+          conversion_rate: { value: null, is_applicable: false, reason: null },
+          cac: { value: null, is_applicable: false, reason: null },
+          leads: null,
+        },
+      }));
       setName("");
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : "Nao foi possivel criar a empresa.");
