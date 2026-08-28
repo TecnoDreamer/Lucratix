@@ -10,12 +10,12 @@ erDiagram
     ORGANIZATIONS ||--o{ MARKETING_CHANNELS : has
     ORGANIZATIONS ||--o{ CAMPAIGNS : has
     ORGANIZATIONS ||--o{ FUNNEL_SNAPSHOTS : has
-    ORGANIZATIONS ||--o{ METRIC_SNAPSHOTS : has
     ORGANIZATIONS ||--o{ EXPERIMENTS : has
     ORGANIZATIONS ||--o{ AUDIT_LOGS : has
     MARKETING_CHANNELS ||--o{ CAMPAIGNS : classifies
-    METRIC_DEFINITIONS ||--o{ METRIC_SNAPSHOTS : versions
     EXPERIMENTS ||--o{ EXPERIMENT_VARIANTS : has
+    USERS ||--o{ PASSWORD_RESET_TOKENS : requests
+    USERS ||--o{ SESSIONS : has
 
     USERS {
         uuid id PK
@@ -108,23 +108,6 @@ erDiagram
         int customers
         int repeat_purchases
     }
-    METRIC_DEFINITIONS {
-        uuid id PK
-        string key UK
-        string name
-        string formula
-        string unit
-        int version
-    }
-    METRIC_SNAPSHOTS {
-        uuid id PK
-        uuid organization_id FK
-        uuid metric_definition_id FK
-        date period
-        numeric value
-        boolean is_applicable
-        timestamptz calculated_at
-    }
     EXPERIMENTS {
         uuid id PK
         uuid organization_id FK
@@ -151,6 +134,23 @@ erDiagram
         uuid entity_id
         timestamptz created_at
     }
+    PASSWORD_RESET_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string token_hash UK
+        timestamptz expires_at
+        timestamptz used_at
+        timestamptz created_at
+    }
+    SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        timestamptz expires_at
+        timestamptz revoked_at
+        timestamptz created_at
+    }
 ```
+
+> **Nota (2026-08-27, auditoria de banco):** `METRIC_DEFINITIONS`/`METRIC_SNAPSHOTS` apareciam neste diagrama em versões anteriores, mas nunca foram implementadas como tabela — `app/modules/metrics/engine.py` calcula cada métrica (CAC, ROAS, conversão etc.) sob demanda a partir de `financial_periods`/`funnel_snapshots`/`campaigns`, sem persistir um snapshot por métrica/período. Removidas daqui para o diagrama refletir o schema real; se a persistência de métricas calculadas vier a ser implementada, ela volta para este diagrama nesse momento, não antes. `SESSIONS` e `PASSWORD_RESET_TOKENS` (existentes desde as migrations 0006/0007) foram adicionadas por estarem ausentes.
 
 Ver decisões de constraint/índice em [schema-notes.md](schema-notes.md) e estratégia de isolamento em [ADR-0003](../adr/0003-estrategia-multi-tenancy.md).

@@ -14,3 +14,14 @@ class AuditLogRead(BaseModel):
     entity: str
     entity_id: uuid.UUID | None
     created_at: datetime
+
+
+class AuditLogPageRead(BaseModel):
+    """Página de resultados de GET /audit-logs (paginação offset — auditoria
+    de banco de 2026-08-27: o endpoint antes retornava sempre os 100
+    registros mais recentes, sem forma de ver entradas mais antigas)."""
+
+    items: list[AuditLogRead]
+    total: int
+    limit: int
+    offset: int
