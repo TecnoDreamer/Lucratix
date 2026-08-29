@@ -14,6 +14,12 @@ dependencies = [
     "argon2-cffi>=23.1",
     "pyjwt>=2.9",
     "python-multipart>=0.0.12",
+    # Importacao/exportacao de .xlsx (modulo de dados, 2026-08-29) — puro
+    # Python, sem dependencia nativa, ja escolhido no lugar de pandas
+    # (que traria numpy e um footprint bem maior so pra ler/escrever
+    # planilha). Cobre leitura E escrita, entao serve tanto o import
+    # quanto o export.
+    "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]

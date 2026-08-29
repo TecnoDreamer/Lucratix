@@ -4,6 +4,9 @@ from app.models.campaign import Campaign
 from app.models.experiment import Experiment, ExperimentStatus, ExperimentVariant
 from app.models.financial_period import FinancialPeriod
 from app.models.funnel_snapshot import FunnelSnapshot
+from app.models.import_error import ImportRowError
+from app.models.import_job import ImportJob, ImportJobStatus
+from app.models.import_mapping_template import ImportMappingTemplate
 from app.models.marketing_channel import MarketingChannel
 from app.models.membership import Membership, MembershipRole, MembershipStatus
 from app.models.organization import Organization
@@ -21,6 +24,10 @@ __all__ = [
     "ExperimentVariant",
     "FinancialPeriod",
     "FunnelSnapshot",
+    "ImportJob",
+    "ImportJobStatus",
+    "ImportMappingTemplate",
+    "ImportRowError",
     "MarketingChannel",
     "Membership",
     "MembershipRole",
