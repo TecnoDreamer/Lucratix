@@ -1,10 +1,12 @@
 # Arquitetura — Importação/Exportação de Dados
 
-Corte vertical mínimo (2026-08-29): domínio **Financeiro** (`financial_periods`) completo, ponta a ponta,
-só importação. Export e demais domínios (Funil, Produtos, Marketing) ficam para PRs seguintes,
-reaproveitando a mesma estrutura descrita aqui — nada nesta versão foi desenhado só para
-`financial_periods`; o ponto de extensão é [domains.py](../../apps/api/app/modules/imports/domains.py) +
-[writers.py](../../apps/api/app/modules/imports/writers.py).
+Corte vertical mínimo: domínio **Financeiro** (`financial_periods`) completo, ponta a ponta —
+importação (2026-08-29) e exportação (2026-08-29). Demais domínios (Funil, Produtos, Marketing) ficam
+para PRs seguintes, reaproveitando a mesma estrutura descrita aqui — nada nesta versão foi desenhado só
+para `financial_periods`; o ponto de extensão é
+[domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois lados) +
+[writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
+[readers.py](../../apps/api/app/modules/exports/readers.py) (exportação).
 
 ## Por que processamento síncrono (sem fila de jobs)
 
@@ -109,24 +111,57 @@ escolhido pelo usuário, padrão `DMY`).
 
 ## Permissões
 
-Sem permissão nomeada nova (`data.import` etc.) — todos os endpoints deste módulo exigem
-`require_role(MembershipRole.ANALYST)`, reaproveitando a hierarquia de papéis já existente
+Sem permissão nomeada nova (`data.import` etc.) — importação exige `require_role(MembershipRole.ANALYST)`
+(escrita), reaproveitando a hierarquia de papéis já existente
 (`ORGANIZATION_OWNER > ORGANIZATION_ADMIN > ANALYST > VIEWER`). Mesmo precedente já usado para RN-010
 (Analytics/Relatório exigem ANALYST+; VIEWER só lê Dashboard). `VIEWER` não pode iniciar nem confirmar
 uma importação — testado em `tests/security/test_import_security.py::test_viewer_cannot_upload_import`.
 
+**Exportação** já é leitura, não escrita: usa `get_organization_context` (sem papel mínimo), o mesmo
+nível de `GET /financials` — RN-010 nunca distinguiu "ver na tela" de "baixar o mesmo dado em arquivo".
+`VIEWER` pode exportar — testado em `tests/api/test_exports.py::test_viewer_can_export_same_as_dashboard_read`.
+
 ## Auditoria
 
-Toda mudança de estado relevante do job grava em `audit_logs` via `record_audit` (convenção já
-estabelecida no resto da aplicação): `import.created`, `import.mapping_changed`, `import.confirmed`,
-`import.completed` / `import.completed_with_errors`.
+Toda mudança de estado relevante do job de importação grava em `audit_logs` via `record_audit`
+(convenção já estabelecida no resto da aplicação): `import.created`, `import.mapping_changed`,
+`import.confirmed`, `import.completed` / `import.completed_with_errors`. Toda exportação também grava
+`export.{domain}.downloaded` — é egresso de dado, vale auditar mesmo sendo só leitura.
+
+## Exportação (leitura → serialização, o espelho da importação)
+
+`app/modules/exports/` segue a mesma divisão de responsabilidades do lado da importação, na direção
+contrária:
+
+```
+GET /exports/{domain}?format=&date_from=&date_to=
+    → readers.py[domain]  (le do repository do domínio real, devolve linhas no formato canônico)
+    → serializers.py      (CSV com cabeçalho amigável + BOM, XLSX com tipo nativo, ou JSON com chave
+                            canônica — genérico, não conhece o domínio, só a DomainSpec)
+    → Response (bytes + Content-Type + Content-Disposition attachment)
+```
+
+Decisões específicas:
+
+- **JSON usa a chave canônica** (`period`, `revenue`...), não o nome de exibição — um arquivo exportado
+  assim é reimportável diretamente, sem precisar passar pela etapa de mapeamento de novo.
+- **CSV/XLSX usam o nome de exibição** (`Período`, `Receita`...) para quem abre o arquivo direto numa
+  planilha — e por coincidência não-acidental (os nomes de exibição já são um alias reconhecido de cada
+  campo em `domains.py`), reimportar esse mesmo arquivo ainda sugere mapeamento em confiança "alta".
+- **CSV sai com BOM UTF-8** (`utf-8-sig`) — Excel no Windows não reconhece UTF-8 sem BOM e corrompe
+  acento; mesma preocupação que `parsers.py::_decode_text` já trata na leitura.
+- **XLSX guarda o tipo nativo** (data como `date`, número como `float`), não string — célula
+  formatada/ordenável/filtrável no Excel, ao contrário do CSV (só texto).
+- Reaproveita `sanitize_for_spreadsheet` (já existia, escrito durante a importação especificamente para
+  ser usado aqui) contra CSV/Spreadsheet Formula Injection em qualquer campo de texto livre — nenhum
+  campo de `financial_periods` é texto hoje, mas o serializer é genérico para os próximos domínios.
+- Mesmo teto `MAX_ROWS` (2000) da importação, pela mesma razão estrutural (processamento síncrono, sem
+  fila de jobs) — acima disso, a resposta é 400 pedindo para filtrar por um intervalo de datas menor.
 
 ## O que este documento não decide ainda
 
-- Exportação (CSV/XLSX/JSON para download) — `security.py::sanitize_for_spreadsheet` já existe (contra
-  CSV/Spreadsheet Formula Injection) porque será reaproveitada quando o export for implementado, mas
-  nenhum endpoint de export existe nesta versão.
-- Frontend (wizard, Central de Dados, card de acesso rápido no dashboard) — fica para PR seguinte.
+- Frontend (wizard, Central de Dados, botão de exportar, card de acesso rápido no dashboard) — fica
+  para PR seguinte.
 - Domínios além de Financeiro (Funil, Produtos, Marketing).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
   lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).
