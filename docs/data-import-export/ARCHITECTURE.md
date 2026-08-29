@@ -157,11 +157,33 @@ Decisões específicas:
   campo de `financial_periods` é texto hoje, mas o serializer é genérico para os próximos domínios.
 - Mesmo teto `MAX_ROWS` (2000) da importação, pela mesma razão estrutural (processamento síncrono, sem
   fila de jobs) — acima disso, a resposta é 400 pedindo para filtrar por um intervalo de datas menor.
+- CORS precisa expor `Content-Disposition` explicitamente (`app/main.py::CORSMiddleware(expose_headers=...)`)
+  — sem isso, `fetch` em requisição cross-origin (dev local: frontend em `:3000` chamando a API em
+  `:8000` direto, sem o rewrite same-origin que existe em produção) não consegue ler o header, e o
+  cliente (`downloadFile`, `apps/web/src/lib/api.ts`) cai sempre no nome de arquivo genérico `"export"`
+  em vez do nome de verdade. Bug real, encontrado e corrigido durante a verificação ao vivo do frontend
+  (2026-08-29), não uma suposição.
+
+## Frontend — Central de Dados
+
+Página `organizations/[id]/central-de-dados`, nova entrada de sidebar sem `minRole` (exportar é
+leitura, ver acima). Composição:
+
+- `ExportPanel` (`components/export-panel.tsx`) — sempre visível, inclusive para `VIEWER`: formato
+  (CSV/XLSX/JSON), filtro de período opcional (padrão: todos os períodos), botão de download (via
+  `downloadFile` + `<a download>` programático).
+- `ImportWizard` (`components/import-wizard.tsx`) — só para quem pode escrever (`canPerformActions`,
+  `lib/roles.ts`): upload → mapeamento (com sugestão pré-preenchida e badge de confiança) → preview →
+  confirmação, espelhando os endpoints do backend passo a passo. `VIEWER` vê só um aviso explicando por
+  quê, nunca um formulário que terminaria em 403.
+- Histórico de importações (paginado, "Carregar mais") e lista de erros por linha sob demanda — só
+  para quem pode escrever, mesmo motivo (o backend também exige `ANALYST`+ nesses endpoints).
 
 ## O que este documento não decide ainda
 
-- Frontend (wizard, Central de Dados, botão de exportar, card de acesso rápido no dashboard) — fica
-  para PR seguinte.
+- Card de acesso rápido para Central de Dados na página inicial da empresa (`quickAccessItems`,
+  `organizations/[id]/page.tsx`) — a entrada de sidebar já existe; o atalho na Início fica para quando
+  fizer sentido revisitar aquela lista (hoje com 6 itens, PARTE 4 do prompt de redesign de UX).
 - Domínios além de Financeiro (Funil, Produtos, Marketing).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
   lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).

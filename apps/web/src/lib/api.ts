@@ -35,27 +35,49 @@ const _REFRESH_PATH = "/api/v1/auth/refresh";
 const _AUTH_PATHS_WITHOUT_RETRY = new Set(["/api/v1/auth/login", _REFRESH_PATH]);
 
 async function _rawFetch(path: string, init?: RequestInit): Promise<Response> {
+  // FormData (upload de arquivo) nunca leva Content-Type explicito — o
+  // browser precisa gerar o boundary do multipart sozinho; forcar
+  // application/json aqui quebraria o parsing no backend.
+  const isFormData = init?.body instanceof FormData;
   return fetch(`${API_URL}${path}`, {
     ...init,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       "X-Requested-With": "XMLHttpRequest",
       ...init?.headers,
     },
   });
 }
 
+/** Repete o request uma vez apos tentar renovar o access token, exatamente
+ * como `request()` abaixo — extraido para ser reaproveitado por
+ * `downloadFile` (resposta binaria, nunca JSON, por isso nao usa `request`). */
+async function _fetchWithRetry(path: string, init?: RequestInit): Promise<Response> {
+  const res = await _rawFetch(path, init);
+  if (res.status === 401 && !_AUTH_PATHS_WITHOUT_RETRY.has(path)) {
+    const refreshRes = await _rawFetch(_REFRESH_PATH, { method: "POST" });
+    if (refreshRes.ok) {
+      return _rawFetch(path, init);
+    }
+  }
+  return res;
+}
+
+async function _errorDetail(res: Response): Promise<string> {
+  let detail = res.statusText;
+  try {
+    const body = await res.json();
+    detail = body.detail ?? detail;
+  } catch {
+    // resposta sem corpo JSON, mantem o statusText
+  }
+  return detail;
+}
+
 async function _toResult<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    let detail = res.statusText;
-    try {
-      const body = await res.json();
-      detail = body.detail ?? detail;
-    } catch {
-      // resposta sem corpo JSON, mantem o statusText
-    }
-    throw new ApiError(res.status, detail);
+    throw new ApiError(res.status, await _errorDetail(res));
   }
 
   if (res.status === 204) {
@@ -65,19 +87,10 @@ async function _toResult<T>(res: Response): Promise<T> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await _rawFetch(path, init);
-
   // Access token expirado (15min) mas refresh token (7 dias) ainda pode ser
-  // valido: tenta renovar uma vez antes de propagar o 401 (issue #33).
-  if (res.status === 401 && !_AUTH_PATHS_WITHOUT_RETRY.has(path)) {
-    const refreshRes = await _rawFetch(_REFRESH_PATH, { method: "POST" });
-    if (refreshRes.ok) {
-      const retryRes = await _rawFetch(path, init);
-      return _toResult<T>(retryRes);
-    }
-  }
-
-  return _toResult<T>(res);
+  // valido: _fetchWithRetry tenta renovar uma vez antes de propagar o 401
+  // (issue #33).
+  return _toResult<T>(await _fetchWithRetry(path, init));
 }
 
 export const api = {
@@ -88,4 +101,22 @@ export const api = {
     request<T>(path, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
   put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
+  del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  // Upload multipart (modulo de importacao de dados) — FormData, nunca JSON.
+  postForm: <T>(path: string, formData: FormData) =>
+    request<T>(path, { method: "POST", body: formData }),
 };
+
+/** Baixa um arquivo (modulo de exportacao de dados) — resposta binaria, nunca
+ * JSON, por isso nao passa por `_toResult`. O nome do arquivo vem do
+ * `Content-Disposition` que o backend já monta (`build_filename`); "export"
+ * é só o fallback caso o header falte por algum motivo. */
+export async function downloadFile(path: string): Promise<{ blob: Blob; filename: string }> {
+  const res = await _fetchWithRetry(path);
+  if (!res.ok) {
+    throw new ApiError(res.status, await _errorDetail(res));
+  }
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename="?([^"]+)"?/.exec(disposition);
+  return { blob: await res.blob(), filename: match ? match[1] : "export" };
+}

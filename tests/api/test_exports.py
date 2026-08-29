@@ -50,6 +50,25 @@ def test_export_csv_contains_seeded_periods(client):
     assert rows[0]["Receita"] == "10000.0"
 
 
+def test_export_exposes_content_disposition_via_cors(client):
+    """Sem `expose_headers`, o browser esconde Content-Disposition de um
+    `fetch` cross-origin (dev local: frontend em :3000 chamando a API em
+    :8000 direto) — `downloadFile` (apps/web/src/lib/api.ts) cairia sempre no
+    nome de arquivo genérico "export". Verificado ao vivo antes desta
+    correção; nunca deve regredir silenciosamente."""
+    org_id = _register_login_and_create_org(client, "exp.cors@example.com", "Empresa Exp Cors")
+    _seed_financial_periods(client, org_id)
+
+    resp = client.get(
+        f"/api/v1/organizations/{org_id}/exports/financial_periods",
+        params={"format": "csv"},
+        headers={"Origin": "http://localhost:3000"},
+    )
+    assert resp.status_code == 200
+    exposed = resp.headers.get("access-control-expose-headers", "")
+    assert "Content-Disposition" in exposed
+
+
 def test_export_xlsx_is_a_valid_workbook(client):
     org_id = _register_login_and_create_org(client, "exp.xlsx@example.com", "Empresa Exp Xlsx")
     _seed_financial_periods(client, org_id)

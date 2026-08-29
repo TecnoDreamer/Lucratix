@@ -5,7 +5,7 @@ escopo confirmada com o usuário — ver histórico das PRs.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — decisões e por quê (processamento síncrono, sem storage de
   arquivo, arquitetura por adaptadores, sugestão de mapeamento, validação, serialização, permissões,
-  auditoria).
+  auditoria, frontend).
 - [IMPORT_FORMATS.md](IMPORT_FORMATS.md) — formatos de arquivo aceitos na importação (CSV/XLSX/JSON),
   limites, e como data/número são interpretados.
 
@@ -38,7 +38,15 @@ Sob `/api/v1/organizations/{organization_id}/exports`, exigindo só membership a
 |---|---|---|
 | GET | `/{domain}?format=csv\|xlsx\|json&date_from=&date_to=` | Baixa os dados do domínio no formato pedido |
 
+## Frontend
+
+Página `organizations/[id]/central-de-dados` (nova entrada de sidebar "Central de Dados", sem `minRole`)
+— `ExportPanel` sempre visível, `ImportWizard` + histórico só para `ANALYST`+. Ver
+[ARCHITECTURE.md](ARCHITECTURE.md#frontend--central-de-dados).
+
 ## Testes
+
+Backend:
 
 - `tests/unit/test_import_parsers.py`, `test_import_transform.py`, `test_import_mapping.py`,
   `test_import_validation.py`, `test_import_file_validation.py`, `test_export_serializers.py` — funções
@@ -51,3 +59,10 @@ Sob `/api/v1/organizations/{organization_id}/exports`, exigindo só membership a
   extensão, ZIP falso, JSON malformado/aninhado demais), isolamento entre organizações, RBAC.
 - `tests/fixtures/imports/` — arquivos de exemplo (`valid.csv`, `invalid.csv`, `duplicates.csv`,
   `valid.json`, `invalid.json`, `aliases.xlsx`) usados pelos testes de importação.
+
+Frontend (`apps/web/src/`):
+
+- `lib/api.spec.ts` — `postForm`/`del`/`downloadFile` novos no cliente HTTP.
+- `components/export-panel.spec.tsx`, `components/import-wizard.spec.tsx` — cada componente isolado.
+- `app/organizations/[id]/central-de-dados/page.spec.tsx` — composição, RBAC (`VIEWER` vs `ANALYST`+),
+  histórico paginado.

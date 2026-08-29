@@ -78,13 +78,14 @@ describe("OrganizationLayout — sidebar", () => {
       "Experimentos",
       "Relatório",
       "Auditoria",
+      "Central de Dados",
       "Glossário",
     ]) {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
   });
 
-  it("esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém o resto", async () => {
+  it("esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém o resto (incluindo Central de Dados — exportar é leitura)", async () => {
     vi.mocked(api.get).mockResolvedValue({ ...FAKE_ORG, my_role: "VIEWER" });
     render(
       <OrganizationLayout>
@@ -95,7 +96,16 @@ describe("OrganizationLayout — sidebar", () => {
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Início" })).toBeVisible();
     });
-    for (const label of ["Dashboard", "Produtos", "Financeiro", "Marketing", "Funil", "Experimentos", "Glossário"]) {
+    for (const label of [
+      "Dashboard",
+      "Produtos",
+      "Financeiro",
+      "Marketing",
+      "Funil",
+      "Experimentos",
+      "Central de Dados",
+      "Glossário",
+    ]) {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
     for (const label of ["Analytics", "Relatório", "Auditoria"]) {
