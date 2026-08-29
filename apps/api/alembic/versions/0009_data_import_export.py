@@ -14,8 +14,9 @@ para multiplos processos, sem depender de sessao em memoria nem de disco.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "0009_data_import_export"
 down_revision: str | None = "0008_performance_indexes"
