@@ -94,4 +94,18 @@ describe("ExportPanel", () => {
 
     expect(await screen.findByText("Domínio não suportado.")).toBeInTheDocument();
   });
+
+  it("troca o domínio para Funil ao clicar no botão", async () => {
+    mockDownloadFile.mockResolvedValue(fakeBlobResult("funnel_snapshots_export.csv"));
+    render(<ExportPanel organizationId="org-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Funil" }));
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+
+    await waitFor(() => {
+      expect(mockDownloadFile).toHaveBeenCalledWith(
+        "/api/v1/organizations/org-1/exports/funnel_snapshots?format=csv"
+      );
+    });
+  });
 });

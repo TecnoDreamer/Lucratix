@@ -90,6 +90,24 @@ describe("ImportWizard", () => {
     expect(screen.getAllByText("confiança alta")).toHaveLength(2);
   });
 
+  it("envia o domínio selecionado no FormData (padrão: primeiro da lista)", async () => {
+    vi.mocked(api.postForm).mockResolvedValue(UPLOAD_RESPONSE);
+
+    render(<ImportWizard organizationId="org-1" />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [csvFile()] } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Domínio" }), {
+      target: { value: "funnel_snapshots" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await waitFor(() => {
+      expect(api.postForm).toHaveBeenCalled();
+    });
+    const formData = vi.mocked(api.postForm).mock.calls[0][1] as FormData;
+    expect(formData.get("domain")).toBe("funnel_snapshots");
+  });
+
   it("mostra o erro da API quando o upload falha e permanece na etapa de upload", async () => {
     vi.mocked(api.postForm).mockRejectedValue(new ApiError(400, "Arquivo maior que o limite de 5 MB."));
 

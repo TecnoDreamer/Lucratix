@@ -1,7 +1,7 @@
 """app/modules/imports/mapping.py e puro — sugestao automatica de campo
 por alias exato, fuzzy match (difflib) e mapeamento lembrado da organizacao."""
 
-from app.modules.imports.domains import FINANCIAL_PERIODS
+from app.modules.imports.domains import FINANCIAL_PERIODS, FUNNEL_SNAPSHOTS
 from app.modules.imports.mapping import normalize_header, suggest_mapping
 
 
@@ -59,3 +59,8 @@ class TestSuggestMapping:
         headers = ["Faturamento", "Custo Total", "Período"]
         suggestions = suggest_mapping(headers, FINANCIAL_PERIODS)
         assert [s.header for s in suggestions] == headers
+
+    def test_maps_funnel_headers_by_alias(self):
+        suggestions = suggest_mapping(["Impressões", "Leads", "MQLs"], FUNNEL_SNAPSHOTS)
+        assert [s.canonical_field for s in suggestions] == ["impressions", "leads", "mqls"]
+        assert all(s.confidence == "alta" for s in suggestions)

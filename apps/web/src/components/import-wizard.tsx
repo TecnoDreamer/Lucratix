@@ -2,15 +2,10 @@
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
+import { DATA_DOMAINS } from "@/lib/data-domains";
 import { buttonPrimary, buttonSecondary, select as selectClass, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Badge, Card } from "@/components/ui";
 import { IconUpload } from "@/components/icons";
-
-// Único domínio existente hoje — deixa de ser fixo assim que um segundo
-// domínio (Funil, Produtos...) existir no backend (ver
-// docs/data-import-export/ARCHITECTURE.md).
-const DOMAIN_KEY = "financial_periods";
-const DOMAIN_LABEL = "Financeiro";
 
 type Step = "upload" | "mapping" | "preview" | "done";
 type DuplicateStrategy = "skip" | "update";
@@ -125,6 +120,7 @@ export function ImportWizard({
   const [step, setStep] = useState<Step>("upload");
   const [error, setError] = useState<string | null>(null);
 
+  const [domain, setDomain] = useState(DATA_DOMAINS[0].key);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -188,7 +184,7 @@ export function ImportWizard({
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("domain", DOMAIN_KEY);
+      formData.append("domain", domain);
       formData.append("file", file);
       const response = await api.postForm<ImportJobCreateResponse>(
         `/api/v1/organizations/${organizationId}/imports`,
@@ -320,8 +316,21 @@ export function ImportWizard({
 
       {step === "upload" && (
         <form onSubmit={(e) => void handleUpload(e)} className="mt-4 flex flex-col gap-3">
+          <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
+            Domínio
+            <select
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              className={`${selectClass} w-auto`}
+            >
+              {DATA_DOMAINS.map(({ key, label: domainLabel }) => (
+                <option key={key} value={key}>
+                  {domainLabel}
+                </option>
+              ))}
+            </select>
+          </label>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Domínio: <span className="font-medium text-slate-700 dark:text-slate-300">{DOMAIN_LABEL}</span>.
             Formatos aceitos: CSV, Excel (.xlsx) ou JSON, até 5&nbsp;MB.
           </p>
           <input

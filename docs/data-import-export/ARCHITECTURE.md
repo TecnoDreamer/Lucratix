@@ -1,12 +1,14 @@
 # Arquitetura — Importação/Exportação de Dados
 
-Corte vertical mínimo: domínio **Financeiro** (`financial_periods`) completo, ponta a ponta —
-importação (2026-08-29) e exportação (2026-08-29). Demais domínios (Funil, Produtos, Marketing) ficam
-para PRs seguintes, reaproveitando a mesma estrutura descrita aqui — nada nesta versão foi desenhado só
-para `financial_periods`; o ponto de extensão é
-[domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois lados) +
-[writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
-[readers.py](../../apps/api/app/modules/exports/readers.py) (exportação).
+Dois domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**
+(`financial_periods`, 2026-08-29) e **Funil** (`funnel_snapshots`, 2026-08-29 — a prova de que a
+arquitetura por adaptadores realmente generaliza, não algo desenhado só para o primeiro domínio).
+Produtos e Marketing ficam para PRs seguintes, reaproveitando a mesma estrutura descrita aqui. O ponto
+de extensão é [domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois
+lados) + [writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
+[readers.py](../../apps/api/app/modules/exports/readers.py) (exportação) — nenhum outro módulo do
+pipeline (parsers, mapping, validation, security, serializers, os dois routers) conhece um domínio
+específico.
 
 ## Por que processamento síncrono (sem fila de jobs)
 
@@ -52,20 +54,31 @@ upload (multipart) → parsers.py (CSV/XLSX/JSON → ParsedFile genérico)
                     → writers.py[domain] (grava no domínio real, reaproveitando o repository dele)
 ```
 
-Todo o pipeline até `validation.py` é **genérico** — não conhece `financial_periods` especificamente,
-só a `DomainSpec` do domínio (`app/modules/imports/domains.py`). Adicionar um domínio novo (ex.: Funil)
-não toca em nenhum desses módulos:
+Todo o pipeline até `validation.py` é **genérico** — não conhece `financial_periods`/`funnel_snapshots`
+especificamente, só a `DomainSpec` do domínio (`app/modules/imports/domains.py`). Adicionar um domínio
+novo (ex.: Produtos) não toca em nenhum desses módulos, e o Funil (2026-08-29) é a prova disso — passo
+a passo real, não hipotético:
 
 1. Registrar uma `DomainSpec` nova em `domains.py` (lista de `FieldSpec` com aliases reais + chave
-   natural).
-2. Escrever uma função de escrita em `writers.py` que reaproveite o `repository` do módulo de domínio já
-   existente (nunca duplicar lógica de upsert — `write_financial_period_row` chama
-   `financials_repository.upsert_financial_period` diretamente).
-3. Registrar a função em `DOMAIN_WRITERS`.
+   natural). Precisou de um `DataType` novo (`"integer"`, além de `"date"`/`"decimal"`) e de
+   `parse_integer` em `transform.py` — reaproveita `parse_decimal` para herdar de graça a mesma
+   resolução de separador de milhar/decimal ambíguo, só rejeitando se sobrar uma fração de verdade.
+2. Escrever uma função de escrita em `writers.py` (`write_funnel_snapshot_row`) e uma de leitura em
+   `exports/readers.py` (`read_funnel_snapshot_rows`), cada uma reaproveitando o `repository` do módulo
+   de domínio já existente (nunca duplicar lógica de upsert/listagem — `funnels_repository` já tinha
+   tudo, mesmo formato de `financials_repository`).
+3. Registrar as duas funções em `DOMAIN_WRITERS`/`DOMAIN_READERS`, e a busca de chave natural existente
+   (duplicidade) em `service.py::_NATURAL_KEY_LOOKUPS` (mesmo padrão dict-por-domínio, não um
+   if/elif crescendo a cada domínio).
+4. Frontend: acrescentar `{ key, label }` em `apps/web/src/lib/data-domains.ts` — a única lista que o
+   frontend mantém (pequena demais para valer buscar de `GET /imports/domains`, que além disso exige
+   `ANALYST`+ e o painel de exportação é visível para `VIEWER` também).
 
-"Leads"/"Clientes", citados no prompt original como domínios de exemplo, **não existem** como tabela no
-schema atual — só como contadores agregados dentro de `campaigns`/`funnel_snapshots`. Não foram criados
-artificialmente para caber neste módulo.
+Nenhuma migration foi necessária para o Funil — `funnel_snapshots` já existia (RF-020, antes deste
+módulo). "Leads"/"Clientes", citados no prompt original como domínios de exemplo, continuam **não
+existindo** como tabela própria — `funnel_snapshots.leads` já cobre o caso real de "Leads"; "Clientes"
+sem uma tabela própria seria só o contador `funnel_snapshots.customers`/`campaigns.customers`, não um
+cadastro de clientes de verdade. Não foram criados artificialmente para caber neste módulo.
 
 ## Sugestão de mapeamento (não é autorização)
 
@@ -184,7 +197,7 @@ leitura, ver acima). Composição:
 - Card de acesso rápido para Central de Dados na página inicial da empresa (`quickAccessItems`,
   `organizations/[id]/page.tsx`) — a entrada de sidebar já existe; o atalho na Início fica para quando
   fizer sentido revisitar aquela lista (hoje com 6 itens, PARTE 4 do prompt de redesign de UX).
-- Domínios além de Financeiro (Funil, Produtos, Marketing).
+- Domínios além de Financeiro e Funil (Produtos, Marketing).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
   lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).
 - Scanner de malware real no upload — não existe serviço compatível disponível hoje; a validação atual

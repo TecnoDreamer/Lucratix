@@ -34,9 +34,11 @@ campo). Os cabeçalhos são a união de todas as chaves vistas, na ordem em que 
 
 ## Domínios suportados
 
-Nesta versão, só **Financeiro** (`financial_periods`). Ver `GET /api/v1/organizations/{id}/imports/domains`
-para a lista de campos e quais são obrigatórios — hoje só `period` (data) é obrigatório; `revenue`,
-`costs`, `expenses`, `marketing_investment` e `taxes` são opcionais.
+**Financeiro** (`financial_periods`) e **Funil** (`funnel_snapshots`). Ver
+`GET /api/v1/organizations/{id}/imports/domains` para a lista de campos de cada domínio e quais são
+obrigatórios — em ambos, só `period` (data) é obrigatório; todos os demais campos (Financeiro: `revenue`,
+`costs`, `expenses`, `marketing_investment`, `taxes`; Funil: `impressions`, `visits`, `leads`, `mqls`,
+`sqls`, `opportunities`, `customers`, `repeat_purchases`) são opcionais.
 
 ## Data e número
 
@@ -50,10 +52,14 @@ para a lista de campos e quais são obrigatórios — hoje só `period` (data) �
   número de dígitos depois dela (1–2 dígitos = decimal; mais que isso = separador de milhar). Qualquer
   caractere fora do padrão numérico esperado (ex.: letra) é rejeitado com erro explícito — nunca
   descartado em silêncio.
+- **Inteiro** (contadores do Funil — impressões, leads...): mesma resolução de separador ambíguo do
+  número acima; rejeitado com erro explícito se sobrar uma fração de verdade (ex.: `"10.5"` não é uma
+  contagem válida).
 
 ## Duplicidade
 
-Uma linha é duplicata quando sua chave natural (para Financeiro: `period`) já existe — no próprio
-arquivo (linha repetida) ou no banco (período já importado antes). A primeira ocorrência no arquivo fica
-`valid`; as seguintes com a mesma chave ficam `duplicate`. Estratégia de tratamento (escolhida na
-confirmação): `"skip"` (padrão, não altera o registro existente) ou `"update"` (sobrescreve).
+Uma linha é duplicata quando sua chave natural (`period`, em ambos os domínios de hoje) já existe — no
+próprio arquivo (linha repetida) ou no banco (período já importado antes). A primeira ocorrência no
+arquivo fica `valid`; as seguintes com a mesma chave ficam `duplicate`. Estratégia de tratamento
+(escolhida na confirmação): `"skip"` (padrão, não altera o registro existente) ou `"update"`
+(sobrescreve).

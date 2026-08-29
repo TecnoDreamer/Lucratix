@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.models.financial_period import FinancialPeriod
+from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.import_error import ImportRowError
 from app.models.import_job import ImportJob
 from app.models.import_mapping_template import ImportMappingTemplate
@@ -75,6 +76,15 @@ def get_existing_financial_periods(db: Session, organization_id: uuid.UUID) -> s
     rows = (
         db.query(FinancialPeriod.period)
         .filter(FinancialPeriod.organization_id == organization_id)
+        .all()
+    )
+    return {(row.period,) for row in rows}
+
+
+def get_existing_funnel_snapshot_periods(db: Session, organization_id: uuid.UUID) -> set[tuple[date]]:
+    rows = (
+        db.query(FunnelSnapshot.period)
+        .filter(FunnelSnapshot.organization_id == organization_id)
         .all()
     )
     return {(row.period,) for row in rows}

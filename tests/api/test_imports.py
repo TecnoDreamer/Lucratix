@@ -47,6 +47,18 @@ def test_list_domains_returns_financial_periods_with_required_field(client):
     assert fields["revenue"]["required"] is False
 
 
+def test_list_domains_includes_funnel_snapshots(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.domainsfunnel@example.com", "Empresa Imp Domains Funil"
+    )
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports/domains")
+    body = resp.json()
+    assert "funnel_snapshots" in body
+    fields = {f["canonical_name"]: f for f in body["funnel_snapshots"]}
+    assert fields["period"]["required"] is True
+    assert fields["leads"]["data_type"] == "integer"
+
+
 def test_upload_suggests_high_confidence_mapping_for_known_headers(client):
     org_id = _register_login_and_create_org(client, "imp.suggest@example.com", "Empresa Imp Suggest")
     content = FIXTURES.joinpath("valid.csv").read_bytes()
@@ -328,3 +340,54 @@ def test_duplicates_within_same_file_are_flagged_and_only_first_row_written(clie
     ).json()
     assert confirm["created_rows"] == 1
     assert confirm["skipped_rows"] == 1
+
+
+def test_funnel_snapshots_full_flow_creates_records_with_integer_fields(client):
+    """Prova que a extensao para um segundo dominio (Funil) funciona ponta a
+    ponta pelo mesmo pipeline generico — nenhum codigo novo no router/service/
+    validation, so DomainSpec + writer/reader (ver domains.py/writers.py)."""
+    org_id = _register_login_and_create_org(client, "imp.funnel@example.com", "Empresa Imp Funil")
+    content = b"Periodo,Impressoes,Visitas,Leads\n2026-01-01,10000,2000,150\n2026-02-01,12000,2500,180\n"
+
+    create = _upload(client, org_id, "funil.csv", content, "text/csv", domain="funnel_snapshots")
+    assert create.status_code == 201
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    assert mapping == {
+        "Periodo": "period",
+        "Impressoes": "impressions",
+        "Visitas": "visits",
+        "Leads": "leads",
+    }
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["status"] == "READY"
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 2
+
+    snapshots = client.get(f"/api/v1/organizations/{org_id}/funnel-snapshots").json()
+    by_period = {s["period"]: s for s in snapshots}
+    assert by_period["2026-01-01"]["impressions"] == 10000
+    assert by_period["2026-01-01"]["visits"] == 2000
+    assert by_period["2026-01-01"]["leads"] == 150
+
+
+def test_funnel_snapshot_with_fractional_count_is_invalid(client):
+    org_id = _register_login_and_create_org(client, "imp.funnelbad@example.com", "Empresa Imp Funil Bad")
+    content = b"Periodo,Leads\n2026-01-01,10.5\n"
+
+    create = _upload(client, org_id, "funil.csv", content, "text/csv", domain="funnel_snapshots")
+    job_id = create.json()["job"]["id"]
+    mapping = {"Periodo": "period", "Leads": "leads"}
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["invalid"] == 1
