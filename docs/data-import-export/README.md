@@ -1,7 +1,7 @@
 # Importação/Exportação de Dados
 
-Corte vertical mínimo: domínio **Financeiro**, importação e exportação, ponta a ponta. Decisão de
-escopo confirmada com o usuário — ver histórico das PRs.
+Dois domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro** e
+**Funil**. Decisão de escopo confirmada com o usuário — ver histórico das PRs.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — decisões e por quê (processamento síncrono, sem storage de
   arquivo, arquitetura por adaptadores, sugestão de mapeamento, validação, serialização, permissões,
@@ -58,11 +58,13 @@ Backend:
 - `tests/security/test_import_security.py`, `test_export_security.py` — arquivo malicioso (tamanho,
   extensão, ZIP falso, JSON malformado/aninhado demais), isolamento entre organizações, RBAC.
 - `tests/fixtures/imports/` — arquivos de exemplo (`valid.csv`, `invalid.csv`, `duplicates.csv`,
-  `valid.json`, `invalid.json`, `aliases.xlsx`) usados pelos testes de importação.
+  `valid.json`, `invalid.json`, `aliases.xlsx`) usados pelos testes de importação (domínio Financeiro;
+  o domínio Funil usa conteúdo inline nos próprios testes, por ser pequeno).
 
 Frontend (`apps/web/src/`):
 
 - `lib/api.spec.ts` — `postForm`/`del`/`downloadFile` novos no cliente HTTP.
-- `components/export-panel.spec.tsx`, `components/import-wizard.spec.tsx` — cada componente isolado.
+- `components/export-panel.spec.tsx`, `components/import-wizard.spec.tsx` — cada componente isolado,
+  incluindo a troca de domínio (`lib/data-domains.ts`).
 - `app/organizations/[id]/central-de-dados/page.spec.tsx` — composição, RBAC (`VIEWER` vs `ANALYST`+),
   histórico paginado.

@@ -133,6 +133,21 @@ def test_export_unsupported_format_is_rejected(client):
     assert resp.status_code == 422  # Literal invalido -> validacao do FastAPI
 
 
+def test_export_funnel_snapshots_uses_integer_values(client):
+    org_id = _register_login_and_create_org(client, "exp.funnel@example.com", "Empresa Exp Funil")
+    client.put(
+        f"/api/v1/organizations/{org_id}/funnel-snapshots",
+        json={"period": "2026-01-01", "impressions": 10000, "visits": 2000, "leads": 150},
+    )
+
+    resp = client.get(f"/api/v1/organizations/{org_id}/exports/funnel_snapshots", params={"format": "json"})
+    assert resp.status_code == 200
+    payload = json.loads(resp.content)
+    assert payload[0]["impressions"] == 10000
+    assert payload[0]["leads"] == 150
+    assert payload[0]["mqls"] is None
+
+
 def test_viewer_can_export_same_as_dashboard_read(client_factory):
     owner = client_factory()
     viewer_client = client_factory()

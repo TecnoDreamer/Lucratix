@@ -1,9 +1,8 @@
 """Leitura por domínio — a metade "adapter" que falta para completar o
 pipeline generico de exportação (serializers.py cobre a escrita do arquivo).
-Só financial_periods existe nesta primeira versão; um domínio novo (Funil,
-Produtos...) só precisa de uma função equivalente aqui, reaproveitando o
-repository do próprio módulo de domínio (mesmo padrão de writers.py, do lado
-da importação — nunca duplicar a query de listagem).
+Um domínio novo (Produtos...) só precisa de uma função equivalente aqui,
+reaproveitando o repository do próprio módulo de domínio (mesmo padrão de
+writers.py, do lado da importação — nunca duplicar a query de listagem).
 """
 
 import uuid
@@ -13,6 +12,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.modules.financials import repository as financials_repository
+from app.modules.funnels import repository as funnels_repository
 
 
 def read_financial_period_rows(
@@ -50,8 +50,38 @@ def read_financial_period_rows(
     return sorted(rows, key=lambda r: r["period"])  # type: ignore[arg-type,return-value]
 
 
+def read_funnel_snapshot_rows(
+    db: Session, organization_id: uuid.UUID, date_from: date | None, date_to: date | None
+) -> list[dict[str, object]]:
+    if date_from is not None and date_to is not None:
+        snapshots = funnels_repository.list_funnel_snapshots_in_range(
+            db, organization_id, date_from, date_to
+        )
+    else:
+        snapshots = funnels_repository.list_funnel_snapshots(db, organization_id)
+
+    # Colunas Integer do SQLAlchemy ja vem como `int`/`None` (ao contrario de
+    # Numeric -> Decimal do financeiro), entao nao precisa de conversao aqui.
+    rows = [
+        {
+            "period": s.period,
+            "impressions": s.impressions,
+            "visits": s.visits,
+            "leads": s.leads,
+            "mqls": s.mqls,
+            "sqls": s.sqls,
+            "opportunities": s.opportunities,
+            "customers": s.customers,
+            "repeat_purchases": s.repeat_purchases,
+        }
+        for s in snapshots
+    ]
+    return sorted(rows, key=lambda r: r["period"])  # type: ignore[arg-type,return-value]
+
+
 DomainReader = Callable[[Session, uuid.UUID, "date | None", "date | None"], list[dict[str, object]]]
 
 DOMAIN_READERS: dict[str, DomainReader] = {
     "financial_periods": read_financial_period_rows,
+    "funnel_snapshots": read_funnel_snapshot_rows,
 }

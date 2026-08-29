@@ -1,7 +1,6 @@
 """Escrita por dominio — a metade "adapter" que falta para completar o
-pipeline generico (parsers.py cobre a leitura). So financial_periods
-existe nesta primeira versao; um dominio novo (Funil, Produtos...) so
-precisa de uma funcao equivalente aqui, reaproveitando o repository do
+pipeline generico (parsers.py cobre a leitura). Um dominio novo (Produtos...)
+so precisa de uma funcao equivalente aqui, reaproveitando o repository do
 proprio modulo de dominio (nunca duplicando a logica de upsert)."""
 
 import uuid
@@ -11,6 +10,7 @@ from typing import Literal, cast
 from sqlalchemy.orm import Session
 
 from app.modules.financials import repository as financials_repository
+from app.modules.funnels import repository as funnels_repository
 
 WriteOutcome = Literal["created", "updated", "skipped"]
 
@@ -41,6 +41,36 @@ def write_financial_period_row(
     return "updated" if existing is not None else "created"
 
 
+def write_funnel_snapshot_row(
+    db: Session,
+    *,
+    organization_id: uuid.UUID,
+    transformed: dict[str, object],
+    duplicate_strategy: str,
+    is_duplicate: bool,
+) -> WriteOutcome:
+    if is_duplicate and duplicate_strategy == "skip":
+        return "skipped"
+
+    period = cast(date, transformed["period"])
+    existing = funnels_repository.get_funnel_snapshot(db, organization_id, period)
+    funnels_repository.upsert_funnel_snapshot(
+        db,
+        organization_id=organization_id,
+        period=period,
+        impressions=transformed.get("impressions"),
+        visits=transformed.get("visits"),
+        leads=transformed.get("leads"),
+        mqls=transformed.get("mqls"),
+        sqls=transformed.get("sqls"),
+        opportunities=transformed.get("opportunities"),
+        customers=transformed.get("customers"),
+        repeat_purchases=transformed.get("repeat_purchases"),
+    )
+    return "updated" if existing is not None else "created"
+
+
 DOMAIN_WRITERS = {
     "financial_periods": write_financial_period_row,
+    "funnel_snapshots": write_funnel_snapshot_row,
 }

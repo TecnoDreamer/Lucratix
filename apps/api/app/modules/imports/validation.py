@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from app.modules.imports.domains import DomainSpec
-from app.modules.imports.transform import TransformError, parse_date, parse_decimal
+from app.modules.imports.transform import TransformError, parse_date, parse_decimal, parse_integer
 
 RowStatus = Literal["valid", "invalid", "duplicate"]
 
@@ -42,6 +42,8 @@ class ValidationSummary:
 def _transform_value(raw: object, data_type: str, transform_config: dict[str, object]) -> object:
     if data_type == "decimal":
         return parse_decimal(raw)
+    if data_type == "integer":
+        return parse_integer(raw)
     if data_type == "date":
         date_format = transform_config.get("date_format", "DMY")
         if date_format not in ("DMY", "MDY", "ISO"):

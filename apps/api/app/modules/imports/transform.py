@@ -73,6 +73,19 @@ def parse_decimal(raw: object) -> float | None:
         raise TransformError(f'Não foi possível interpretar "{raw}" como número.') from exc
 
 
+def parse_integer(raw: object) -> int | None:
+    """Contadores do funil (impressões, leads...) — reaproveita `parse_decimal`
+    para herdar de graça a mesma resolução de separador de milhar/decimal
+    ambíguo, e só rejeita o resultado se sobrar uma fração de verdade
+    (ex.: "10.5" não é uma contagem válida)."""
+    value = parse_decimal(raw)
+    if value is None:
+        return None
+    if not value.is_integer():
+        raise TransformError(f'Não foi possível interpretar "{raw}" como número inteiro.')
+    return int(value)
+
+
 _ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _SLASH_OR_DASH_RE = re.compile(r"^(\d{1,4})[/-](\d{1,2})[/-](\d{1,4})$")
 

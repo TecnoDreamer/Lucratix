@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ApiError, downloadFile } from "@/lib/api";
+import { DATA_DOMAINS } from "@/lib/data-domains";
 import { buttonPrimary, input as inputClass, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, Card } from "@/components/ui";
 import { IconDownload } from "@/components/icons";
@@ -13,10 +14,6 @@ const FORMATS: { id: ExportFormat; label: string }[] = [
   { id: "xlsx", label: "Excel (.xlsx)" },
   { id: "json", label: "JSON" },
 ];
-
-// Único domínio existente hoje (financial_periods) — deixa de ser fixo
-// quando um segundo domínio existir (ver docs/data-import-export/ARCHITECTURE.md).
-const DOMAIN_KEY = "financial_periods";
 
 function triggerBrowserDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -32,6 +29,7 @@ function triggerBrowserDownload(blob: Blob, filename: string) {
 /** Seção sempre visível (inclusive para VIEWER) — exportar é leitura, mesmo
  * nível de permissão de GET /financials (ver ARCHITECTURE.md). */
 export function ExportPanel({ organizationId }: { organizationId: string }) {
+  const [domain, setDomain] = useState(DATA_DOMAINS[0].key);
   const [format, setFormat] = useState<ExportFormat>("csv");
   const [filterByDate, setFilterByDate] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
@@ -53,7 +51,7 @@ export function ExportPanel({ organizationId }: { organizationId: string }) {
         params.set("date_to", dateTo);
       }
       const { blob, filename } = await downloadFile(
-        `/api/v1/organizations/${organizationId}/exports/${DOMAIN_KEY}?${params.toString()}`
+        `/api/v1/organizations/${organizationId}/exports/${domain}?${params.toString()}`
       );
       triggerBrowserDownload(blob, filename);
     } catch (err) {
@@ -70,10 +68,31 @@ export function ExportPanel({ organizationId }: { organizationId: string }) {
         <h2 className={sectionTitle}>Exportar dados</h2>
       </div>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Baixe os dados financeiros desta empresa em CSV, Excel ou JSON.
+        Baixe os dados desta empresa em CSV, Excel ou JSON.
       </p>
 
       <div className="mt-4 flex flex-col gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Dados</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Dados a exportar">
+            {DATA_DOMAINS.map(({ key, label: domainLabel }) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={domain === key}
+                onClick={() => setDomain(key)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  domain === key
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                }`}
+              >
+                {domainLabel}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Formato</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Formato de exportação">

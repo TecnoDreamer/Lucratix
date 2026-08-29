@@ -4,6 +4,7 @@ preview -> confirmacao), delegando cada etapa para o modulo especializado
 HTTP <-> este modulo; nenhuma regra de negocio fica no router."""
 
 import uuid
+from collections.abc import Callable
 from datetime import date
 from typing import cast
 
@@ -50,14 +51,21 @@ def _require_domain(domain_key: str) -> DomainSpec:
     return domain
 
 
+# Mesma ideia de DOMAIN_WRITERS (writers.py)/DOMAIN_READERS (exports/readers.py)
+# — um dicionario por dominio em vez de crescer um if/elif a cada dominio novo.
+_NATURAL_KEY_LOOKUPS: dict[str, Callable[[Session, uuid.UUID], set[tuple[date]]]] = {
+    "financial_periods": repository.get_existing_financial_periods,
+    "funnel_snapshots": repository.get_existing_funnel_snapshot_periods,
+}
+
+
 def _existing_natural_keys(
     db: Session, organization_id: uuid.UUID, domain_key: str
 ) -> set[tuple[object, ...]]:
-    if domain_key == "financial_periods":
-        return cast(
-            "set[tuple[object, ...]]", repository.get_existing_financial_periods(db, organization_id)
-        )
-    return set()
+    lookup = _NATURAL_KEY_LOOKUPS.get(domain_key)
+    if lookup is None:
+        return set()
+    return cast("set[tuple[object, ...]]", lookup(db, organization_id))
 
 
 def _get_remembered_mapping(db: Session, organization_id: uuid.UUID, domain_key: str) -> dict[str, str]:

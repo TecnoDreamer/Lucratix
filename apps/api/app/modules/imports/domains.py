@@ -2,21 +2,22 @@
 novo dominio (Produtos, Marketing, Funil...) sem tocar no pipeline generico
 de parsing/mapeamento/validacao (prompt mestre, secao 4: "arquitetura por
 adaptadores"). Cada dominio so precisa de uma lista de `FieldSpec` aqui e de
-uma funcao de escrita em `writers.py` — o resto (upload, mapeamento,
-validacao, preview) e compartilhado.
+uma funcao de escrita em `writers.py`/leitura em `exports/readers.py` — o
+resto (upload, mapeamento, validacao, preview, serializacao) e compartilhado.
 
-Nesta primeira versao (corte vertical, 2026-08-29) so `financial_periods`
-esta cadastrado — os demais dominios reais existentes (funnel_snapshots,
-products, campaigns) entram em PRs seguintes reaproveitando esta mesma
-estrutura. "Leads"/"Clientes" do prompt original NAO existem como tabela
-no schema atual (sao so contadores agregados dentro de campaigns/
-funnel_snapshots) — nao foram criados aqui; ver auditoria na PR.
+`financial_periods` (2026-08-29) e `funnel_snapshots` (2026-08-29) estao
+cadastrados — os demais dominios reais existentes (products, campaigns)
+entram em PRs seguintes reaproveitando esta mesma estrutura. "Leads"/
+"Clientes" do prompt original NAO existem como tabela propria no schema
+atual (sao contadores agregados dentro de funnel_snapshots/campaigns, e
+`funnel_snapshots.leads` ja cobre o caso real) — nao foram criados aqui; ver
+auditoria na PR.
 """
 
 from dataclasses import dataclass, field
 from typing import Literal
 
-DataType = Literal["date", "decimal"]
+DataType = Literal["date", "decimal", "integer"]
 
 
 @dataclass(frozen=True)
@@ -100,8 +101,83 @@ FINANCIAL_PERIODS = DomainSpec(
     ),
 )
 
+FUNNEL_SNAPSHOTS = DomainSpec(
+    key="funnel_snapshots",
+    display_name="Funil",
+    natural_key=("period",),
+    fields=(
+        FieldSpec(
+            "period",
+            "Período",
+            (
+                "period",
+                "periodo",
+                "data",
+                "mes",
+                "data do periodo",
+                "data de referencia",
+                "reference_date",
+                "competencia",
+            ),
+            "date",
+            required=True,
+        ),
+        # Ordem espelha a etapa do funil (RN-006: ordem fixa das etapas),
+        # mesma ordem de app/models/funnel_snapshot.py.
+        FieldSpec(
+            "impressions",
+            "Impressões",
+            ("impressions", "impressoes", "impressões", "views", "visualizacoes"),
+            "integer",
+        ),
+        FieldSpec(
+            "visits",
+            "Visitas",
+            ("visits", "visitas", "sessions", "sessoes", "sessões"),
+            "integer",
+        ),
+        FieldSpec(
+            "leads",
+            "Leads",
+            ("leads", "lead"),
+            "integer",
+        ),
+        FieldSpec(
+            "mqls",
+            "MQLs",
+            ("mqls", "mql", "leads qualificados marketing", "marketing qualified leads"),
+            "integer",
+        ),
+        FieldSpec(
+            "sqls",
+            "SQLs",
+            ("sqls", "sql", "leads qualificados vendas", "sales qualified leads"),
+            "integer",
+        ),
+        FieldSpec(
+            "opportunities",
+            "Oportunidades",
+            ("opportunities", "oportunidades", "oportunidade"),
+            "integer",
+        ),
+        FieldSpec(
+            "customers",
+            "Clientes",
+            ("customers", "clientes", "novos clientes", "vendas fechadas"),
+            "integer",
+        ),
+        FieldSpec(
+            "repeat_purchases",
+            "Recompras",
+            ("repeat_purchases", "recompras", "recompra", "clientes recorrentes", "repeat purchases"),
+            "integer",
+        ),
+    ),
+)
+
 DOMAIN_REGISTRY: dict[str, DomainSpec] = {
     FINANCIAL_PERIODS.key: FINANCIAL_PERIODS,
+    FUNNEL_SNAPSHOTS.key: FUNNEL_SNAPSHOTS,
 }
 
 
