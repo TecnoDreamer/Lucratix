@@ -2,6 +2,11 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-08-29
+
+### Added
+- Módulo de Importação de Dados (corte vertical mínimo, domínio **Financeiro**): wizard completo via API — upload (`.csv`/`.xlsx`/`.json`, até 5 MB / 2000 linhas), sugestão automática de mapeamento de campo (alias exato, fuzzy match via `difflib`, e mapeamento lembrado do último import bem-sucedido da mesma organização), confirmação de mapeamento com validação recalculada sob demanda (campo obrigatório, tipo, duplicidade por chave natural — dentro do arquivo e contra o banco), preview paginado, confirmação com estratégia de duplicata (`skip`/`update`), histórico de imports e lista de erros por linha, e templates de mapeamento reutilizáveis. Processamento síncrono (sem fila de jobs) e sem storage de arquivo (linhas parseadas ficam em `JSONB`, nunca o arquivo em si) — decisões justificadas pela infraestrutura real (réplica única no Railway, sem Celery/Redis/S3, auditada antes de desenhar o módulo). Escrita reaproveita `financials_repository.upsert_financial_period` (nenhuma lógica de upsert duplicada). Arquitetura por adaptadores, pronta para novos domínios (Funil, Produtos, Marketing) sem tocar no pipeline genérico — ver `docs/data-import-export/ARCHITECTURE.md`. Permissão: `ANALYST`+ (mesmo precedente de RN-010), sem permissão nomeada nova. Nova dependência: `openpyxl` (leitura/escrita de `.xlsx`, escolhida sobre pandas por não ter dependência nativa). Migration `0009_data_import_export` (`import_jobs`, `import_errors`, `import_mapping_templates`). Export, frontend (Central de Dados/wizard) e demais domínios ficam para PRs seguintes — escopo confirmado com o usuário.
+
 ## 2026-08-27
 
 ### Added

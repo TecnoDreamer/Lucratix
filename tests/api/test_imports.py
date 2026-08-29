@@ -1,0 +1,330 @@
+"""Modulo de importacao de dados — corte vertical, domínio Financeiro
+(2026-08-29). Fluxo completo: upload -> mapeamento -> preview -> confirmacao
+-> banco, alem de reprocessamento (skip/update) e historico/erros/templates.
+"""
+
+from pathlib import Path
+
+FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "imports"
+
+
+def _register_login_and_create_org(client, email: str, org_name: str) -> str:
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": email, "password": "SenhaForte123!"},
+    )
+    client.post("/api/v1/auth/login", json={"email": email, "password": "SenhaForte123!"})
+    org = client.post("/api/v1/organizations", json={"name": org_name}).json()
+    return org["id"]
+
+
+def _upload(
+    client, org_id: str, filename: str, content: bytes, content_type: str, domain: str = "financial_periods"
+):
+    return client.post(
+        f"/api/v1/organizations/{org_id}/imports",
+        data={"domain": domain},
+        files={"file": (filename, content, content_type)},
+    )
+
+
+def _suggested_mapping_dict(create_resp_json: dict) -> dict[str, str]:
+    return {
+        s["header"]: s["canonical_field"]
+        for s in create_resp_json["suggested_mapping"]
+        if s["canonical_field"]
+    }
+
+
+def test_list_domains_returns_financial_periods_with_required_field(client):
+    org_id = _register_login_and_create_org(client, "imp.domains@example.com", "Empresa Imp Domains")
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports/domains")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "financial_periods" in body
+    fields = {f["canonical_name"]: f for f in body["financial_periods"]}
+    assert fields["period"]["required"] is True
+    assert fields["revenue"]["required"] is False
+
+
+def test_upload_suggests_high_confidence_mapping_for_known_headers(client):
+    org_id = _register_login_and_create_org(client, "imp.suggest@example.com", "Empresa Imp Suggest")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+
+    resp = _upload(client, org_id, "valid.csv", content, "text/csv")
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["job"]["status"] == "MAPPING_REQUIRED"
+    assert body["job"]["total_rows"] == 2
+
+    mapping = _suggested_mapping_dict(body)
+    assert mapping["Periodo"] == "period"
+    assert mapping["Receita"] == "revenue"
+    assert mapping["Custos"] == "costs"
+    assert mapping["Despesas"] == "expenses"
+
+
+def test_full_flow_upload_mapping_preview_confirm_creates_financial_periods(client):
+    org_id = _register_login_and_create_org(client, "imp.fullflow@example.com", "Empresa Imp Full Flow")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+
+    create = _upload(client, org_id, "valid.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {"date_format": "DMY"}},
+    )
+    assert mapping_resp.status_code == 200
+    summary = mapping_resp.json()
+    assert summary["status"] == "READY"
+    assert summary["valid"] == 2
+    assert summary["invalid"] == 0
+    assert summary["duplicate"] == 0
+
+    preview = client.get(f"/api/v1/organizations/{org_id}/imports/{job_id}/preview")
+    assert preview.status_code == 200
+    preview_body = preview.json()
+    assert preview_body["total"] == 2
+    assert preview_body["items"][0]["status"] == "valid"
+    assert preview_body["items"][0]["transformed"]["revenue"] == 10000.0
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    )
+    assert confirm.status_code == 200
+    confirm_body = confirm.json()
+    assert confirm_body["status"] == "COMPLETED"
+    assert confirm_body["created_rows"] == 2
+    assert confirm_body["updated_rows"] == 0
+    assert confirm_body["skipped_rows"] == 0
+
+    financials = client.get(f"/api/v1/organizations/{org_id}/financials").json()
+    periods = {p["period"]: p for p in financials}
+    assert periods["2026-01-01"]["revenue"] == 10000
+    assert periods["2026-01-01"]["costs"] == 3000
+    assert periods["2026-02-01"]["revenue"] == 12000
+
+
+def test_reimporting_same_file_skips_duplicates_by_default(client):
+    org_id = _register_login_and_create_org(client, "imp.reimport@example.com", "Empresa Imp Reimport")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+
+    def _run_full_import(duplicate_strategy: str) -> dict:
+        create = _upload(client, org_id, "valid.csv", content, "text/csv")
+        job_id = create.json()["job"]["id"]
+        mapping = _suggested_mapping_dict(create.json())
+        client.put(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+            json={"mapping": mapping, "transform_config": {}},
+        )
+        return client.post(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm",
+            json={"duplicate_strategy": duplicate_strategy},
+        ).json()
+
+    first = _run_full_import("skip")
+    assert first["created_rows"] == 2
+
+    second = _run_full_import("skip")
+    assert second["created_rows"] == 0
+    assert second["skipped_rows"] == 2
+    assert second["status"] == "COMPLETED"
+
+    financials = client.get(f"/api/v1/organizations/{org_id}/financials").json()
+    matching = [p for p in financials if p["period"] == "2026-01-01"]
+    assert len(matching) == 1
+    assert matching[0]["revenue"] == 10000  # nao duplicou nem sobrescreveu
+
+
+def test_reimporting_with_update_strategy_overwrites_existing_period(client):
+    org_id = _register_login_and_create_org(client, "imp.update@example.com", "Empresa Imp Update")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+    updated_content = (
+        b"Periodo,Receita,Custos,Despesas\n2026-01-01,99999,3000,1000\n2026-02-01,12000,3500,1200\n"
+    )
+
+    def _run_full_import(payload: bytes, duplicate_strategy: str) -> dict:
+        create = _upload(client, org_id, "valid.csv", payload, "text/csv")
+        job_id = create.json()["job"]["id"]
+        mapping = _suggested_mapping_dict(create.json())
+        client.put(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+            json={"mapping": mapping, "transform_config": {}},
+        )
+        return client.post(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm",
+            json={"duplicate_strategy": duplicate_strategy},
+        ).json()
+
+    _run_full_import(content, "skip")
+    second = _run_full_import(updated_content, "update")
+    assert second["updated_rows"] == 2
+    assert second["created_rows"] == 0
+
+    financials = client.get(f"/api/v1/organizations/{org_id}/financials").json()
+    matching = [p for p in financials if p["period"] == "2026-01-01"]
+    assert matching[0]["revenue"] == 99999
+
+
+def test_invalid_rows_are_reported_in_preview_and_errors_endpoint(client):
+    org_id = _register_login_and_create_org(client, "imp.invalid@example.com", "Empresa Imp Invalid")
+    content = FIXTURES.joinpath("invalid.csv").read_bytes()
+
+    create = _upload(client, org_id, "invalid.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+    mapping = {"Periodo": "period", "Receita": "revenue"}
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    summary = mapping_resp.json()
+    assert summary["invalid"] == 3
+
+    errors = client.get(f"/api/v1/organizations/{org_id}/imports/{job_id}/errors")
+    assert errors.status_code == 200
+    assert errors.json()["total"] >= 3
+
+
+def test_confirm_before_ready_is_rejected(client):
+    org_id = _register_login_and_create_org(client, "imp.notready@example.com", "Empresa Imp Not Ready")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+    create = _upload(client, org_id, "valid.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+
+    # Sem mapear (nenhum campo obrigatorio mapeado) o job continua
+    # MAPPING_REQUIRED, nunca chega em READY.
+    resp = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    )
+    assert resp.status_code == 400
+
+
+def test_unsupported_domain_is_rejected(client):
+    org_id = _register_login_and_create_org(client, "imp.baddomain@example.com", "Empresa Imp Bad Domain")
+    resp = _upload(client, org_id, "valid.csv", b"a,b\n1,2\n", "text/csv", domain="leads")
+    assert resp.status_code == 400
+
+
+def test_cancel_import_marks_job_cancelled(client):
+    org_id = _register_login_and_create_org(client, "imp.cancel@example.com", "Empresa Imp Cancel")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+    create = _upload(client, org_id, "valid.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+
+    resp = client.delete(f"/api/v1/organizations/{org_id}/imports/{job_id}")
+    assert resp.status_code == 204
+
+    job = client.get(f"/api/v1/organizations/{org_id}/imports/{job_id}").json()
+    assert job["status"] == "CANCELLED"
+
+
+def test_cancel_already_completed_import_is_rejected(client):
+    org_id = _register_login_and_create_org(client, "imp.cancelcompleted@example.com", "Empresa Imp Cancel2")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+    create = _upload(client, org_id, "valid.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    )
+
+    resp = client.delete(f"/api/v1/organizations/{org_id}/imports/{job_id}")
+    assert resp.status_code == 400
+
+
+def test_import_history_lists_jobs_paginated(client):
+    org_id = _register_login_and_create_org(client, "imp.history@example.com", "Empresa Imp History")
+    content = FIXTURES.joinpath("valid.csv").read_bytes()
+    for _ in range(3):
+        _upload(client, org_id, "valid.csv", content, "text/csv")
+
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports", params={"limit": 2, "offset": 0})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 3
+    assert len(body["items"]) == 2
+
+
+def test_mapping_template_create_and_list(client):
+    org_id = _register_login_and_create_org(client, "imp.templates@example.com", "Empresa Imp Templates")
+    create = client.post(
+        f"/api/v1/organizations/{org_id}/imports/mapping-templates",
+        json={
+            "domain": "financial_periods",
+            "name": "Padrão ERP",
+            "mapping": {"Data Ref": "period", "Fat.": "revenue"},
+        },
+    )
+    assert create.status_code == 201
+
+    listed = client.get(
+        f"/api/v1/organizations/{org_id}/imports/mapping-templates", params={"domain": "financial_periods"}
+    )
+    assert listed.status_code == 200
+    names = [t["name"] for t in listed.json()]
+    assert "Padrão ERP" in names
+
+
+def test_xlsx_upload_with_alias_headers_maps_correctly(client):
+    org_id = _register_login_and_create_org(client, "imp.xlsx@example.com", "Empresa Imp Xlsx")
+    content = FIXTURES.joinpath("aliases.xlsx").read_bytes()
+
+    resp = _upload(
+        client,
+        org_id,
+        "aliases.xlsx",
+        content,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    assert resp.status_code == 201
+    mapping = _suggested_mapping_dict(resp.json())
+    assert mapping["Data de Referência"] == "period"
+    assert mapping["Faturamento"] == "revenue"
+    assert mapping["Custo Total"] == "costs"
+    assert mapping["Investimento Marketing"] == "marketing_investment"
+
+
+def test_json_upload_full_flow(client):
+    org_id = _register_login_and_create_org(client, "imp.json@example.com", "Empresa Imp Json")
+    content = FIXTURES.joinpath("valid.json").read_bytes()
+
+    create = _upload(client, org_id, "valid.json", content, "application/json")
+    assert create.status_code == 201
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+
+    client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 2
+
+
+def test_duplicates_within_same_file_are_flagged_and_only_first_row_written(client):
+    org_id = _register_login_and_create_org(client, "imp.dupfile@example.com", "Empresa Imp Dup File")
+    content = FIXTURES.joinpath("duplicates.csv").read_bytes()
+
+    create = _upload(client, org_id, "duplicates.csv", content, "text/csv")
+    job_id = create.json()["job"]["id"]
+    mapping = {"Periodo": "period", "Receita": "revenue"}
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["duplicate"] == 1
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 1
+    assert confirm["skipped_rows"] == 1
