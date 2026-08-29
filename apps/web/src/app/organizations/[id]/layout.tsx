@@ -12,6 +12,7 @@ import {
   IconArrowLeft,
   IconBookOpen,
   IconBuilding,
+  IconDatabase,
   IconDollar,
   IconFileText,
   IconFlask,
@@ -52,6 +53,11 @@ const NAV_ITEMS: {
   { href: "experiments", label: "Experimentos", icon: IconFlask },
   { href: "reports", label: "Relatório", icon: IconFileText, minRole: "ANALYST" },
   { href: "audit", label: "Auditoria", icon: IconShieldCheck, minRole: "ORGANIZATION_ADMIN" },
+  // Sem minRole: exportar é leitura (mesmo nível de GET /financials, VIEWER
+  // incluso — ver docs/data-import-export/ARCHITECTURE.md); só a etapa de
+  // importação dentro da página exige ANALYST+, escondida ali dentro
+  // (mesmo padrão de "Ações rápidas" da Início, ver page.tsx/lib/roles.ts).
+  { href: "central-de-dados", label: "Central de Dados", icon: IconDatabase },
   { href: "glossario", label: "Glossário", icon: IconBookOpen },
 ];
 

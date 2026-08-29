@@ -33,6 +33,15 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "X-Requested-With"],
+    # Content-Disposition nao esta na lista de resposta CORS-safelisted do
+    # browser (Cache-Control/Content-Language/Content-Length/Content-Type/
+    # Expires/Last-Modified/Pragma) — sem isso, `fetch` em requisicao
+    # cross-origin (dev local: frontend em :3000 chamando a API em :8000
+    # direto, sem o rewrite same-origin que existe em producao) nao consegue
+    # ler o header, e `downloadFile` (modulo de exportacao) cai no nome de
+    # arquivo generico "export" em vez do nome de verdade. Verificado ao
+    # vivo durante o desenvolvimento do modulo de exportacao (2026-08-29).
+    expose_headers=["Content-Disposition"],
 )
 # Comprime respostas JSON grandes (ex.: lista de organizacoes, dashboard) —
 # reduz o tamanho transferido, principalmente relevante com o backend hospedado
