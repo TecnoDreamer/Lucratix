@@ -13,6 +13,7 @@ import { currentMonthPeriod, formatMetric } from "@/lib/metrics";
 import { canPerformActions, hasMinimumRole, roleLabel } from "@/lib/roles";
 import {
   IconClock,
+  IconDatabase,
   IconDollar,
   IconFileText,
   IconFlask,
@@ -33,11 +34,15 @@ function formatTrackingSince(date: string): string {
   return new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// PARTE 4 do prompt de redesign de UX (2026-08-27): 4-6 atalhos principais,
-// não todos os módulos da sidebar (isso já existe na navegação completa).
+// PARTE 4 do prompt de redesign de UX (2026-08-27): atalhos principais, não
+// todos os módulos da sidebar (isso já existe na navegação completa).
 // `minRole`: mesmo critério da sidebar (ver layout.tsx) — Analytics exige
 // ANALYST+ no backend, então não faz sentido oferecer o atalho pra quem só
-// vai receber um 403 ao clicar.
+// vai receber um 403 ao clicar. Central de Dados (2026-08-30) é o único item
+// aqui que não é um módulo de visualização — adicionado porque a entrada de
+// sidebar sozinha não bastava: é uma ferramenta de importação/exportação em
+// massa, útil o bastante para merecer destaque na tela que todo mundo vê
+// primeiro, não só descoberta navegando a sidebar inteira.
 function quickAccessItems(id: string): {
   href: string;
   icon: typeof IconTrendingUp;
@@ -82,6 +87,12 @@ function quickAccessItems(id: string): {
       icon: IconFlask,
       title: "Experimentos",
       description: "Acompanhe testes, hipóteses e resultados.",
+    },
+    {
+      href: `/organizations/${id}/central-de-dados`,
+      icon: IconDatabase,
+      title: "Central de Dados",
+      description: "Importe e exporte dados em massa (CSV, Excel, JSON).",
     },
   ];
 }
