@@ -110,7 +110,7 @@ describe("OrganizationDetailPage — página inicial da empresa", () => {
     });
   });
 
-  it("mostra os 6 atalhos de acesso rápido apontando para rotas existentes", async () => {
+  it("mostra os 7 atalhos de acesso rápido apontando para rotas existentes", async () => {
     mockApiGet({ comparison: null });
     renderWithOrg();
 
@@ -121,6 +121,7 @@ describe("OrganizationDetailPage — página inicial da empresa", () => {
       ["Funil", "/organizations/org-123/funnel"],
       ["Produtos", "/organizations/org-123/products"],
       ["Experimentos", "/organizations/org-123/experiments"],
+      ["Central de Dados", "/organizations/org-123/central-de-dados"],
     ]) {
       expect(screen.getByRole("link", { name: new RegExp(label) })).toHaveAttribute("href", href);
     }

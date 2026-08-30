@@ -2,6 +2,11 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-08-30
+
+### Added
+- Atalho "Central de Dados" no grid de "Acesso rápido" da página inicial da empresa (`quickAccessItems`, `organizations/[id]/page.tsx`) — até então só era alcançável pela sidebar. Sem `minRole` (mesmo critério da entrada de sidebar e do painel de exportação — exportar é leitura, `VIEWER` incluso).
+
 ## 2026-08-29
 
 ### Added

@@ -225,11 +225,13 @@ leitura, ver acima). Composição:
 - Histórico de importações (paginado, "Carregar mais") e lista de erros por linha sob demanda — só
   para quem pode escrever, mesmo motivo (o backend também exige `ANALYST`+ nesses endpoints).
 
+Atalho na Início (2026-08-30): `quickAccessItems` (`organizations/[id]/page.tsx`) ganhou "Central de
+Dados", sem `minRole` (mesmo critério da entrada de sidebar). É o único item da lista que não é um
+módulo de visualização — a entrada de sidebar sozinha não bastava para dar destaque a uma ferramenta
+de importação/exportação em massa na tela que todo mundo vê primeiro.
+
 ## O que este documento não decide ainda
 
-- Card de acesso rápido para Central de Dados na página inicial da empresa (`quickAccessItems`,
-  `organizations/[id]/page.tsx`) — a entrada de sidebar já existe; o atalho na Início fica para quando
-  fizer sentido revisitar aquela lista (hoje com 6 itens, PARTE 4 do prompt de redesign de UX).
 - Marketing/Campanhas — precisa antes decidir como resolver o canal (`channel_id`) a partir do nome
   escrito no arquivo (ver domains.py, docstring do módulo).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
