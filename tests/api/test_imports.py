@@ -391,3 +391,139 @@ def test_funnel_snapshot_with_fractional_count_is_invalid(client):
         json={"mapping": mapping, "transform_config": {}},
     )
     assert mapping_resp.json()["invalid"] == 1
+
+
+def test_list_domains_includes_products(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.domainsproducts@example.com", "Empresa Imp Domains Produtos"
+    )
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports/domains")
+    body = resp.json()
+    assert "products" in body
+    fields = {f["canonical_name"]: f for f in body["products"]}
+    assert fields["name"]["required"] is True
+    assert fields["active"]["data_type"] == "boolean"
+
+
+def test_products_full_flow_creates_records(client):
+    """Segundo domínio sem chave natural única no banco (name não tem
+    constraint de unicidade, ao contrário de period em Financeiro/Funil) —
+    prova que a deduplicação por nome (normalize_natural_key_value) funciona
+    ponta a ponta, não só na validação isolada."""
+    org_id = _register_login_and_create_org(client, "imp.products@example.com", "Empresa Imp Produtos")
+    content = (
+        b"Nome,Categoria,Preco,Custo,Ativo\n"
+        b"Notebook Pro,Eletronicos,5000,3000,true\n"
+        b"Mouse Sem Fio,Eletronicos,80,40,true\n"
+    )
+
+    create = _upload(client, org_id, "produtos.csv", content, "text/csv", domain="products")
+    assert create.status_code == 201
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    assert mapping["Nome"] == "name"
+    assert mapping["Ativo"] == "active"
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["status"] == "READY"
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 2
+
+    products = client.get(f"/api/v1/organizations/{org_id}/products").json()
+    by_name = {p["name"]: p for p in products}
+    assert by_name["Notebook Pro"]["price"] == 5000
+    assert by_name["Notebook Pro"]["cost"] == 3000
+    assert by_name["Notebook Pro"]["active"] is True
+
+
+def test_products_reimport_with_different_case_updates_existing(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.productscase@example.com", "Empresa Imp Produtos Case"
+    )
+
+    def _import(content: bytes, duplicate_strategy: str) -> dict:
+        create = _upload(client, org_id, "produtos.csv", content, "text/csv", domain="products")
+        job_id = create.json()["job"]["id"]
+        mapping = _suggested_mapping_dict(create.json())
+        client.put(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+            json={"mapping": mapping, "transform_config": {}},
+        )
+        return client.post(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm",
+            json={"duplicate_strategy": duplicate_strategy},
+        ).json()
+
+    first = _import(b"Nome,Preco\nNotebook Pro,5000\n", "skip")
+    assert first["created_rows"] == 1
+
+    # Mesmo produto, nome com capitalização diferente — precisa ser
+    # reconhecido como o mesmo (name não tem constraint de unicidade no
+    # banco; a deduplicação é só na camada de importação).
+    second = _import(b"Nome,Preco\nNOTEBOOK PRO,5500\n", "update")
+    assert second["updated_rows"] == 1
+    assert second["created_rows"] == 0
+
+    products = client.get(f"/api/v1/organizations/{org_id}/products").json()
+    assert len(products) == 1
+    assert products[0]["price"] == 5500
+
+
+def test_product_without_active_mapped_defaults_to_active_true(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.productdefault@example.com", "Empresa Imp Produtos Default"
+    )
+    content = b"Nome\nProduto Simples\n"
+
+    create = _upload(client, org_id, "produtos.csv", content, "text/csv", domain="products")
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 1
+
+    products = client.get(f"/api/v1/organizations/{org_id}/products").json()
+    assert products[0]["active"] is True
+
+
+def test_product_update_without_active_mapped_keeps_existing_value(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.productkeep@example.com", "Empresa Imp Produtos Keep"
+    )
+
+    # Cria o produto já inativo, direto pela API de produtos (fora do fluxo
+    # de import).
+    created = client.post(
+        f"/api/v1/organizations/{org_id}/products", json={"name": "Produto Antigo"}
+    ).json()
+    client.patch(f"/api/v1/organizations/{org_id}/products/{created['id']}", json={"active": False})
+
+    # Reimporta o mesmo produto (por nome) sem mapear "Ativo" — não pode
+    # reativar por acidente.
+    content = b"Nome,Preco\nProduto Antigo,999\n"
+    create = _upload(client, org_id, "produtos.csv", content, "text/csv", domain="products")
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "update"}
+    ).json()
+    assert confirm["updated_rows"] == 1
+
+    products = client.get(f"/api/v1/organizations/{org_id}/products").json()
+    assert products[0]["active"] is False
+    assert products[0]["price"] == 999

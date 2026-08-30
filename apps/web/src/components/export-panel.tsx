@@ -37,16 +37,18 @@ export function ExportPanel({ organizationId }: { organizationId: string }) {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const supportsDateRange = DATA_DOMAINS.find((d) => d.key === domain)?.supportsDateRange ?? true;
+
   async function handleExport() {
     setError(null);
-    if (filterByDate && dateFrom && dateTo && dateFrom > dateTo) {
+    if (supportsDateRange && filterByDate && dateFrom && dateTo && dateFrom > dateTo) {
       setError("A data inicial não pode ser depois da data final.");
       return;
     }
     setExporting(true);
     try {
       const params = new URLSearchParams({ format });
-      if (filterByDate && dateFrom && dateTo) {
+      if (supportsDateRange && filterByDate && dateFrom && dateTo) {
         params.set("date_from", dateFrom);
         params.set("date_to", dateTo);
       }
@@ -114,37 +116,41 @@ export function ExportPanel({ organizationId }: { organizationId: string }) {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-          <input
-            type="checkbox"
-            checked={filterByDate}
-            onChange={(e) => setFilterByDate(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
-          />
-          Filtrar por período (padrão: todos os períodos)
-        </label>
+        {supportsDateRange && (
+          <>
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={filterByDate}
+                onChange={(e) => setFilterByDate(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
+              />
+              Filtrar por período (padrão: todos os períodos)
+            </label>
 
-        {filterByDate && (
-          <div className="flex flex-wrap items-end gap-3">
-            <label className={labelClass}>
-              De
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className={`${inputClass} w-auto`}
-              />
-            </label>
-            <label className={labelClass}>
-              Até
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className={`${inputClass} w-auto`}
-              />
-            </label>
-          </div>
+            {filterByDate && (
+              <div className="flex flex-wrap items-end gap-3">
+                <label className={labelClass}>
+                  De
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className={`${inputClass} w-auto`}
+                  />
+                </label>
+                <label className={labelClass}>
+                  Até
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className={`${inputClass} w-auto`}
+                  />
+                </label>
+              </div>
+            )}
+          </>
         )}
 
         {error && <Alert>{error}</Alert>}

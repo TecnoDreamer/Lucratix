@@ -1,11 +1,12 @@
 # Arquitetura — Importação/Exportação de Dados
 
-Dois domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**
-(`financial_periods`, 2026-08-29) e **Funil** (`funnel_snapshots`, 2026-08-29 — a prova de que a
-arquitetura por adaptadores realmente generaliza, não algo desenhado só para o primeiro domínio).
-Produtos e Marketing ficam para PRs seguintes, reaproveitando a mesma estrutura descrita aqui. O ponto
-de extensão é [domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois
-lados) + [writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
+Três domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**
+(`financial_periods`, 2026-08-29), **Funil** (`funnel_snapshots`, 2026-08-29) e **Produtos**
+(`products`, 2026-08-29 — o mais diferente dos três: sem `period`, com campo de texto/booleano e sem
+constraint de unicidade no banco, e mesmo assim coube na mesma estrutura). Marketing/Campanhas fica
+para uma PR seguinte. O ponto de extensão é
+[domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois lados) +
+[writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
 [readers.py](../../apps/api/app/modules/exports/readers.py) (exportação) — nenhum outro módulo do
 pipeline (parsers, mapping, validation, security, serializers, os dois routers) conhece um domínio
 específico.
@@ -74,11 +75,37 @@ a passo real, não hipotético:
    frontend mantém (pequena demais para valer buscar de `GET /imports/domains`, que além disso exige
    `ANALYST`+ e o painel de exportação é visível para `VIEWER` também).
 
-Nenhuma migration foi necessária para o Funil — `funnel_snapshots` já existia (RF-020, antes deste
-módulo). "Leads"/"Clientes", citados no prompt original como domínios de exemplo, continuam **não
-existindo** como tabela própria — `funnel_snapshots.leads` já cobre o caso real de "Leads"; "Clientes"
-sem uma tabela própria seria só o contador `funnel_snapshots.customers`/`campaigns.customers`, não um
-cadastro de clientes de verdade. Não foram criados artificialmente para caber neste módulo.
+Nenhuma migration foi necessária para o Funil nem para Produtos — `funnel_snapshots` (RF-020) e
+`products` já existiam antes deste módulo. "Leads"/"Clientes", citados no prompt original como
+domínios de exemplo, continuam **não existindo** como tabela própria — `funnel_snapshots.leads` já
+cobre o caso real de "Leads"; "Clientes" sem uma tabela própria seria só o contador
+`funnel_snapshots.customers`/`campaigns.customers`, não um cadastro de clientes de verdade. Não foram
+criados artificialmente para caber neste módulo.
+
+**Produtos foi mais longe que o passo a passo acima** — a única extensão real que o pipeline genérico
+precisou até agora, não só um registro novo de dados:
+
+- Dois `DataType` novos: `"string"` (`parse_string`, com `FieldSpec.max_length` opcional — espelha o
+  limite da coluna no banco, ex.: `String(255)`, rejeitado com erro explícito em vez de deixar o
+  `INSERT` falhar com um erro genérico) e `"boolean"` (`parse_boolean`, aceita valores comuns em
+  português/inglês — `"sim"/"não"`, `"ativo"/"inativo"`, `"true"/"false"`, `1`/`0` — e rejeita qualquer
+  outra coisa em vez de adivinhar um "truthy").
+- **Chave natural sem constraint de unicidade no banco**: `products.name` não é `UNIQUE` (ao contrário
+  de `period` em Financeiro/Funil, que já é a própria chave única da tabela). A deduplicação de
+  verdade é só na camada de importação —
+  `domains.py::normalize_natural_key_value` (minúsculo + sem espaço nas bordas) usado nos dois lados da
+  comparação (`validation.py` para as linhas do arquivo, `imports/repository.py::get_existing_product_names`
+  para o que já existe no banco) — e uma busca por nome equivalente no repository do domínio real
+  (`products/repository.py::get_product_by_name`, mesma normalização).
+- **Campo `NOT NULL` com valor padrão** (`products.active`, default `True`): diferente de
+  `revenue`/`costs` etc. (nullable de verdade, onde "não mapeado" sempre quer dizer `None`),
+  `writers.py::write_product_row` nunca passa `active=None` explícito — omite a chave do dicionário de
+  campos quando não mapeado/em branco, deixando o banco aplicar o default na criação e preservando o
+  valor existente numa atualização (passar `None` explícito violaria a constraint `NOT NULL`).
+- **Domínio sem conceito de período**: `DomainSpec.supports_date_range = False` — Produtos é um
+  catálogo, não uma série temporal. O filtro de data do export é ignorado no backend
+  (`exports/service.py`, para não filtrar por acidente nem gerar um nome de arquivo que sugira um
+  filtro que não foi aplicado) e escondido no frontend (`lib/data-domains.ts::supportsDateRange`).
 
 ## Sugestão de mapeamento (não é autorização)
 
@@ -109,12 +136,16 @@ custo (reprocessar até 2000 linhas em memória a cada chamada) é aceitável da
 imposto por outro motivo (processamento síncrono).
 
 Duplicidade é detectada por **chave natural do domínio** (`DomainSpec.natural_key`), tanto contra o
-próprio arquivo (duas linhas iguais no mesmo upload) quanto contra o banco
-(`repository.get_existing_financial_periods`). Estratégia de tratamento de duplicata é escolhida pelo
-usuário na confirmação: `"skip"` (padrão) ou `"update"`. `"create_new"` do vocabulário genérico do prompt
-original não se aplica a `financial_periods`, cuja chave natural `(organization_id, period)` já é a
-própria constraint de unicidade do banco — não existe "criar mesmo já existindo" possível aqui. Um
-domínio futuro sem chave natural única poderia reintroduzir essa opção.
+próprio arquivo (duas linhas iguais no mesmo upload) quanto contra o banco — um componente de texto da
+chave é comparado sem diferenciar maiúsculas/minúsculas nem espaço nas bordas
+(`normalize_natural_key_value`), necessário para Produtos (ver acima). Estratégia de tratamento de
+duplicata é escolhida pelo usuário na confirmação: `"skip"` (padrão) ou `"update"`. `"create_new"` do
+vocabulário genérico do prompt original não se aplica a nenhum dos três domínios de hoje —
+`(organization_id, period)` já é a própria constraint de unicidade do banco em Financeiro/Funil, e
+Produtos, mesmo sem constraint de banco, resolveu deduplicar por nome em vez de permitir duplicata (a
+alternativa seria mais fiel ao "não tem unicidade real", mas corresponderia pior à intenção de quem
+importa uma planilha de produtos). Um domínio futuro que realmente precise de "criar sempre, nunca
+atualizar" poderia reintroduzir essa opção.
 
 ## Formato de data e número
 
@@ -182,13 +213,15 @@ Decisões específicas:
 Página `organizations/[id]/central-de-dados`, nova entrada de sidebar sem `minRole` (exportar é
 leitura, ver acima). Composição:
 
-- `ExportPanel` (`components/export-panel.tsx`) — sempre visível, inclusive para `VIEWER`: formato
-  (CSV/XLSX/JSON), filtro de período opcional (padrão: todos os períodos), botão de download (via
-  `downloadFile` + `<a download>` programático).
+- `ExportPanel` (`components/export-panel.tsx`) — sempre visível, inclusive para `VIEWER`: seletor de
+  domínio (`lib/data-domains.ts`), formato (CSV/XLSX/JSON), filtro de período opcional (padrão: todos
+  os períodos — escondido para um domínio sem `supportsDateRange`, ex.: Produtos), botão de download
+  (via `downloadFile` + `<a download>` programático).
 - `ImportWizard` (`components/import-wizard.tsx`) — só para quem pode escrever (`canPerformActions`,
-  `lib/roles.ts`): upload → mapeamento (com sugestão pré-preenchida e badge de confiança) → preview →
-  confirmação, espelhando os endpoints do backend passo a passo. `VIEWER` vê só um aviso explicando por
-  quê, nunca um formulário que terminaria em 403.
+  `lib/roles.ts`): seletor de domínio, upload → mapeamento (com sugestão pré-preenchida e badge de
+  confiança) → preview → confirmação, espelhando os endpoints do backend passo a passo. O seletor de
+  formato de data só aparece na etapa de mapeamento se o domínio tiver algum campo `"date"` (Produtos
+  não tem). `VIEWER` vê só um aviso explicando por quê, nunca um formulário que terminaria em 403.
 - Histórico de importações (paginado, "Carregar mais") e lista de erros por linha sob demanda — só
   para quem pode escrever, mesmo motivo (o backend também exige `ANALYST`+ nesses endpoints).
 
@@ -197,7 +230,8 @@ leitura, ver acima). Composição:
 - Card de acesso rápido para Central de Dados na página inicial da empresa (`quickAccessItems`,
   `organizations/[id]/page.tsx`) — a entrada de sidebar já existe; o atalho na Início fica para quando
   fizer sentido revisitar aquela lista (hoje com 6 itens, PARTE 4 do prompt de redesign de UX).
-- Domínios além de Financeiro e Funil (Produtos, Marketing).
+- Marketing/Campanhas — precisa antes decidir como resolver o canal (`channel_id`) a partir do nome
+  escrito no arquivo (ver domains.py, docstring do módulo).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
   lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).
 - Scanner de malware real no upload — não existe serviço compatível disponível hoje; a validação atual

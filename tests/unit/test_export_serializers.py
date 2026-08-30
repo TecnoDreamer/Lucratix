@@ -14,7 +14,7 @@ from app.modules.exports.serializers import (
     to_json_bytes,
     to_xlsx_bytes,
 )
-from app.modules.imports.domains import FINANCIAL_PERIODS
+from app.modules.imports.domains import FINANCIAL_PERIODS, PRODUCTS
 
 ROWS = [
     {"period": date(2026, 1, 1), "revenue": 10000.0, "costs": 3000.0, "expenses": None,
@@ -46,6 +46,14 @@ class TestToCsvBytes:
         malicious_rows = [{**ROWS[0], "revenue": "=cmd|'/C calc'!A1"}]
         content = to_csv_bytes(FINANCIAL_PERIODS, malicious_rows)
         assert "'=cmd" in content.decode("utf-8-sig")
+
+    def test_boolean_is_localized_not_python_repr(self):
+        # "True"/"False" seria um vazamento de inglês num arquivo cujo
+        # cabeçalho já é todo em português.
+        rows = [{"name": "Produto A", "category": None, "price": None, "cost": None, "active": True}]
+        content = to_csv_bytes(PRODUCTS, rows)
+        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
+        assert next(reader)["Ativo"] == "Sim"
 
 
 class TestToXlsxBytes:

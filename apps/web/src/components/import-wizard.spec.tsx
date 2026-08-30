@@ -210,4 +210,31 @@ describe("ImportWizard", () => {
     const errorMessage = await screen.findByText("Valor inválido.");
     expect(within(errorMessage.closest("tr") as HTMLElement).getByText("3")).toBeInTheDocument();
   });
+
+  it("domínio sem campo de data (Produtos) não mostra o seletor de formato de data", async () => {
+    vi.mocked(api.postForm).mockResolvedValue({
+      job: { id: "job-1", source_filename: "produtos.csv", status: "MAPPING_REQUIRED", total_rows: 1 },
+      suggested_mapping: [
+        { header: "Nome", canonical_field: "name", confidence: "alta", display_name: "Nome" },
+        { header: "Ativo", canonical_field: "active", confidence: "alta", display_name: "Ativo" },
+      ],
+      domain_fields: [
+        { canonical_name: "name", display_name: "Nome", data_type: "string", required: true },
+        { canonical_name: "active", display_name: "Ativo", data_type: "boolean", required: false },
+      ],
+    });
+
+    render(<ImportWizard organizationId="org-1" />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Domínio" }), {
+      target: { value: "products" },
+    });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(["Nome,Ativo\nProduto,true\n"], "produtos.csv", { type: "text/csv" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await screen.findByText("produtos.csv");
+    expect(screen.queryByText("Formato de data (campo Período)")).not.toBeInTheDocument();
+  });
 });

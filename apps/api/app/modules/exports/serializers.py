@@ -34,6 +34,11 @@ def _sanitize_text(value: object) -> object:
 def _csv_cell(value: object) -> object:
     if isinstance(value, date):
         return value.isoformat()
+    if isinstance(value, bool):
+        # "True"/"False" (repr do Python) seria um vazamento de inglês num
+        # arquivo cujo cabeçalho já é todo em português — "Sim"/"Não" também
+        # é aceito de volta na importação (transform.py::parse_boolean).
+        return "Sim" if value else "Não"
     if value is None:
         return ""
     return _sanitize_text(value)

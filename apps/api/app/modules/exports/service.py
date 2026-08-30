@@ -51,7 +51,14 @@ def export_domain(
     if reader is None:
         raise DomainNotFoundError(domain_key)
 
-    rows = reader(db, organization_id, date_from, date_to)
+    # Domínio sem conceito de período (ex.: Produtos — catálogo, não série
+    # temporal) ignora um date_from/date_to que o cliente eventualmente
+    # mande: nunca filtra por acidente, e o nome do arquivo nunca sugere um
+    # filtro que não foi aplicado de verdade.
+    effective_date_from = date_from if domain.supports_date_range else None
+    effective_date_to = date_to if domain.supports_date_range else None
+
+    rows = reader(db, organization_id, effective_date_from, effective_date_to)
     # Mesmo teto de MAX_ROWS da importação (processamento síncrono, sem fila
     # de jobs — ver docs/data-import-export/ARCHITECTURE.md): sem evidência
     # de organização real perto desse volume, mas o teto existe pelo mesmo
@@ -60,7 +67,7 @@ def export_domain(
         raise ExportTooLargeError(len(rows))
 
     content = serialize(file_format, domain, rows)
-    filename = build_filename(domain_key, file_format, date_from, date_to)
+    filename = build_filename(domain_key, file_format, effective_date_from, effective_date_to)
     return content, CONTENT_TYPES[file_format], filename
 
 

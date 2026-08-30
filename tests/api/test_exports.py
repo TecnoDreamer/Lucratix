@@ -148,6 +148,32 @@ def test_export_funnel_snapshots_uses_integer_values(client):
     assert payload[0]["mqls"] is None
 
 
+def test_export_products_includes_inactive_and_ignores_date_range(client):
+    org_id = _register_login_and_create_org(client, "exp.products@example.com", "Empresa Exp Produtos")
+    client.post(f"/api/v1/organizations/{org_id}/products", json={"name": "Notebook Pro", "price": 5000})
+    inactive = client.post(
+        f"/api/v1/organizations/{org_id}/products", json={"name": "Produto Descontinuado", "price": 10}
+    ).json()
+    client.patch(f"/api/v1/organizations/{org_id}/products/{inactive['id']}", json={"active": False})
+
+    # date_from/date_to são ignorados — Produtos não tem conceito de período
+    # (DomainSpec.supports_date_range = False) — e mesmo assim devolve tudo,
+    # inclusive o produto inativo (RN-014: nunca excluído de verdade).
+    resp = client.get(
+        f"/api/v1/organizations/{org_id}/exports/products",
+        params={"format": "json", "date_from": "2020-01-01", "date_to": "2020-12-31"},
+    )
+    assert resp.status_code == 200
+    payload = json.loads(resp.content)
+    names = {p["name"] for p in payload}
+    assert names == {"Notebook Pro", "Produto Descontinuado"}
+    by_name = {p["name"]: p for p in payload}
+    assert by_name["Notebook Pro"]["active"] is True
+    assert by_name["Produto Descontinuado"]["active"] is False
+    # Filename não menciona um intervalo que não foi de fato aplicado.
+    assert 'filename="products_export.json"' in resp.headers["content-disposition"]
+
+
 def test_viewer_can_export_same_as_dashboard_read(client_factory):
     owner = client_factory()
     viewer_client = client_factory()

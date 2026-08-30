@@ -5,7 +5,14 @@ from datetime import date
 
 import pytest
 
-from app.modules.imports.transform import TransformError, parse_date, parse_decimal, parse_integer
+from app.modules.imports.transform import (
+    TransformError,
+    parse_boolean,
+    parse_date,
+    parse_decimal,
+    parse_integer,
+    parse_string,
+)
 
 
 class TestParseDecimal:
@@ -125,3 +132,60 @@ class TestParseDate:
     def test_unexpected_type_raises(self):
         with pytest.raises(TransformError):
             parse_date(12345)
+
+
+class TestParseString:
+    def test_none_is_none(self):
+        assert parse_string(None) is None
+
+    def test_blank_after_strip_is_none(self):
+        assert parse_string("   ") is None
+
+    def test_strips_whitespace(self):
+        assert parse_string("  Notebook Pro  ") == "Notebook Pro"
+
+    def test_non_string_is_converted(self):
+        assert parse_string(42) == "42"
+
+    def test_within_max_length_passes(self):
+        assert parse_string("abc", max_length=3) == "abc"
+
+    def test_over_max_length_raises(self):
+        with pytest.raises(TransformError):
+            parse_string("abcd", max_length=3)
+
+
+class TestParseBoolean:
+    def test_none_is_none(self):
+        assert parse_boolean(None) is None
+
+    def test_empty_string_is_none(self):
+        assert parse_boolean("") is None
+
+    def test_native_bool_passes_through(self):
+        assert parse_boolean(True) is True
+        assert parse_boolean(False) is False
+
+    def test_native_zero_and_one(self):
+        assert parse_boolean(1) is True
+        assert parse_boolean(0) is False
+
+    @pytest.mark.parametrize("value", ["true", "1", "sim", "yes", "y", "ativo", "verdadeiro", "ATIVO"])
+    def test_recognizes_true_values(self, value):
+        assert parse_boolean(value) is True
+
+    @pytest.mark.parametrize("value", ["false", "0", "nao", "não", "no", "n", "inativo", "falso"])
+    def test_recognizes_false_values(self, value):
+        assert parse_boolean(value) is False
+
+    def test_unrecognized_string_raises(self):
+        with pytest.raises(TransformError):
+            parse_boolean("talvez")
+
+    def test_native_number_out_of_range_raises(self):
+        with pytest.raises(TransformError):
+            parse_boolean(2)
+
+    def test_unexpected_type_raises(self):
+        with pytest.raises(TransformError):
+            parse_boolean(["a"])
