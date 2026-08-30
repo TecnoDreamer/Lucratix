@@ -5,15 +5,16 @@ Cada dominio so precisa de uma lista de `FieldSpec` aqui e de uma funcao de
 escrita em `writers.py`/leitura em `exports/readers.py` — o resto (upload,
 mapeamento, validacao, preview, serializacao) e compartilhado.
 
-`financial_periods` (2026-08-29), `funnel_snapshots` (2026-08-29) e
-`products` (2026-08-29) estao cadastrados — `campaigns` fica para uma PR
-seguinte: diferente dos tres ja feitos, toda campanha pertence a um canal
-(`channel_id`), o que exige decidir como resolver o canal a partir do nome
-escrito no arquivo (buscar existente? criar se nao existir?) antes de caber
-nesta mesma estrutura — decisao de negocio, nao so tecnica, adiada de
-proposito em vez de resolvida no automatico. "Leads"/"Clientes" do prompt
-original NAO existem como tabela propria no schema atual (sao contadores
-agregados dentro de funnel_snapshots/campaigns, e `funnel_snapshots.leads`/
+`financial_periods`, `funnel_snapshots`, `products` (todos 2026-08-29) e
+`campaigns` (2026-08-30) estao cadastrados. Campanhas precisou de uma
+decisao de negocio antes de caber nesta estrutura — toda campanha pertence
+a um canal (`channel_id`), e o arquivo importado so traz o NOME do canal,
+nunca o id. Decisao confirmada com o usuario: se o nome nao bate com nenhum
+canal ja cadastrado na organizacao, a linha e invalida (nunca cria canal
+automaticamente por adivinhacao — um erro de digitacao na planilha nao pode
+virar um canal fantasma). "Leads"/"Clientes" do prompt original NAO existem
+como tabela propria no schema atual (sao contadores agregados dentro de
+funnel_snapshots/campaigns, e `funnel_snapshots.leads`/
 `funnel_snapshots.customers` ja cobrem o caso real) — nao foram criados
 aqui; ver auditoria na PR.
 """
@@ -245,10 +246,104 @@ PRODUCTS = DomainSpec(
     ),
 )
 
+CAMPAIGNS = DomainSpec(
+    key="campaigns",
+    display_name="Marketing",
+    # Chave composta: "name" sozinho e ambiguo (duas campanhas podem ter o
+    # mesmo nome em canais diferentes) — igual a Produtos, sem constraint de
+    # unicidade no banco, entao a deduplicacao e so na camada de importacao.
+    natural_key=("name", "channel"),
+    fields=(
+        # "channel" guarda o NOME do canal como texto — nunca o channel_id
+        # (o arquivo importado nao tem acesso a esse id interno). A
+        # resolucao nome -> canal existente acontece em validation.py
+        # (foreign_key_values, ve service.py) e de novo em writers.py na
+        # hora de gravar — linha cujo canal nao existe fica invalida, nunca
+        # cria um canal automaticamente (decisao confirmada com o usuario).
+        FieldSpec(
+            "channel",
+            "Canal",
+            ("channel", "canal", "canal de marketing", "marketing channel"),
+            "string",
+            required=True,
+            max_length=255,
+        ),
+        FieldSpec(
+            "name",
+            "Nome",
+            ("name", "nome", "campanha", "nome da campanha", "campaign name"),
+            "string",
+            required=True,
+            max_length=255,
+        ),
+        FieldSpec(
+            "start_date",
+            "Data de início",
+            ("start_date", "data de inicio", "data de início", "data inicial", "inicio", "início"),
+            "date",
+        ),
+        FieldSpec(
+            "end_date",
+            "Data de término",
+            ("end_date", "data de termino", "data de término", "data final", "fim", "termino", "término"),
+            "date",
+        ),
+        FieldSpec(
+            "investment",
+            "Investimento",
+            ("investment", "investimento", "valor investido", "gasto", "budget"),
+            "decimal",
+        ),
+        FieldSpec(
+            "impressions",
+            "Impressões",
+            ("impressions", "impressoes", "impressões", "views"),
+            "integer",
+        ),
+        FieldSpec(
+            "clicks",
+            "Cliques",
+            ("clicks", "cliques", "clique"),
+            "integer",
+        ),
+        FieldSpec(
+            "leads",
+            "Leads",
+            ("leads", "lead"),
+            "integer",
+        ),
+        FieldSpec(
+            "opportunities",
+            "Oportunidades",
+            ("opportunities", "oportunidades", "oportunidade"),
+            "integer",
+        ),
+        FieldSpec(
+            "customers",
+            "Clientes",
+            ("customers", "clientes", "vendas", "conversoes", "conversões"),
+            "integer",
+        ),
+        FieldSpec(
+            "attributed_revenue",
+            "Receita atribuída",
+            (
+                "attributed_revenue",
+                "receita atribuida",
+                "receita atribuída",
+                "receita gerada",
+                "receita da campanha",
+            ),
+            "decimal",
+        ),
+    ),
+)
+
 DOMAIN_REGISTRY: dict[str, DomainSpec] = {
     FINANCIAL_PERIODS.key: FINANCIAL_PERIODS,
     FUNNEL_SNAPSHOTS.key: FUNNEL_SNAPSHOTS,
     PRODUCTS.key: PRODUCTS,
+    CAMPAIGNS.key: CAMPAIGNS,
 }
 
 

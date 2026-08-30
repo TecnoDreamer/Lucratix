@@ -97,8 +97,7 @@ def update_campaign(
     if campaign is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Campanha nao encontrada")
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(campaign, field, value)
+    repository.update_campaign(db, campaign, **data.model_dump(exclude_unset=True))
 
     record_audit(
         db,

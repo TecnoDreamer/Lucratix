@@ -135,4 +135,18 @@ describe("ExportPanel", () => {
       );
     });
   });
+
+  it("troca o domínio para Marketing ao clicar no botão", async () => {
+    mockDownloadFile.mockResolvedValue(fakeBlobResult("campaigns_export.csv"));
+    render(<ExportPanel organizationId="org-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Marketing" }));
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+
+    await waitFor(() => {
+      expect(mockDownloadFile).toHaveBeenCalledWith(
+        "/api/v1/organizations/org-1/exports/campaigns?format=csv"
+      );
+    });
+  });
 });

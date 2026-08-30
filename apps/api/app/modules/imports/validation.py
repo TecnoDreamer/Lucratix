@@ -69,13 +69,21 @@ def validate_rows(
     domain: DomainSpec,
     transform_config: dict[str, object],
     existing_natural_keys: set[tuple[object, ...]],
+    foreign_key_values: dict[str, set[object]] | None = None,
 ) -> ValidationSummary:
     """`mapping`: {header_original: canonical_field}. `existing_natural_keys`:
     chaves naturais (ex.: (period,)) já presentes no banco — usado para
     marcar duplicidade contra dado já existente, além de duplicidade
-    dentro do próprio arquivo."""
+    dentro do próprio arquivo. `foreign_key_values`: {canonical_field: {valores
+    normalizados válidos}} — para um campo de texto que precisa apontar para
+    um registro que já existe em OUTRA tabela (ex.: Marketing: "channel" só é
+    válido se já existe um canal com aquele nome na organização — nunca cria
+    um canal por adivinhação a partir de um erro de digitação na planilha).
+    Sem entrada nesse dict para um campo, nenhuma verificação é feita — é
+    opcional, a maioria dos domínios não precisa."""
     fields_by_canonical = {f.canonical_name: f for f in domain.fields}
     required_fields = [f.canonical_name for f in domain.fields if f.required]
+    foreign_key_values = foreign_key_values or {}
 
     seen_keys_in_file: set[tuple[object, ...]] = set()
     results: list[RowResult] = []
@@ -106,6 +114,25 @@ def validate_rows(
                         field=canonical_field,
                         message=f'Campo obrigatório "{spec.display_name}" não foi preenchido.',
                         raw_value=None,
+                    )
+                )
+
+        for canonical_field, valid_values in foreign_key_values.items():
+            value = result.transformed.get(canonical_field)
+            # None (não mapeado/em branco) já foi tratado acima, se
+            # obrigatório — aqui só verifica quando há algo para checar.
+            if value is None or any(e.field == canonical_field for e in result.errors):
+                continue
+            if normalize_natural_key_value(value) not in valid_values:
+                spec = fields_by_canonical[canonical_field]
+                result.errors.append(
+                    RowError(
+                        field=canonical_field,
+                        message=(
+                            f'{spec.display_name} "{value}" não encontrado nesta organização — '
+                            "cadastre-o antes de importar."
+                        ),
+                        raw_value=_as_display(value),
                     )
                 )
 

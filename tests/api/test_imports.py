@@ -527,3 +527,125 @@ def test_product_update_without_active_mapped_keeps_existing_value(client):
     products = client.get(f"/api/v1/organizations/{org_id}/products").json()
     assert products[0]["active"] is False
     assert products[0]["price"] == 999
+
+
+def test_list_domains_includes_campaigns(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.domainscampaigns@example.com", "Empresa Imp Domains Campanhas"
+    )
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports/domains")
+    body = resp.json()
+    assert "campaigns" in body
+    fields = {f["canonical_name"]: f for f in body["campaigns"]}
+    assert fields["channel"]["required"] is True
+    assert fields["name"]["required"] is True
+    assert fields["investment"]["data_type"] == "decimal"
+
+
+def test_campaigns_full_flow_resolves_channel_by_name(client):
+    """O canal precisa já existir — nunca é criado automaticamente a partir
+    do nome escrito no arquivo (decisão confirmada com o usuário)."""
+    org_id = _register_login_and_create_org(client, "imp.campaigns@example.com", "Empresa Imp Campanhas")
+    client.post(f"/api/v1/organizations/{org_id}/marketing-channels", json={"name": "Google Ads"})
+
+    content = b"Canal,Nome,Investimento,Cliques\nGoogle Ads,Black Friday,5000,1200\n"
+    create = _upload(client, org_id, "campanhas.csv", content, "text/csv", domain="campaigns")
+    assert create.status_code == 201
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    assert mapping["Canal"] == "channel"
+    assert mapping["Nome"] == "name"
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["status"] == "READY"
+    assert mapping_resp.json()["invalid"] == 0
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 1
+
+    campaigns = client.get(f"/api/v1/organizations/{org_id}/campaigns").json()
+    assert campaigns[0]["name"] == "Black Friday"
+    assert campaigns[0]["investment"] == 5000
+    assert campaigns[0]["clicks"] == 1200
+
+
+def test_campaign_with_unknown_channel_is_invalid(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.campaignbadchannel@example.com", "Empresa Imp Campanhas Canal"
+    )
+    # Nenhum canal cadastrado nesta organização.
+    content = b"Canal,Nome\nGoogle Ads,Black Friday\n"
+    create = _upload(client, org_id, "campanhas.csv", content, "text/csv", domain="campaigns")
+    job_id = create.json()["job"]["id"]
+    mapping = {"Canal": "channel", "Nome": "name"}
+
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    summary = mapping_resp.json()
+    assert summary["invalid"] == 1
+    # Confirma que o canal realmente não foi criado por adivinhação.
+    assert client.get(f"/api/v1/organizations/{org_id}/marketing-channels").json() == []
+
+
+def test_campaigns_reimport_with_different_case_updates_existing(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.campaignscase@example.com", "Empresa Imp Campanhas Case"
+    )
+    client.post(f"/api/v1/organizations/{org_id}/marketing-channels", json={"name": "Google Ads"})
+
+    def _import(content: bytes, duplicate_strategy: str) -> dict:
+        create = _upload(client, org_id, "campanhas.csv", content, "text/csv", domain="campaigns")
+        job_id = create.json()["job"]["id"]
+        mapping = _suggested_mapping_dict(create.json())
+        client.put(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+            json={"mapping": mapping, "transform_config": {}},
+        )
+        return client.post(
+            f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm",
+            json={"duplicate_strategy": duplicate_strategy},
+        ).json()
+
+    first = _import(b"Canal,Nome,Investimento\nGoogle Ads,Black Friday,5000\n", "skip")
+    assert first["created_rows"] == 1
+
+    # Mesma campanha, canal e nome com capitalização diferente — precisa
+    # ser reconhecida como a mesma (nem "name" nem "channel" tem constraint
+    # de unicidade no banco).
+    second = _import(b"Canal,Nome,Investimento\nGOOGLE ADS,black friday,5500\n", "update")
+    assert second["updated_rows"] == 1
+    assert second["created_rows"] == 0
+
+    campaigns = client.get(f"/api/v1/organizations/{org_id}/campaigns").json()
+    assert len(campaigns) == 1
+    assert campaigns[0]["investment"] == 5500
+
+
+def test_same_campaign_name_in_different_channels_is_not_a_duplicate(client):
+    org_id = _register_login_and_create_org(
+        client, "imp.campaignsmultichannel@example.com", "Empresa Imp Campanhas Multi Canal"
+    )
+    client.post(f"/api/v1/organizations/{org_id}/marketing-channels", json={"name": "Google Ads"})
+    client.post(f"/api/v1/organizations/{org_id}/marketing-channels", json={"name": "Instagram"})
+
+    content = b"Canal,Nome\nGoogle Ads,Black Friday\nInstagram,Black Friday\n"
+    create = _upload(client, org_id, "campanhas.csv", content, "text/csv", domain="campaigns")
+    job_id = create.json()["job"]["id"]
+    mapping = _suggested_mapping_dict(create.json())
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": mapping, "transform_config": {}},
+    )
+    assert mapping_resp.json()["duplicate"] == 0
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    ).json()
+    assert confirm["created_rows"] == 2

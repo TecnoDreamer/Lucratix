@@ -174,6 +174,26 @@ def test_export_products_includes_inactive_and_ignores_date_range(client):
     assert 'filename="products_export.json"' in resp.headers["content-disposition"]
 
 
+def test_export_campaigns_resolves_channel_name(client):
+    org_id = _register_login_and_create_org(client, "exp.campaigns@example.com", "Empresa Exp Campanhas")
+    channel = client.post(
+        f"/api/v1/organizations/{org_id}/marketing-channels", json={"name": "Google Ads"}
+    ).json()
+    client.post(
+        f"/api/v1/organizations/{org_id}/campaigns",
+        json={"channel_id": channel["id"], "name": "Black Friday", "investment": 5000, "clicks": 1200},
+    )
+
+    resp = client.get(f"/api/v1/organizations/{org_id}/exports/campaigns", params={"format": "json"})
+    assert resp.status_code == 200
+    payload = json.loads(resp.content)
+    # "channel" sai como nome, nunca o channel_id interno.
+    assert payload[0]["channel"] == "Google Ads"
+    assert payload[0]["name"] == "Black Friday"
+    assert payload[0]["investment"] == 5000.0
+    assert payload[0]["clicks"] == 1200
+
+
 def test_viewer_can_export_same_as_dashboard_read(client_factory):
     owner = client_factory()
     viewer_client = client_factory()

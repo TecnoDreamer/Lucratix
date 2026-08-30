@@ -3,7 +3,7 @@ lógica não-declarativa deste módulo (o resto é registro de dados)."""
 
 from datetime import date
 
-from app.modules.imports.domains import DOMAIN_REGISTRY, PRODUCTS, normalize_natural_key_value
+from app.modules.imports.domains import CAMPAIGNS, DOMAIN_REGISTRY, PRODUCTS, normalize_natural_key_value
 
 
 class TestNormalizeNaturalKeyValue:
@@ -38,3 +38,19 @@ class TestDomainRegistry:
     def test_only_name_is_required_in_products(self):
         required = {f.canonical_name for f in PRODUCTS.fields if f.required}
         assert required == {"name"}
+
+    def test_campaigns_is_registered(self):
+        assert DOMAIN_REGISTRY["campaigns"] is CAMPAIGNS
+
+    def test_campaigns_natural_key_is_name_and_channel(self):
+        # "name" sozinho é ambíguo (duas campanhas podem ter o mesmo nome em
+        # canais diferentes) — diferente de Produtos, onde "name" bastava.
+        assert CAMPAIGNS.natural_key == ("name", "channel")
+
+    def test_campaigns_supports_date_range(self):
+        # Ao contrário de Produtos, Campanha tem start_date/end_date.
+        assert CAMPAIGNS.supports_date_range is True
+
+    def test_channel_and_name_are_the_only_required_fields_in_campaigns(self):
+        required = {f.canonical_name for f in CAMPAIGNS.fields if f.required}
+        assert required == {"channel", "name"}

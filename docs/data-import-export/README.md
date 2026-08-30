@@ -1,7 +1,9 @@
 # Importação/Exportação de Dados
 
-Três domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**,
-**Funil** e **Produtos**. Decisão de escopo confirmada com o usuário — ver histórico das PRs.
+Quatro domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**,
+**Funil**, **Produtos** e **Marketing**. Todos os domínios reais que existiam no schema antes deste
+módulo estão cobertos — não há mais nenhum pendente. Decisão de escopo confirmada com o usuário — ver
+histórico das PRs.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — decisões e por quê (processamento síncrono, sem storage de
   arquivo, arquitetura por adaptadores, sugestão de mapeamento, validação, serialização, permissões,
@@ -60,7 +62,7 @@ Backend:
 - `tests/unit/test_import_domains.py` — `normalize_natural_key_value` e o registro de domínios.
 - `tests/fixtures/imports/` — arquivos de exemplo (`valid.csv`, `invalid.csv`, `duplicates.csv`,
   `valid.json`, `invalid.json`, `aliases.xlsx`) usados pelos testes de importação (domínio Financeiro;
-  Funil e Produtos usam conteúdo inline nos próprios testes, por ser pequeno).
+  Funil, Produtos e Marketing usam conteúdo inline nos próprios testes, por ser pequeno).
 
 Frontend (`apps/web/src/`):
 

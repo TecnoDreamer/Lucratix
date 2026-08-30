@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.campaign import Campaign
@@ -30,6 +30,38 @@ def create_channel(db: Session, *, organization_id: uuid.UUID, **fields: object)
     db.add(channel)
     db.flush()
     return channel
+
+
+def get_channel_by_name(db: Session, organization_id: uuid.UUID, name: str) -> MarketingChannel | None:
+    """Comparação sem diferenciar maiúsculas/minúsculas — usada pelo módulo
+    de importação para resolver o nome de canal escrito no arquivo (mesma
+    normalização de `imports/domains.py::normalize_natural_key_value`)."""
+    return (
+        db.query(MarketingChannel)
+        .filter(
+            MarketingChannel.organization_id == organization_id,
+            func.lower(MarketingChannel.name) == name.strip().lower(),
+        )
+        .one_or_none()
+    )
+
+
+def get_channels_by_ids(
+    db: Session, organization_id: uuid.UUID, channel_ids: set[uuid.UUID]
+) -> dict[uuid.UUID, MarketingChannel]:
+    """Busca em lote (evita N+1) — usada pela exportação para anexar o nome
+    do canal a cada campanha sem uma query por linha."""
+    if not channel_ids:
+        return {}
+    rows = (
+        db.query(MarketingChannel)
+        .filter(
+            MarketingChannel.organization_id == organization_id,
+            MarketingChannel.id.in_(channel_ids),
+        )
+        .all()
+    )
+    return {c.id: c for c in rows}
 
 
 def list_campaigns(db: Session, organization_id: uuid.UUID) -> list[Campaign]:
@@ -74,5 +106,31 @@ def get_campaign(db: Session, organization_id: uuid.UUID, campaign_id: uuid.UUID
 def create_campaign(db: Session, *, organization_id: uuid.UUID, **fields: object) -> Campaign:
     campaign = Campaign(organization_id=organization_id, **fields)
     db.add(campaign)
+    db.flush()
+    return campaign
+
+
+def get_campaign_by_name_and_channel(
+    db: Session, organization_id: uuid.UUID, name: str, channel_id: uuid.UUID
+) -> Campaign | None:
+    """Chave natural de Campanha para o módulo de importação: nome sozinho é
+    ambíguo (duas campanhas podem ter o mesmo nome em canais diferentes),
+    então a busca é sempre nome + canal — comparação de nome sem
+    diferenciar maiúsculas/minúsculas, mesma normalização do resto do
+    módulo."""
+    return (
+        db.query(Campaign)
+        .filter(
+            Campaign.organization_id == organization_id,
+            Campaign.channel_id == channel_id,
+            func.lower(Campaign.name) == name.strip().lower(),
+        )
+        .one_or_none()
+    )
+
+
+def update_campaign(db: Session, campaign: Campaign, **fields: object) -> Campaign:
+    for key, value in fields.items():
+        setattr(campaign, key, value)
     db.flush()
     return campaign
