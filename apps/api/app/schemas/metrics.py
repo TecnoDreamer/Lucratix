@@ -74,6 +74,31 @@ class ExecutiveDashboardRead(BaseModel):
     recurrence_rate: MetricWithComparisonRead
 
 
+class MonthlyMetricsRead(BaseModel):
+    """Um ponto da série mensal — mesmos 7 KPIs do dashboard executivo,
+    calculados isoladamente para este mês (não acumulado)."""
+
+    period: date
+    revenue: MetricResultRead
+    profit: MetricResultRead
+    margin: MetricResultRead
+    cac: MetricResultRead
+    conversion_rate: MetricResultRead
+    average_ticket: MetricResultRead
+    recurrence_rate: MetricResultRead
+
+
+class ExecutiveSeriesRead(BaseModel):
+    """Série mensal de KPIs para gráficos de evolução (um ponto por mês de
+    calendário tocado pelo intervalo). Mês sem dado aparece com
+    `is_applicable=False` em cada métrica (RN-003), nunca omitido — quem
+    desenha o gráfico decide como representar o buraco."""
+
+    date_from: date
+    date_to: date
+    points: list[MonthlyMetricsRead]
+
+
 class MarketingAnalyticsRead(BaseModel):
     """Métricas de campanha por intervalo de datas — ROAS, ROI, CTR, CPC,
     CPM, CPL, CPA. Campanhas sem `start_date` nem `end_date` são excluídas

@@ -8,13 +8,16 @@ import {
   formatMetric,
   formatPercentChange,
   type ExecutiveDashboard,
+  type ExecutiveSeries,
   type MarketingAnalytics,
   type MetricWithComparison,
+  type MonthlyMetrics,
 } from "@/lib/metrics";
 import { sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { MetricHelp } from "@/components/metric-help";
 import { DateRangeFilter } from "@/components/date-range-filter";
+import { SeriesChart } from "@/components/series-chart";
 import {
   IconDollar,
   IconGrid,
@@ -26,6 +29,10 @@ import {
 } from "@/components/icons";
 
 type CardConfig<T> = { key: keyof T & string; label: string; percent?: boolean; icon: typeof IconDollar };
+
+// Os 7 KPIs comuns a ExecutiveDashboard (agregado) e MonthlyMetrics (um
+// ponto da série) — os únicos campos que fazem sentido virar gráfico.
+type DashboardMetricKey = keyof ExecutiveDashboard & keyof MonthlyMetrics;
 
 const CARDS: CardConfig<ExecutiveDashboard>[] = [
   { key: "revenue", label: "Receita", icon: IconDollar },
@@ -96,12 +103,39 @@ function MetricGrid<T extends object>({ data, cards }: { data: T; cards: CardCon
   );
 }
 
+function SeriesGrid({ series }: { series: ExecutiveSeries }) {
+  return (
+    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {CARDS.map(({ key, label, percent, icon: Icon }, i) => (
+        <Card key={key} className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {label}
+              <MetricHelp metric={key} />
+            </p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+          </div>
+          <div className="mt-2">
+            <SeriesChart
+              points={series.points.map((p) => ({ period: p.period, metric: p[key as DashboardMetricKey] }))}
+              percent={percent}
+            />
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [data, setData] = useState<ExecutiveDashboard | null>(null);
+  const [series, setSeries] = useState<ExecutiveSeries | null>(null);
   const [marketing, setMarketing] = useState<MarketingAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +166,14 @@ export default function AnalyticsPage() {
         )
         .then((result) => {
           if (!cancelled) setData(result);
+        })
+        .catch(handleError),
+      api
+        .get<ExecutiveSeries>(
+          `/api/v1/organizations/${id}/analytics/executive/series?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+        )
+        .then((result) => {
+          if (!cancelled) setSeries(result);
         })
         .catch(handleError),
       api
@@ -190,6 +232,21 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         data && <MetricGrid data={data} cards={CARDS} />
+      )}
+
+      <div className="mt-10 flex items-center gap-2">
+        <IconTrendingUp className="h-4 w-4 text-slate-400" />
+        <h2 className={sectionTitle}>Evolução mensal</h2>
+      </div>
+
+      {loading ? (
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+      ) : (
+        series && <SeriesGrid series={series} />
       )}
 
       <div className="mt-10 flex items-center gap-2">

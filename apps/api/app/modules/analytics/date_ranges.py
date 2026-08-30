@@ -27,3 +27,21 @@ def months_in_range(date_from: date, date_to: date) -> int:
     `FinancialPeriod`/`FunnelSnapshot` sao mensais, entao esse e o numero
     maximo de registros possiveis no intervalo."""
     return (date_to.year - date_from.year) * 12 + (date_to.month - date_from.month) + 1
+
+
+def months_between(date_from: date, date_to: date) -> list[date]:
+    """Lista o dia 1 de cada mes de calendario tocado pelo intervalo, em
+    ordem cronologica (ex.: 15/08 a 03/09 -> [2026-08-01, 2026-09-01]).
+    Usado para montar series mensais (um ponto por mes) — `FinancialPeriod`/
+    `FunnelSnapshot` guardam `period` sempre como dia 1, entao essa lista e
+    exatamente o conjunto de chaves a procurar."""
+    months = []
+    current = date_from.replace(day=1)
+    end = date_to.replace(day=1)
+    while current <= end:
+        months.append(current)
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+    return months

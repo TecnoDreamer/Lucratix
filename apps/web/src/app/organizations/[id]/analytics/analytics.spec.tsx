@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
-import type { ExecutiveDashboard, MarketingAnalytics } from "@/lib/metrics";
+import type { ExecutiveDashboard, ExecutiveSeries, MarketingAnalytics } from "@/lib/metrics";
 import AnalyticsPage from "./page";
 
 const mockPush = vi.fn();
@@ -15,6 +15,10 @@ vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
   return { ...actual, api: { ...actual.api, get: vi.fn() } };
 });
+
+function fakeResult(value: number, isApplicable = true) {
+  return { value: isApplicable ? value : null, is_applicable: isApplicable, reason: isApplicable ? null : "Sem dado" };
+}
 
 function fakeMetric(value: number, percentChange: number | null = 0.1) {
   return {
@@ -45,6 +49,33 @@ const FAKE_DASHBOARD: ExecutiveDashboard = {
   recurrence_rate: fakeMetric(0.333),
 };
 
+const FAKE_SERIES: ExecutiveSeries = {
+  date_from: "2026-07-01",
+  date_to: "2026-08-31",
+  points: [
+    {
+      period: "2026-07-01",
+      revenue: fakeResult(50000),
+      profit: fakeResult(18000),
+      margin: fakeResult(0.36),
+      cac: fakeResult(120),
+      conversion_rate: fakeResult(0.06),
+      average_ticket: fakeResult(900),
+      recurrence_rate: fakeResult(0.3),
+    },
+    {
+      period: "2026-08-01",
+      revenue: fakeResult(58200),
+      profit: fakeResult(20900),
+      margin: fakeResult(0.359),
+      cac: fakeResult(133.33),
+      conversion_rate: fakeResult(0.07),
+      average_ticket: fakeResult(923.81),
+      recurrence_rate: fakeResult(0.333),
+    },
+  ],
+};
+
 const FAKE_MARKETING: MarketingAnalytics = {
   date_from: "2026-08-01",
   date_to: "2026-08-31",
@@ -60,10 +91,17 @@ const FAKE_MARKETING: MarketingAnalytics = {
   cpa: fakeMetric(100),
 };
 
-function mockApiByUrl(overrides?: { dashboard?: ExecutiveDashboard; marketing?: MarketingAnalytics }) {
+function mockApiByUrl(overrides?: {
+  dashboard?: ExecutiveDashboard;
+  series?: ExecutiveSeries;
+  marketing?: MarketingAnalytics;
+}) {
   vi.mocked(api.get).mockImplementation((url: string) => {
     if (url.includes("/analytics/marketing")) {
       return Promise.resolve(overrides?.marketing ?? FAKE_MARKETING);
+    }
+    if (url.includes("/analytics/executive/series")) {
+      return Promise.resolve(overrides?.series ?? FAKE_SERIES);
     }
     return Promise.resolve(overrides?.dashboard ?? FAKE_DASHBOARD);
   });
@@ -139,15 +177,51 @@ describe("AnalyticsPage", () => {
     render(<AnalyticsPage />);
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(2);
+      expect(api.get).toHaveBeenCalledTimes(3);
     });
 
     const { fireEvent } = await import("@testing-library/react");
     fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(4);
+      expect(api.get).toHaveBeenCalledTimes(6);
     });
+  });
+
+  it("renderiza os gráficos de evolução mensal com os meses da série", async () => {
+    mockApiByUrl();
+    render(<AnalyticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
+    });
+    // Um gráfico por KPI (7), cada um com rótulos de mês no eixo X —
+    // confirma que os dados da série chegaram ao componente.
+    expect(screen.getAllByText("jul/26").length).toBe(7);
+    expect(screen.getAllByText("ago/26").length).toBe(7);
+  });
+
+  it("mês sem dado na série não quebra o gráfico (buraco, não zero)", async () => {
+    mockApiByUrl({
+      series: {
+        ...FAKE_SERIES,
+        points: [
+          FAKE_SERIES.points[0],
+          {
+            ...FAKE_SERIES.points[1],
+            revenue: { value: null, is_applicable: false, reason: "Sem dado" },
+          },
+        ],
+      },
+    });
+    render(<AnalyticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
+    });
+    // O mês sem dado não faz o gráfico quebrar nem some da lista de meses no
+    // eixo X — só não desenha ponto/linha ali (buraco, RN-003).
+    expect(screen.getAllByText("ago/26").length).toBe(7);
   });
 
   it("renderiza os KPIs de marketing (ROAS, ROI, CTR, CPC, CPM, CPL, CPA)", async () => {
