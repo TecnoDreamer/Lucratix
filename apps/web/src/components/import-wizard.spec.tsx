@@ -237,4 +237,53 @@ describe("ImportWizard", () => {
     await screen.findByText("produtos.csv");
     expect(screen.queryByText("Formato de data (campo Período)")).not.toBeInTheDocument();
   });
+
+  it("Marketing: preview mostra o erro de canal não encontrado (nunca cria canal por adivinhação)", async () => {
+    vi.mocked(api.postForm).mockResolvedValue({
+      job: { id: "job-1", source_filename: "campanhas.csv", status: "MAPPING_REQUIRED", total_rows: 1 },
+      suggested_mapping: [
+        { header: "Canal", canonical_field: "channel", confidence: "alta", display_name: "Canal" },
+        { header: "Nome", canonical_field: "name", confidence: "alta", display_name: "Nome" },
+      ],
+      domain_fields: [
+        { canonical_name: "channel", display_name: "Canal", data_type: "string", required: true },
+        { canonical_name: "name", display_name: "Nome", data_type: "string", required: true },
+      ],
+    });
+    vi.mocked(api.put).mockResolvedValue({ status: "READY", total: 1, valid: 0, invalid: 1, duplicate: 0 });
+    vi.mocked(api.get).mockResolvedValue({
+      items: [
+        {
+          row_number: 1,
+          transformed: { name: "Black Friday" },
+          status: "invalid",
+          errors: [{ field: "channel", message: 'Canal "Google Adds" não encontrado nesta organização.' }],
+        },
+      ],
+      total: 1,
+      limit: 50,
+      offset: 0,
+    });
+
+    render(<ImportWizard organizationId="org-1" />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Domínio" }), {
+      target: { value: "campaigns" },
+    });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(["Canal,Nome\nGoogle Adds,Black Friday\n"], "campanhas.csv", { type: "text/csv" }),
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByText("campanhas.csv");
+
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    expect(
+      await screen.findByText('Canal "Google Adds" não encontrado nesta organização.')
+    ).toBeInTheDocument();
+  });
 });

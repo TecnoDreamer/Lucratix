@@ -1,15 +1,15 @@
 # Arquitetura — Importação/Exportação de Dados
 
-Três domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**
-(`financial_periods`, 2026-08-29), **Funil** (`funnel_snapshots`, 2026-08-29) e **Produtos**
-(`products`, 2026-08-29 — o mais diferente dos três: sem `period`, com campo de texto/booleano e sem
-constraint de unicidade no banco, e mesmo assim coube na mesma estrutura). Marketing/Campanhas fica
-para uma PR seguinte. O ponto de extensão é
+Quatro domínios completos, ponta a ponta (importação + exportação + frontend): **Financeiro**
+(`financial_periods`), **Funil** (`funnel_snapshots`), **Produtos** (`products`) e **Marketing**
+(`campaigns`, 2026-08-30 — o único com uma referência para outra tabela, `channel_id`; ver seção
+própria abaixo). O ponto de extensão é
 [domains.py](../../apps/api/app/modules/imports/domains.py) (compartilhado pelos dois lados) +
 [writers.py](../../apps/api/app/modules/imports/writers.py) (importação) +
 [readers.py](../../apps/api/app/modules/exports/readers.py) (exportação) — nenhum outro módulo do
 pipeline (parsers, mapping, validation, security, serializers, os dois routers) conhece um domínio
-específico.
+específico. Todos os quatro domínios reais que existiam no schema antes deste módulo estão cobertos —
+não há mais nenhum domínio pendente.
 
 ## Por que processamento síncrono (sem fila de jobs)
 
@@ -70,7 +70,8 @@ a passo real, não hipotético:
    tudo, mesmo formato de `financials_repository`).
 3. Registrar as duas funções em `DOMAIN_WRITERS`/`DOMAIN_READERS`, e a busca de chave natural existente
    (duplicidade) em `service.py::_NATURAL_KEY_LOOKUPS` (mesmo padrão dict-por-domínio, não um
-   if/elif crescendo a cada domínio).
+   if/elif crescendo a cada domínio). Se o domínio referenciar outra tabela (ex.: Campanhas → Canal),
+   registrar também em `_FOREIGN_KEY_LOOKUPS` (ver seção de Marketing abaixo).
 4. Frontend: acrescentar `{ key, label }` em `apps/web/src/lib/data-domains.ts` — a única lista que o
    frontend mantém (pequena demais para valer buscar de `GET /imports/domains`, que além disso exige
    `ANALYST`+ e o painel de exportação é visível para `VIEWER` também).
@@ -107,6 +108,42 @@ precisou até agora, não só um registro novo de dados:
   (`exports/service.py`, para não filtrar por acidente nem gerar um nome de arquivo que sugira um
   filtro que não foi aplicado) e escondido no frontend (`lib/data-domains.ts::supportsDateRange`).
 
+**Marketing (`campaigns`) foi além de Produtos** — o único domínio com uma referência para OUTRA
+tabela (`channel_id`, FK obrigatória para `marketing_channels`). O arquivo importado só traz o NOME do
+canal (texto), nunca o id interno — decisão confirmada com o usuário antes de implementar: **se o
+nome não bate com nenhum canal já cadastrado na organização, a linha fica inválida**. Nunca cria um
+canal automaticamente a partir do nome — um erro de digitação na planilha ("Google Adds" em vez de
+"Google Ads") não pode virar um canal fantasma cadastrado silenciosamente.
+
+- **`validate_rows` ganhou um parâmetro novo, `foreign_key_values`** (`{canonical_field: {valores
+  normalizados válidos}}`, opcional — só Campanhas usa hoje): depois do campo obrigatório ser
+  verificado, se o campo tem uma entrada em `foreign_key_values` e o valor transformado (normalizado)
+  não está no conjunto, a linha ganha um erro
+  (`'{campo} "{valor}" não encontrado nesta organização — cadastre-o antes de importar.'`). Mecanismo
+  genérico — qualquer domínio futuro com a mesma necessidade (um campo de texto que precisa apontar
+  para um registro que já existe em outra tabela) reaproveita sem mudar `validation.py` de novo.
+- `service.py::_FOREIGN_KEY_LOOKUPS` — mesmo padrão dict-por-domínio de `_NATURAL_KEY_LOOKUPS`/
+  `DOMAIN_WRITERS`/`DOMAIN_READERS`. Para Campanhas, busca todos os nomes de canal já cadastrados na
+  organização (`imports/repository.py::get_valid_channel_names`) e passa como o conjunto válido do
+  campo `"channel"`.
+- **Chave natural composta**: `("name", "channel")` — nome de campanha sozinho é ambíguo (duas
+  campanhas podem ter o mesmo nome em canais diferentes), diferente de Produtos, onde `name` sozinho
+  bastava. Nenhum dos dois componentes tem constraint de unicidade no banco; a normalização
+  case/espaço-insensível já genérica (`normalize_natural_key_value`, aplicada a cada componente da
+  chave) cobre isso automaticamente, sem código novo.
+- `writers.py::write_campaign_row` resolve o canal por nome de novo na hora de gravar
+  (`marketing_repository.get_channel_by_name`) — redundante com a checagem da validação só na
+  aparência: a validação garante que o canal existe no momento em que valida, mas nada impede (em
+  teoria) que ele deixe de existir entre o preview e a confirmação. Como não existe endpoint de
+  exclusão de canal hoje, isso nunca acontece na prática — a linha defensiva (`return "skipped"` se o
+  canal não for encontrado) nunca deveria disparar, mas existe para nunca derrubar a confirmação
+  inteira por causa de uma única linha.
+- `exports/readers.py::read_campaign_rows` devolve o NOME do canal, nunca o `channel_id` — `Campaign`
+  não tem relationship ORM para `MarketingChannel` (nenhuma tabela deste módulo tem relationship
+  definida, é FK pura em todo lugar), então a leitura busca os canais referenciados em lote
+  (`marketing_repository.get_channels_by_ids`) para evitar N+1, uma query por página de export, não
+  uma por campanha.
+
 ## Sugestão de mapeamento (não é autorização)
 
 `mapping.py::suggest_mapping` roda em três camadas, na ordem:
@@ -135,17 +172,18 @@ errado, não existe risco de o preview mostrar um resultado desatualizado de uma
 custo (reprocessar até 2000 linhas em memória a cada chamada) é aceitável dado o teto de linhas já
 imposto por outro motivo (processamento síncrono).
 
-Duplicidade é detectada por **chave natural do domínio** (`DomainSpec.natural_key`), tanto contra o
-próprio arquivo (duas linhas iguais no mesmo upload) quanto contra o banco — um componente de texto da
-chave é comparado sem diferenciar maiúsculas/minúsculas nem espaço nas bordas
-(`normalize_natural_key_value`), necessário para Produtos (ver acima). Estratégia de tratamento de
-duplicata é escolhida pelo usuário na confirmação: `"skip"` (padrão) ou `"update"`. `"create_new"` do
-vocabulário genérico do prompt original não se aplica a nenhum dos três domínios de hoje —
-`(organization_id, period)` já é a própria constraint de unicidade do banco em Financeiro/Funil, e
-Produtos, mesmo sem constraint de banco, resolveu deduplicar por nome em vez de permitir duplicata (a
-alternativa seria mais fiel ao "não tem unicidade real", mas corresponderia pior à intenção de quem
-importa uma planilha de produtos). Um domínio futuro que realmente precise de "criar sempre, nunca
-atualizar" poderia reintroduzir essa opção.
+Duplicidade é detectada por **chave natural do domínio** (`DomainSpec.natural_key`, que pode ter mais
+de um componente — ver Campanhas acima), tanto contra o próprio arquivo (duas linhas iguais no mesmo
+upload) quanto contra o banco — um componente de texto da chave é comparado sem diferenciar
+maiúsculas/minúsculas nem espaço nas bordas (`normalize_natural_key_value`), necessário para
+Produtos/Campanhas (ver acima). Estratégia de tratamento de duplicata é escolhida pelo usuário na
+confirmação: `"skip"` (padrão) ou `"update"`. `"create_new"` do vocabulário genérico do prompt original
+não se aplica a nenhum dos quatro domínios de hoje — `(organization_id, period)` já é a própria
+constraint de unicidade do banco em Financeiro/Funil, e Produtos/Campanhas, mesmo sem constraint de
+banco, resolveram deduplicar por chave natural em vez de permitir duplicata (a alternativa seria mais
+fiel ao "não tem unicidade real", mas corresponderia pior à intenção de quem reimporta a mesma
+planilha). Um domínio futuro que realmente precise de "criar sempre, nunca atualizar" poderia
+reintroduzir essa opção.
 
 ## Formato de data e número
 
@@ -232,8 +270,6 @@ de importação/exportação em massa na tela que todo mundo vê primeiro.
 
 ## O que este documento não decide ainda
 
-- Marketing/Campanhas — precisa antes decidir como resolver o canal (`channel_id`) a partir do nome
-  escrito no arquivo (ver domains.py, docstring do módulo).
 - Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
   lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).
 - Scanner de malware real no upload — não existe serviço compatível disponível hoje; a validação atual

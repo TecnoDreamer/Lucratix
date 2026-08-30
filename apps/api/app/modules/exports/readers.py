@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
+from app.modules.marketing import repository as marketing_repository
 from app.modules.products import repository as products_repository
 
 
@@ -102,10 +103,48 @@ def read_product_rows(
     return sorted(rows, key=lambda r: str(r["name"]).lower())
 
 
+def read_campaign_rows(
+    db: Session, organization_id: uuid.UUID, date_from: date | None, date_to: date | None
+) -> list[dict[str, object]]:
+    """"channel" sai como o NOME do canal, não o channel_id interno — busca
+    em lote (evita N+1) via `get_channels_by_ids`, já que Campaign não tem
+    relationship ORM para MarketingChannel (nenhum join automático)."""
+    if date_from is not None and date_to is not None:
+        campaigns = marketing_repository.list_campaigns_in_range(db, organization_id, date_from, date_to)
+    else:
+        campaigns = marketing_repository.list_campaigns(db, organization_id)
+
+    channel_ids = {c.channel_id for c in campaigns}
+    channels_by_id = marketing_repository.get_channels_by_ids(db, organization_id, channel_ids)
+
+    rows: list[dict[str, object]] = [
+        {
+            "channel": channels_by_id[c.channel_id].name if c.channel_id in channels_by_id else None,
+            "name": c.name,
+            "start_date": c.start_date,
+            "end_date": c.end_date,
+            "investment": float(c.investment) if c.investment is not None else None,
+            "impressions": c.impressions,
+            "clicks": c.clicks,
+            "leads": c.leads,
+            "opportunities": c.opportunities,
+            "customers": c.customers,
+            "attributed_revenue": float(c.attributed_revenue) if c.attributed_revenue is not None else None,
+        }
+        for c in campaigns
+    ]
+    # Campanha sem nenhuma data (start_date e end_date nulos) vai para o
+    # fim, em vez de quebrar a ordenação — mesma regra de
+    # list_campaigns_in_range (RF-023) de tratar "sem data" como um caso à
+    # parte, nunca ordenado como se fosse anterior a tudo.
+    return sorted(rows, key=lambda r: (r["start_date"] is None, r["start_date"] or date.min))
+
+
 DomainReader = Callable[[Session, uuid.UUID, "date | None", "date | None"], list[dict[str, object]]]
 
 DOMAIN_READERS: dict[str, DomainReader] = {
     "financial_periods": read_financial_period_rows,
     "funnel_snapshots": read_funnel_snapshot_rows,
     "products": read_product_rows,
+    "campaigns": read_campaign_rows,
 }

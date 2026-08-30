@@ -57,6 +57,7 @@ _NATURAL_KEY_LOOKUPS: dict[str, Callable[[Session, uuid.UUID], set[tuple[object,
     "financial_periods": repository.get_existing_financial_periods,
     "funnel_snapshots": repository.get_existing_funnel_snapshot_periods,
     "products": repository.get_existing_product_names,
+    "campaigns": repository.get_existing_campaign_keys,
 }
 
 
@@ -66,6 +67,26 @@ def _existing_natural_keys(
     lookup = _NATURAL_KEY_LOOKUPS.get(domain_key)
     if lookup is None:
         return set()
+    return lookup(db, organization_id)
+
+
+def _campaign_foreign_key_values(db: Session, organization_id: uuid.UUID) -> dict[str, set[object]]:
+    return {"channel": repository.get_valid_channel_names(db, organization_id)}
+
+
+# Mesmo padrão dos dois dicionários acima — só Campanhas precisa disso hoje
+# (campo de texto que precisa apontar pra um registro que já existe em
+# OUTRA tabela; ver validation.py::validate_rows, parâmetro
+# `foreign_key_values`, e a decisão de nunca criar canal por adivinhação).
+_FOREIGN_KEY_LOOKUPS: dict[str, Callable[[Session, uuid.UUID], dict[str, set[object]]]] = {
+    "campaigns": _campaign_foreign_key_values,
+}
+
+
+def _foreign_key_values(db: Session, organization_id: uuid.UUID, domain_key: str) -> dict[str, set[object]]:
+    lookup = _FOREIGN_KEY_LOOKUPS.get(domain_key)
+    if lookup is None:
+        return {}
     return lookup(db, organization_id)
 
 
@@ -122,7 +143,10 @@ def get_validation_summary(db: Session, job: ImportJob) -> ValidationSummary:
     domain = _require_domain(job.domain)
     raw_rows = [cast("dict[str, object]", r["values"]) for r in job.raw_rows]
     existing_keys = _existing_natural_keys(db, job.organization_id, job.domain)
-    return validate_rows(raw_rows, job.mapping or {}, domain, job.transform_config or {}, existing_keys)
+    foreign_keys = _foreign_key_values(db, job.organization_id, job.domain)
+    return validate_rows(
+        raw_rows, job.mapping or {}, domain, job.transform_config or {}, existing_keys, foreign_keys
+    )
 
 
 def save_mapping(

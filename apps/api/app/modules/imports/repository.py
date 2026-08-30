@@ -2,11 +2,13 @@ import uuid
 
 from sqlalchemy.orm import Session
 
+from app.models.campaign import Campaign
 from app.models.financial_period import FinancialPeriod
 from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.import_error import ImportRowError
 from app.models.import_job import ImportJob
 from app.models.import_mapping_template import ImportMappingTemplate
+from app.models.marketing_channel import MarketingChannel
 from app.models.product import Product
 from app.modules.imports.domains import normalize_natural_key_value
 
@@ -99,6 +101,31 @@ def get_existing_product_names(db: Session, organization_id: uuid.UUID) -> set[t
     banco, então os dois lados da comparação precisam concordar."""
     rows = db.query(Product.name).filter(Product.organization_id == organization_id).all()
     return {(normalize_natural_key_value(row.name),) for row in rows}
+
+
+def get_existing_campaign_keys(db: Session, organization_id: uuid.UUID) -> set[tuple[object, ...]]:
+    """Chave (nome da campanha, nome do canal) — nome de campanha sozinho é
+    ambíguo (ver domains.py::CAMPAIGNS), e nenhum dos dois tem constraint de
+    unicidade no banco. JOIN com marketing_channels só para pegar o nome do
+    canal (a chave natural do import é por nome, nunca por channel_id)."""
+    rows = (
+        db.query(Campaign.name, MarketingChannel.name)
+        .join(MarketingChannel, MarketingChannel.id == Campaign.channel_id)
+        .filter(Campaign.organization_id == organization_id)
+        .all()
+    )
+    return {
+        (normalize_natural_key_value(campaign_name), normalize_natural_key_value(channel_name))
+        for campaign_name, channel_name in rows
+    }
+
+
+def get_valid_channel_names(db: Session, organization_id: uuid.UUID) -> set[object]:
+    """Usado por service.py para validar, na importação de Campanhas, se o
+    canal escrito no arquivo já existe — nunca cria um canal por
+    adivinhação (decisão confirmada com o usuário)."""
+    rows = db.query(MarketingChannel.name).filter(MarketingChannel.organization_id == organization_id).all()
+    return {normalize_natural_key_value(row.name) for row in rows}
 
 
 def create_mapping_template(

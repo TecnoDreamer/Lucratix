@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
+from app.modules.marketing import repository as marketing_repository
 from app.modules.products import repository as products_repository
 
 WriteOutcome = Literal["created", "updated", "skipped"]
@@ -106,8 +107,57 @@ def write_product_row(
     return "created"
 
 
+def write_campaign_row(
+    db: Session,
+    *,
+    organization_id: uuid.UUID,
+    transformed: dict[str, object],
+    duplicate_strategy: str,
+    is_duplicate: bool,
+) -> WriteOutcome:
+    if is_duplicate and duplicate_strategy == "skip":
+        return "skipped"
+
+    name = cast(str, transformed["name"])
+    channel_name = cast(str, transformed["channel"])
+    channel = marketing_repository.get_channel_by_name(db, organization_id, channel_name)
+    if channel is None:
+        # Defensivo: validation.py (service.py::_foreign_key_values) já
+        # garante que o canal existe no momento da validação — isto só
+        # dispararia se o canal fosse apagado entre o preview e a
+        # confirmação, e hoje não existe nem endpoint para apagar canal.
+        # Ignora em vez de derrubar a confirmação inteira por uma linha.
+        return "skipped"
+
+    existing = marketing_repository.get_campaign_by_name_and_channel(db, organization_id, name, channel.id)
+
+    fields: dict[str, object] = {
+        "name": name,
+        "start_date": transformed.get("start_date"),
+        "end_date": transformed.get("end_date"),
+        "investment": transformed.get("investment"),
+        "impressions": transformed.get("impressions"),
+        "clicks": transformed.get("clicks"),
+        "leads": transformed.get("leads"),
+        "opportunities": transformed.get("opportunities"),
+        "customers": transformed.get("customers"),
+        "attributed_revenue": transformed.get("attributed_revenue"),
+    }
+
+    if existing is not None:
+        # channel_id nunca entra num update (mesmo contrato de
+        # CampaignUpdate, schemas/marketing.py) — a chave natural já é
+        # (nome, canal), então o canal de uma duplicata é sempre o mesmo.
+        marketing_repository.update_campaign(db, existing, **fields)
+        return "updated"
+    fields["channel_id"] = channel.id
+    marketing_repository.create_campaign(db, organization_id=organization_id, **fields)
+    return "created"
+
+
 DOMAIN_WRITERS = {
     "financial_periods": write_financial_period_row,
     "funnel_snapshots": write_funnel_snapshot_row,
     "products": write_product_row,
+    "campaigns": write_campaign_row,
 }

@@ -4,7 +4,7 @@ por chave natural (dentro do arquivo e contra o banco)."""
 
 from datetime import date
 
-from app.modules.imports.domains import FINANCIAL_PERIODS, PRODUCTS
+from app.modules.imports.domains import CAMPAIGNS, FINANCIAL_PERIODS, PRODUCTS
 from app.modules.imports.validation import validate_rows
 
 MAPPING = {"Periodo": "period", "Receita": "revenue"}
@@ -124,3 +124,72 @@ def test_products_boolean_field_false_is_not_treated_as_missing():
     result = summary.rows[0]
     assert result.status == "valid"
     assert result.transformed["active"] is False
+
+
+CAMPAIGN_MAPPING = {"Canal": "channel", "Nome": "name"}
+
+
+def test_campaign_with_known_channel_is_valid():
+    rows = [{"Canal": "Google Ads", "Nome": "Black Friday"}]
+    foreign_keys = {"channel": {"google ads"}}  # já normalizado, como o repository devolve
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set(), foreign_keys)
+
+    assert summary.rows[0].status == "valid"
+
+
+def test_campaign_with_unknown_channel_is_invalid_and_never_creates_one():
+    # Decisão confirmada com o usuário: nunca cria canal por adivinhação a
+    # partir de um erro de digitação na planilha — a linha vira inválida.
+    rows = [{"Canal": "Google Adds", "Nome": "Black Friday"}]
+    foreign_keys = {"channel": {"google ads"}}
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set(), foreign_keys)
+
+    result = summary.rows[0]
+    assert result.status == "invalid"
+    error = next(e for e in result.errors if e.field == "channel")
+    assert 'Canal "Google Adds" não encontrado' in error.message
+
+
+def test_campaign_channel_check_is_case_and_whitespace_insensitive():
+    rows = [{"Canal": "  GOOGLE ADS  ", "Nome": "Black Friday"}]
+    foreign_keys = {"channel": {"google ads"}}
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set(), foreign_keys)
+
+    assert summary.rows[0].status == "valid"
+
+
+def test_campaign_without_foreign_key_values_skips_channel_check():
+    # Nenhuma entrada para "channel" em foreign_key_values (ou parâmetro
+    # omitido) — nenhuma verificação é feita, o campo só passa pela
+    # validação de texto normal.
+    rows = [{"Canal": "Qualquer Coisa", "Nome": "Black Friday"}]
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set())
+
+    assert summary.rows[0].status == "valid"
+
+
+def test_campaign_duplicate_detection_uses_name_and_channel_together():
+    # "name" sozinho não basta — mesma campanha em canais diferentes não é
+    # duplicata.
+    rows = [
+        {"Canal": "Google Ads", "Nome": "Black Friday"},
+        {"Canal": "Instagram", "Nome": "Black Friday"},
+    ]
+    foreign_keys = {"channel": {"google ads", "instagram"}}
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set(), foreign_keys)
+
+    assert summary.rows[0].status == "valid"
+    assert summary.rows[1].status == "valid"
+    assert summary.duplicate == 0
+
+
+def test_campaign_same_name_and_channel_is_duplicate():
+    rows = [
+        {"Canal": "Google Ads", "Nome": "Black Friday"},
+        {"Canal": "  google ads  ", "Nome": "black friday"},
+    ]
+    foreign_keys = {"channel": {"google ads"}}
+    summary = validate_rows(rows, CAMPAIGN_MAPPING, CAMPAIGNS, {}, set(), foreign_keys)
+
+    assert summary.rows[0].status == "valid"
+    assert summary.rows[1].status == "duplicate"
