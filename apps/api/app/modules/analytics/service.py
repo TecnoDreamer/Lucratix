@@ -5,9 +5,11 @@ sem infraestrutura (RNF-016).
 """
 
 from dataclasses import dataclass
+from datetime import date
 
 from app.models.financial_period import FinancialPeriod
 from app.models.funnel_snapshot import FunnelSnapshot
+from app.modules.analytics.date_ranges import months_between
 from app.modules.metrics import engine
 from app.modules.metrics.engine import MetricResult
 
@@ -129,3 +131,38 @@ def compute_dashboard_metrics(
         "average_ticket": average_ticket_result,
         "recurrence_rate": recurrence_result,
     }
+
+
+@dataclass(frozen=True)
+class MonthlyMetrics:
+    """Um ponto da serie mensal — mesmos KPIs de `compute_dashboard_metrics`,
+    calculados isoladamente para um unico mes (nao acumulado, nao media)."""
+
+    period: date
+    metrics: dict[str, MetricResult]
+
+
+def compute_monthly_series(
+    date_from: date,
+    date_to: date,
+    financials: list[FinancialPeriod],
+    funnels: list[FunnelSnapshot],
+) -> list[MonthlyMetrics]:
+    """RF-023 (extensao): um ponto por mes de calendario tocado pelo
+    intervalo (`months_between`), na ordem cronologica — para alimentar
+    graficos de evolucao. Mes sem `FinancialPeriod`/`FunnelSnapshot` ainda
+    aparece na lista (nunca omitido: o grafico precisa do "buraco" para nao
+    sugerir continuidade que nao existe, RN-003) — `compute_dashboard_metrics`
+    ja devolve `is_applicable=False` nesse caso.
+    """
+    financials_by_month = {p.period: p for p in financials}
+    funnels_by_month = {s.period: s for s in funnels}
+    return [
+        MonthlyMetrics(
+            period=month,
+            metrics=compute_dashboard_metrics(
+                financials_by_month.get(month), funnels_by_month.get(month)
+            ),
+        )
+        for month in months_between(date_from, date_to)
+    ]

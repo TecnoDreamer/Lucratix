@@ -63,6 +63,12 @@ def test_viewer_access_split_between_dashboard_and_analytics_reports(client_fact
     )
     assert marketing_resp.status_code == 403
 
+    series_resp = viewer_client.get(
+        f"/api/v1/organizations/{org['id']}/analytics/executive/series",
+        params={"date_from": "2026-08-01", "date_to": "2026-08-31"},
+    )
+    assert series_resp.status_code == 403
+
     report_resp = viewer_client.get(
         f"/api/v1/organizations/{org['id']}/reports/basic", params={"period": "2026-08-01"}
     )

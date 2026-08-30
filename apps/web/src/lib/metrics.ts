@@ -63,6 +63,26 @@ export interface OrganizationSummary {
   leads: number | null;
 }
 
+/** Um ponto da série mensal de KPIs (GET /analytics/executive/series) —
+ * mesmos 7 campos do dashboard executivo, calculados isoladamente para
+ * este mês (não acumulado). */
+export interface MonthlyMetrics {
+  period: string;
+  revenue: MetricResult;
+  profit: MetricResult;
+  margin: MetricResult;
+  cac: MetricResult;
+  conversion_rate: MetricResult;
+  average_ticket: MetricResult;
+  recurrence_rate: MetricResult;
+}
+
+export interface ExecutiveSeries {
+  date_from: string;
+  date_to: string;
+  points: MonthlyMetrics[];
+}
+
 export interface MarketingAnalytics {
   date_from: string;
   date_to: string;

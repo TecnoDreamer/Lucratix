@@ -2,12 +2,15 @@
 SQLAlchemy usados aqui sao construidos em memoria, sem sessao/commit.
 """
 
+from datetime import date
+
 from app.models.financial_period import FinancialPeriod
 from app.models.funnel_snapshot import FunnelSnapshot
 from app.modules.analytics.service import (
     aggregate_financials,
     aggregate_funnels,
     compute_dashboard_metrics,
+    compute_monthly_series,
 )
 
 
@@ -101,3 +104,42 @@ def test_compute_dashboard_metrics_accepts_aggregated_dataclasses():
     assert metrics["revenue"].value == 10000
     assert metrics["profit"].value == 6000
     assert metrics["cac"].value == 100
+
+
+def test_compute_monthly_series_has_one_point_per_calendar_month():
+    financials = [FinancialPeriod(period=date(2026, 6, 1), revenue=10000)]
+    funnels: list[FunnelSnapshot] = []
+
+    series = compute_monthly_series(date(2026, 6, 1), date(2026, 8, 31), financials, funnels)
+
+    assert [point.period for point in series] == [date(2026, 6, 1), date(2026, 7, 1), date(2026, 8, 1)]
+
+
+def test_compute_monthly_series_uses_each_months_own_data_not_a_running_total():
+    financials = [
+        FinancialPeriod(period=date(2026, 6, 1), revenue=10000),
+        FinancialPeriod(period=date(2026, 7, 1), revenue=12000),
+    ]
+    funnels: list[FunnelSnapshot] = []
+
+    series = compute_monthly_series(date(2026, 6, 1), date(2026, 7, 31), financials, funnels)
+
+    assert series[0].metrics["revenue"].value == 10000
+    assert series[1].metrics["revenue"].value == 12000  # nao 22000 — nao e acumulado
+
+
+def test_compute_monthly_series_month_without_data_is_not_applicable_but_not_omitted():
+    # Mes do meio sem financial_period: aparece na lista (nunca "pulado"),
+    # com is_applicable=False — o grafico precisa do buraco (RN-003).
+    financials = [
+        FinancialPeriod(period=date(2026, 6, 1), revenue=10000),
+        FinancialPeriod(period=date(2026, 8, 1), revenue=15000),
+    ]
+    funnels: list[FunnelSnapshot] = []
+
+    series = compute_monthly_series(date(2026, 6, 1), date(2026, 8, 31), financials, funnels)
+
+    assert len(series) == 3
+    assert series[1].period == date(2026, 7, 1)
+    assert series[1].metrics["revenue"].is_applicable is False
+    assert series[1].metrics["revenue"].value is None

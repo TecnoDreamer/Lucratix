@@ -13,6 +13,7 @@ from app.modules.analytics.service import (
     aggregate_financials,
     aggregate_funnels,
     compute_dashboard_metrics,
+    compute_monthly_series,
 )
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
@@ -22,9 +23,11 @@ from app.modules.metrics.engine import compare_periods
 from app.schemas.metrics import (
     DashboardRead,
     ExecutiveDashboardRead,
+    ExecutiveSeriesRead,
     MarketingAnalyticsRead,
     MetricResultRead,
     MetricWithComparisonRead,
+    MonthlyMetricsRead,
     PeriodComparisonRead,
 )
 
@@ -150,6 +153,48 @@ def get_executive_dashboard(
         months_with_financial_data=len(financials),
         months_with_funnel_data=len(funnels),
         **metrics_with_comparison,
+    )
+
+
+@router.get("/analytics/executive/series")
+def get_executive_series(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> ExecutiveSeriesRead:
+    """Serie mensal dos mesmos 7 KPIs de `/analytics/executive`, um ponto por
+    mes de calendario tocado pelo intervalo — para os graficos de evolucao
+    da Visao Executiva. Mesma permissao do endpoint agregado (ANALYST+): e o
+    mesmo dado, so que detalhado por mes em vez de somado.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    monthly = compute_monthly_series(date_from, date_to, financials, funnels)
+
+    return ExecutiveSeriesRead(
+        date_from=date_from,
+        date_to=date_to,
+        points=[
+            MonthlyMetricsRead(
+                period=point.period,
+                **{
+                    key: MetricResultRead.from_result(point.metrics[key])
+                    for key in _DASHBOARD_METRIC_KEYS
+                },
+            )
+            for point in monthly
+        ],
     )
 
 
