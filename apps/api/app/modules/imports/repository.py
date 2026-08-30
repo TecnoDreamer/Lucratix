@@ -1,5 +1,4 @@
 import uuid
-from datetime import date
 
 from sqlalchemy.orm import Session
 
@@ -8,6 +7,8 @@ from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.import_error import ImportRowError
 from app.models.import_job import ImportJob
 from app.models.import_mapping_template import ImportMappingTemplate
+from app.models.product import Product
+from app.modules.imports.domains import normalize_natural_key_value
 
 
 def create_import_job(
@@ -72,7 +73,7 @@ def count_import_errors(db: Session, import_job_id: uuid.UUID) -> int:
     return db.query(ImportRowError).filter(ImportRowError.import_job_id == import_job_id).count()
 
 
-def get_existing_financial_periods(db: Session, organization_id: uuid.UUID) -> set[tuple[date]]:
+def get_existing_financial_periods(db: Session, organization_id: uuid.UUID) -> set[tuple[object, ...]]:
     rows = (
         db.query(FinancialPeriod.period)
         .filter(FinancialPeriod.organization_id == organization_id)
@@ -81,13 +82,23 @@ def get_existing_financial_periods(db: Session, organization_id: uuid.UUID) -> s
     return {(row.period,) for row in rows}
 
 
-def get_existing_funnel_snapshot_periods(db: Session, organization_id: uuid.UUID) -> set[tuple[date]]:
+def get_existing_funnel_snapshot_periods(
+    db: Session, organization_id: uuid.UUID
+) -> set[tuple[object, ...]]:
     rows = (
         db.query(FunnelSnapshot.period)
         .filter(FunnelSnapshot.organization_id == organization_id)
         .all()
     )
     return {(row.period,) for row in rows}
+
+
+def get_existing_product_names(db: Session, organization_id: uuid.UUID) -> set[tuple[object, ...]]:
+    """Normalizado (minúsculo, sem espaço nas bordas) com a mesma função
+    usada em validation.py — `name` não tem constraint de unicidade no
+    banco, então os dois lados da comparação precisam concordar."""
+    rows = db.query(Product.name).filter(Product.organization_id == organization_id).all()
+    return {(normalize_natural_key_value(row.name),) for row in rows}
 
 
 def create_mapping_template(

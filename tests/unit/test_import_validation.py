@@ -4,7 +4,7 @@ por chave natural (dentro do arquivo e contra o banco)."""
 
 from datetime import date
 
-from app.modules.imports.domains import FINANCIAL_PERIODS
+from app.modules.imports.domains import FINANCIAL_PERIODS, PRODUCTS
 from app.modules.imports.validation import validate_rows
 
 MAPPING = {"Periodo": "period", "Receita": "revenue"}
@@ -90,3 +90,37 @@ def test_invalid_row_is_never_also_marked_duplicate():
     summary = validate_rows(rows, MAPPING, FINANCIAL_PERIODS, {}, set())
     assert summary.invalid == 2
     assert summary.duplicate == 0
+
+
+def test_products_duplicate_detection_is_case_and_whitespace_insensitive():
+    # Produtos não tem constraint de unicidade em "name" no banco (ao
+    # contrário de "period" em Financeiro/Funil) — a deduplicação por
+    # maiúscula/minúscula e espaço nas bordas é a única defesa real.
+    mapping = {"Nome": "name"}
+    rows = [
+        {"Nome": "Notebook Pro"},
+        {"Nome": "  notebook pro  "},
+    ]
+    summary = validate_rows(rows, mapping, PRODUCTS, {}, set())
+
+    assert summary.rows[0].status == "valid"
+    assert summary.rows[1].status == "duplicate"
+
+
+def test_products_duplicate_against_existing_database_is_case_insensitive():
+    mapping = {"Nome": "name"}
+    rows = [{"Nome": "Notebook Pro"}]
+    existing = {("notebook pro",)}  # já normalizado, como devolvido pelo repository
+    summary = validate_rows(rows, mapping, PRODUCTS, {}, existing)
+
+    assert summary.rows[0].status == "duplicate"
+
+
+def test_products_boolean_field_false_is_not_treated_as_missing():
+    mapping = {"Nome": "name", "Ativo": "active"}
+    rows = [{"Nome": "Produto Descontinuado", "Ativo": "false"}]
+    summary = validate_rows(rows, mapping, PRODUCTS, {}, set())
+
+    result = summary.rows[0]
+    assert result.status == "valid"
+    assert result.transformed["active"] is False

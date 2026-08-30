@@ -108,4 +108,31 @@ describe("ExportPanel", () => {
       );
     });
   });
+
+  it("esconde o filtro de período para Produtos (catálogo, não série temporal)", () => {
+    render(<ExportPanel organizationId="org-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Produtos" }));
+
+    expect(
+      screen.queryByLabelText("Filtrar por período (padrão: todos os períodos)")
+    ).not.toBeInTheDocument();
+  });
+
+  it("exporta Produtos sem parâmetros de data mesmo tendo marcado o filtro antes de trocar de domínio", async () => {
+    mockDownloadFile.mockResolvedValue(fakeBlobResult("products_export.csv"));
+    render(<ExportPanel organizationId="org-1" />);
+
+    fireEvent.click(screen.getByLabelText("Filtrar por período (padrão: todos os períodos)"));
+    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-01-01" } });
+    fireEvent.change(screen.getByLabelText("Até"), { target: { value: "2026-12-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "Produtos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+
+    await waitFor(() => {
+      expect(mockDownloadFile).toHaveBeenCalledWith(
+        "/api/v1/organizations/org-1/exports/products?format=csv"
+      );
+    });
+  });
 });

@@ -383,18 +383,20 @@ export function ImportWizard({
             })}
           </div>
 
-          <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-            Formato de data (campo Período)
-            <select
-              value={dateFormat}
-              onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-              className={`${selectClass} w-auto`}
-            >
-              <option value="DMY">Dia/Mês/Ano (31/12/2026)</option>
-              <option value="MDY">Mês/Dia/Ano (12/31/2026)</option>
-              <option value="ISO">Ano-Mês-Dia (2026-12-31)</option>
-            </select>
-          </label>
+          {domainFields.some((f) => f.data_type === "date") && (
+            <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
+              Formato de data (campo Período)
+              <select
+                value={dateFormat}
+                onChange={(e) => setDateFormat(e.target.value as DateFormat)}
+                className={`${selectClass} w-auto`}
+              >
+                <option value="DMY">Dia/Mês/Ano (31/12/2026)</option>
+                <option value="MDY">Mês/Dia/Ano (12/31/2026)</option>
+                <option value="ISO">Ano-Mês-Dia (2026-12-31)</option>
+              </select>
+            </label>
+          )}
 
           <div className="flex gap-2">
             <button

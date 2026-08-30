@@ -55,8 +55,7 @@ def update_product(
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto nao encontrado")
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(product, field, value)
+    repository.update_product(db, product, **data.model_dump(exclude_unset=True))
 
     record_audit(
         db,

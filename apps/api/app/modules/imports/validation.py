@@ -8,8 +8,15 @@ deste modulo. Aqui: campo obrigatorio ausente, tipo invalido, duplicidade
 from dataclasses import dataclass, field
 from typing import Literal
 
-from app.modules.imports.domains import DomainSpec
-from app.modules.imports.transform import TransformError, parse_date, parse_decimal, parse_integer
+from app.modules.imports.domains import DomainSpec, FieldSpec, normalize_natural_key_value
+from app.modules.imports.transform import (
+    TransformError,
+    parse_boolean,
+    parse_date,
+    parse_decimal,
+    parse_integer,
+    parse_string,
+)
 
 RowStatus = Literal["valid", "invalid", "duplicate"]
 
@@ -39,17 +46,21 @@ class ValidationSummary:
     rows: list[RowResult]
 
 
-def _transform_value(raw: object, data_type: str, transform_config: dict[str, object]) -> object:
-    if data_type == "decimal":
+def _transform_value(raw: object, spec: FieldSpec, transform_config: dict[str, object]) -> object:
+    if spec.data_type == "decimal":
         return parse_decimal(raw)
-    if data_type == "integer":
+    if spec.data_type == "integer":
         return parse_integer(raw)
-    if data_type == "date":
+    if spec.data_type == "string":
+        return parse_string(raw, max_length=spec.max_length)
+    if spec.data_type == "boolean":
+        return parse_boolean(raw)
+    if spec.data_type == "date":
         date_format = transform_config.get("date_format", "DMY")
         if date_format not in ("DMY", "MDY", "ISO"):
             date_format = "DMY"
         return parse_date(raw, date_format=date_format)  # type: ignore[arg-type]
-    raise TransformError(f"Tipo de dado desconhecido: {data_type}.")
+    raise TransformError(f"Tipo de dado desconhecido: {spec.data_type}.")
 
 
 def validate_rows(
@@ -79,9 +90,7 @@ def validate_rows(
             spec = fields_by_canonical[canonical_field]
             raw_value = raw_row.get(header)
             try:
-                result.transformed[canonical_field] = _transform_value(
-                    raw_value, spec.data_type, transform_config
-                )
+                result.transformed[canonical_field] = _transform_value(raw_value, spec, transform_config)
             except TransformError as exc:
                 result.errors.append(
                     RowError(field=canonical_field, message=exc.message, raw_value=_as_display(raw_value))
@@ -103,7 +112,9 @@ def validate_rows(
         if result.errors:
             result.status = "invalid"
         else:
-            natural_key = tuple(result.transformed.get(k) for k in domain.natural_key)
+            natural_key = tuple(
+                normalize_natural_key_value(result.transformed.get(k)) for k in domain.natural_key
+            )
             if natural_key in existing_natural_keys or natural_key in seen_keys_in_file:
                 result.status = "duplicate"
             else:

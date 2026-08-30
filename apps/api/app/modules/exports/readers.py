@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
+from app.modules.products import repository as products_repository
 
 
 def read_financial_period_rows(
@@ -79,9 +80,32 @@ def read_funnel_snapshot_rows(
     return sorted(rows, key=lambda r: r["period"])  # type: ignore[arg-type,return-value]
 
 
+def read_product_rows(
+    db: Session, organization_id: uuid.UUID, date_from: date | None, date_to: date | None
+) -> list[dict[str, object]]:
+    """Produtos é um catálogo, não uma série temporal — `date_from`/
+    `date_to` são ignorados de propósito (`DomainSpec.supports_date_range =
+    False`, ver domains.py; o frontend nem oferece o filtro para este
+    domínio). Inclui produtos inativos (RN-014: nunca excluídos de
+    verdade) — um export completo não pode omitir histórico."""
+    products = products_repository.list_products(db, organization_id, include_inactive=True)
+    rows: list[dict[str, object]] = [
+        {
+            "name": p.name,
+            "category": p.category,
+            "price": float(p.price) if p.price is not None else None,
+            "cost": float(p.cost) if p.cost is not None else None,
+            "active": p.active,
+        }
+        for p in products
+    ]
+    return sorted(rows, key=lambda r: str(r["name"]).lower())
+
+
 DomainReader = Callable[[Session, uuid.UUID, "date | None", "date | None"], list[dict[str, object]]]
 
 DOMAIN_READERS: dict[str, DomainReader] = {
     "financial_periods": read_financial_period_rows,
     "funnel_snapshots": read_funnel_snapshot_rows,
+    "products": read_product_rows,
 }

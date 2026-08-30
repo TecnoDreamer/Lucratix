@@ -86,6 +86,54 @@ def parse_integer(raw: object) -> int | None:
     return int(value)
 
 
+def parse_string(raw: object, *, max_length: int | None = None) -> str | None:
+    """Texto livre (ex.: nome/categoria de produto) — string vazia (depois de
+    remover espaço nas bordas) vira None, igual aos outros tipos ("campo em
+    branco" nunca é diferente de "não preenchido"). `max_length`, quando
+    informado, espelha o limite da coluna no banco (ex.: String(255)) —
+    rejeitado aqui com mensagem acionável em vez de deixar o INSERT falhar
+    com um erro genérico do banco."""
+    if raw is None:
+        return None
+    text = raw.strip() if isinstance(raw, str) else str(raw).strip()
+    if text == "":
+        return None
+    if max_length is not None and len(text) > max_length:
+        raise TransformError(
+            f'Texto tem {len(text)} caracteres, acima do limite de {max_length}: "{text[:50]}...".'
+        )
+    return text
+
+
+_TRUE_VALUES = {"true", "1", "sim", "yes", "y", "ativo", "verdadeiro"}
+_FALSE_VALUES = {"false", "0", "nao", "não", "no", "n", "inativo", "falso"}
+
+
+def parse_boolean(raw: object) -> bool | None:
+    """Campo booleano (ex.: products.active) — aceita valores comuns em
+    português e inglês; qualquer outra coisa é erro explícito, nunca um
+    "truthy" adivinhado (ex.: não trata "talvez" como verdadeiro)."""
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, (int, float)):
+        if raw in (0, 1):
+            return bool(raw)
+        raise TransformError(f"Não foi possível interpretar {raw!r} como verdadeiro/falso.")
+    if not isinstance(raw, str):
+        raise TransformError(f"Valor booleano inesperado: {raw!r}.")
+
+    text = raw.strip().lower()
+    if text == "":
+        return None
+    if text in _TRUE_VALUES:
+        return True
+    if text in _FALSE_VALUES:
+        return False
+    raise TransformError(f'Não foi possível interpretar "{raw}" como verdadeiro/falso.')
+
+
 _ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _SLASH_OR_DASH_RE = re.compile(r"^(\d{1,4})[/-](\d{1,2})[/-](\d{1,4})$")
 
