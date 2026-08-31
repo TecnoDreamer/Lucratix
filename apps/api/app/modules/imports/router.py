@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
@@ -10,6 +10,7 @@ from app.models.import_job import ImportJob
 from app.models.membership import MembershipRole
 from app.modules.imports import repository, service
 from app.modules.imports.domains import DOMAIN_REGISTRY, get_domain
+from app.modules.imports.parsers import SheetSelectionRequiredError
 from app.modules.imports.security import FileValidationError, detect_format_from_filename
 from app.schemas.import_job import (
     ConfirmRequest,
@@ -28,6 +29,7 @@ from app.schemas.import_job import (
     PreviewPageRead,
     PreviewRowRead,
     ValidationSummaryRead,
+    XlsxSheetSelectionRequired,
 )
 
 router = APIRouter(prefix="/api/v1/organizations/{organization_id}/imports", tags=["imports"])
@@ -98,11 +100,13 @@ def list_mapping_templates(
 # ordenacao ja documentada em organizations/router.py::/summary.
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_import(
+    response: Response,
     domain: str = Form(...),
     file: UploadFile = File(...),
+    sheet_name: str | None = Form(default=None),
     ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
-) -> ImportJobCreateResponse:
+) -> ImportJobCreateResponse | XlsxSheetSelectionRequired:
     content = await file.read()
     filename = file.filename or "arquivo"
     try:
@@ -115,7 +119,16 @@ async def create_import(
             filename=filename,
             file_format=file_format,
             content=content,
+            sheet_name=sheet_name,
         )
+    except SheetSelectionRequiredError as exc:
+        # Nao e um erro de verdade — estado esperado do fluxo (.xlsx com mais
+        # de uma aba). Nenhum job criado, nada persistido; sobrescreve o 201
+        # padrao da rota (nada foi de fato criado) por 200, e o corpo tem sua
+        # propria forma (XlsxSheetSelectionRequired) em vez de reusar
+        # ImportJobCreateResponse com campos vazios.
+        response.status_code = status.HTTP_200_OK
+        return XlsxSheetSelectionRequired(sheets=exc.sheet_names)
     except (FileValidationError, service.DomainNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=exc.message) from exc
 

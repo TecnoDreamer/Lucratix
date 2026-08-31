@@ -27,6 +27,7 @@ class ImportJobRead(BaseModel):
     domain: str
     source_filename: str
     file_format: str
+    sheet_name: str | None
     status: str
     headers: list[str]
     mapping: dict[str, str] | None
@@ -46,6 +47,17 @@ class ImportJobCreateResponse(BaseModel):
     job: ImportJobRead
     suggested_mapping: list[MappingSuggestionRead]
     domain_fields: list[DomainFieldRead]
+
+
+class XlsxSheetSelectionRequired(BaseModel):
+    """Devolvido por POST /imports no lugar de ImportJobCreateResponse quando
+    o .xlsx enviado tem mais de uma aba e nenhuma foi escolhida — nenhum job
+    é criado (nada persistido). O cliente reenvia o MESMO arquivo com
+    `sheet_name` preenchido (não há storage de arquivo entre requests, ver
+    app/models/import_job.py)."""
+
+    needs_sheet_selection: Literal[True] = True
+    sheets: list[str]
 
 
 # "create_new" do vocabulario generico do prompt mestre nao se aplica a um

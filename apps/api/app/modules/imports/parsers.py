@@ -23,6 +23,22 @@ class ParsedFile:
     # motor de transformacao (transform.py) sabe tratar sem exigir re-parse
     # de string quando a celula ja veio tipada.
     rows: list[dict[str, object]]
+    # Nome da aba efetivamente lida — só .xlsx preenche (auto-selecionada
+    # quando o arquivo só tem uma aba, ou a escolhida explicitamente pelo
+    # usuário). None para CSV/JSON, que não têm o conceito de aba.
+    sheet_name: str | None = None
+
+
+class SheetSelectionRequiredError(FileValidationError):
+    """Levantado quando um .xlsx tem mais de uma aba e nenhuma foi escolhida
+    — o chamador (service.py/router.py) decide o que fazer (pedir pro
+    usuário escolher), nunca adivinha qual aba importar."""
+
+    def __init__(self, sheet_names: list[str]):
+        self.sheet_names = sheet_names
+        super().__init__(
+            "Este arquivo tem mais de uma aba — escolha qual aba corresponde a este domínio."
+        )
 
 
 def _decode_text(content: bytes) -> str:
@@ -66,17 +82,30 @@ def parse_csv(content: bytes) -> ParsedFile:
     return ParsedFile(headers=headers, rows=rows)
 
 
-def parse_xlsx(content: bytes) -> ParsedFile:
+def parse_xlsx(content: bytes, sheet_name: str | None = None) -> ParsedFile:
     try:
         workbook = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
     except Exception as exc:  # openpyxl levanta varios tipos de erro para arquivo corrompido
         raise FileValidationError("Não foi possível abrir o arquivo .xlsx (arquivo corrompido?).") from exc
 
-    # Primeira planilha nao vazia — selecao de planilha fica para uma
-    # proxima versao (limitacao documentada, ver docs/data-import-export/IMPORT_FORMATS.md).
-    sheet = workbook.worksheets[0] if workbook.worksheets else None
-    if sheet is None:
+    if not workbook.worksheets:
         raise FileValidationError("A planilha não tem nenhuma aba.")
+
+    if sheet_name is None:
+        # So auto-seleciona quando nao ha ambiguidade (uma aba so) — com
+        # mais de uma, quem decide qual aba e o dominio certo e quem esta
+        # importando, nunca uma adivinhação silenciosa (poderia pegar a aba
+        # errada sem ninguem perceber).
+        if len(workbook.worksheets) > 1:
+            raise SheetSelectionRequiredError([ws.title for ws in workbook.worksheets])
+        sheet = workbook.worksheets[0]
+    else:
+        sheet = workbook[sheet_name] if sheet_name in workbook.sheetnames else None
+        if sheet is None:
+            raise FileValidationError(
+                f'Aba "{sheet_name}" não existe neste arquivo. '
+                f"Abas disponíveis: {', '.join(workbook.sheetnames)}."
+            )
 
     rows_iter = sheet.iter_rows(values_only=True)
     try:
@@ -98,7 +127,7 @@ def parse_xlsx(content: bytes) -> ParsedFile:
             )
         values = list(raw_row) + [None] * (len(headers) - len(raw_row))
         rows.append(dict(zip(headers, values, strict=False)))
-    return ParsedFile(headers=headers, rows=rows)
+    return ParsedFile(headers=headers, rows=rows, sheet_name=sheet.title)
 
 
 def parse_json(content: bytes) -> ParsedFile:
@@ -140,8 +169,10 @@ _PARSERS = {
 }
 
 
-def parse_file(file_format: str, content: bytes) -> ParsedFile:
+def parse_file(file_format: str, content: bytes, *, sheet_name: str | None = None) -> ParsedFile:
     parser = _PARSERS.get(file_format)
     if parser is None:
         raise FileValidationError(f"Formato '{file_format}' não é suportado.")
+    if file_format == "xlsx":
+        return parse_xlsx(content, sheet_name=sheet_name)
     return parser(content)

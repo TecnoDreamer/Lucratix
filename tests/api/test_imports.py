@@ -19,13 +19,43 @@ def _register_login_and_create_org(client, email: str, org_name: str) -> str:
 
 
 def _upload(
-    client, org_id: str, filename: str, content: bytes, content_type: str, domain: str = "financial_periods"
+    client,
+    org_id: str,
+    filename: str,
+    content: bytes,
+    content_type: str,
+    domain: str = "financial_periods",
+    sheet_name: str | None = None,
 ):
+    data = {"domain": domain}
+    if sheet_name is not None:
+        data["sheet_name"] = sheet_name
     return client.post(
         f"/api/v1/organizations/{org_id}/imports",
-        data={"domain": domain},
+        data=data,
         files={"file": (filename, content, content_type)},
     )
+
+
+def _build_xlsx(sheets: dict[str, tuple[list[str], list[list[object]]]]) -> bytes:
+    """Monta um .xlsx com uma ou mais abas em memória, sem depender de
+    fixture em disco — usado pelos testes de seleção de aba abaixo."""
+    import io
+
+    import openpyxl
+
+    wb = openpyxl.Workbook()
+    first = True
+    for sheet_name, (headers, rows) in sheets.items():
+        ws = wb.active if first else wb.create_sheet()
+        first = False
+        ws.title = sheet_name
+        ws.append(headers)
+        for row in rows:
+            ws.append(row)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
 
 
 def _suggested_mapping_dict(create_resp_json: dict) -> dict[str, str]:
@@ -301,6 +331,84 @@ def test_xlsx_upload_with_alias_headers_maps_correctly(client):
     assert mapping["Faturamento"] == "revenue"
     assert mapping["Custo Total"] == "costs"
     assert mapping["Investimento Marketing"] == "marketing_investment"
+
+
+def test_xlsx_multi_sheet_without_sheet_name_requires_selection(client):
+    """Sem escolher a aba, o upload não vira job nenhum — devolve a lista de
+    abas disponíveis (HTTP 200, não 201: nada foi criado)."""
+    org_id = _register_login_and_create_org(client, "imp.xlsxmulti@example.com", "Empresa Imp Xlsx Multi")
+    content = _build_xlsx(
+        {
+            "Financeiro": (["Periodo", "Receita"], [["2026-01-01", 1000]]),
+            "Leads": (["Periodo", "Leads"], [["2026-01-01", 50]]),
+        }
+    )
+
+    resp = _upload(client, org_id, "multi.xlsx", content, "application/vnd.ms-excel")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["needs_sheet_selection"] is True
+    assert body["sheets"] == ["Financeiro", "Leads"]
+
+    # Nao criou job nenhum.
+    jobs = client.get(f"/api/v1/organizations/{org_id}/imports").json()
+    assert jobs["total"] == 0
+
+
+def test_xlsx_multi_sheet_with_sheet_name_imports_chosen_sheet(client):
+    org_id = _register_login_and_create_org(client, "imp.xlsxpick@example.com", "Empresa Imp Xlsx Pick")
+    content = _build_xlsx(
+        {
+            "Financeiro": (["Periodo", "Receita"], [["2026-01-01", 1000]]),
+            "Leads": (["Periodo", "Leads"], [["2026-01-01", 50]]),
+        }
+    )
+
+    create = _upload(
+        client, org_id, "multi.xlsx", content, "application/vnd.ms-excel", sheet_name="Leads"
+    )
+    assert create.status_code == 201
+    body = create.json()
+    assert body["job"]["sheet_name"] == "Leads"
+    assert body["job"]["headers"] == ["Periodo", "Leads"]  # veio da aba certa, nao de "Financeiro"
+
+    job_id = body["job"]["id"]
+    mapping_resp = client.put(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/mapping",
+        json={"mapping": {"Periodo": "period"}, "transform_config": {"date_format": "ISO"}},
+    )
+    assert mapping_resp.json()["status"] == "READY"
+
+    confirm = client.post(
+        f"/api/v1/organizations/{org_id}/imports/{job_id}/confirm", json={"duplicate_strategy": "skip"}
+    )
+    assert confirm.json()["created_rows"] == 1
+
+    financials = client.get(f"/api/v1/organizations/{org_id}/financials").json()
+    assert financials[0]["period"] == "2026-01-01"
+    assert financials[0]["revenue"] is None  # "Receita" da aba Financeiro nao foi lida — aba errada
+
+
+def test_xlsx_unknown_sheet_name_is_rejected(client):
+    org_id = _register_login_and_create_org(client, "imp.xlsxbadsheet@example.com", "Empresa Imp Xlsx Bad")
+    content = _build_xlsx({"Financeiro": (["Periodo", "Receita"], [["2026-01-01", 1000]])})
+
+    resp = _upload(
+        client, org_id, "one.xlsx", content, "application/vnd.ms-excel", sheet_name="NaoExiste"
+    )
+    assert resp.status_code == 400
+    assert "NaoExiste" in resp.json()["detail"]
+
+
+def test_xlsx_single_sheet_ignores_sheet_name_ambiguity_gracefully(client):
+    """Arquivo de aba única continua funcionando sem informar sheet_name —
+    comportamento original (2026-08-29), inalterado."""
+    org_id = _register_login_and_create_org(client, "imp.xlsxsingle@example.com", "Empresa Imp Xlsx Single")
+    content = _build_xlsx({"Dados": (["Periodo", "Receita"], [["2026-01-01", 1000]])})
+
+    resp = _upload(client, org_id, "single.xlsx", content, "application/vnd.ms-excel")
+    assert resp.status_code == 201
+    assert resp.json()["job"]["sheet_name"] == "Dados"
 
 
 def test_json_upload_full_flow(client):

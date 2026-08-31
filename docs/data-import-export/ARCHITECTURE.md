@@ -257,9 +257,12 @@ leitura, ver acima). Composição:
   (via `downloadFile` + `<a download>` programático).
 - `ImportWizard` (`components/import-wizard.tsx`) — só para quem pode escrever (`canPerformActions`,
   `lib/roles.ts`): seletor de domínio, upload → mapeamento (com sugestão pré-preenchida e badge de
-  confiança) → preview → confirmação, espelhando os endpoints do backend passo a passo. O seletor de
-  formato de data só aparece na etapa de mapeamento se o domínio tiver algum campo `"date"` (Produtos
-  não tem). `VIEWER` vê só um aviso explicando por quê, nunca um formulário que terminaria em 403.
+  confiança) → preview → confirmação, espelhando os endpoints do backend passo a passo. Um `.xlsx` com
+  mais de uma aba insere uma etapa extra entre upload e mapeamento (escolher a aba, ver
+  "Seleção de aba..." acima) — o componente guarda o `File` já escolhido em memória e reenvia o mesmo
+  arquivo com `sheet_name`, sem pedir pra escolher de novo. O seletor de formato de data só aparece na
+  etapa de mapeamento se o domínio tiver algum campo `"date"` (Produtos não tem). `VIEWER` vê só um
+  aviso explicando por quê, nunca um formulário que terminaria em 403.
 - Histórico de importações (paginado, "Carregar mais") e lista de erros por linha sob demanda — só
   para quem pode escrever, mesmo motivo (o backend também exige `ANALYST`+ nesses endpoints).
 
@@ -268,10 +271,18 @@ Dados", sem `minRole` (mesmo critério da entrada de sidebar). É o único item 
 módulo de visualização — a entrada de sidebar sozinha não bastava para dar destaque a uma ferramenta
 de importação/exportação em massa na tela que todo mundo vê primeiro.
 
+## Seleção de aba em `.xlsx` com múltiplas abas (2026-08-31)
+
+Resolvida sem quebrar a decisão de não ter storage de arquivo (seção acima): `POST /imports` aceita um
+`sheet_name` opcional. Sem ele, um `.xlsx` de uma aba só é lido direto (comportamento original,
+inalterado); um `.xlsx` de várias abas devolve `XlsxSheetSelectionRequired` (HTTP 200, `{"needs_sheet_selection":
+true, "sheets": [...]}`) **sem criar job nenhum** — nada é persistido nesse meio-tempo, então não há
+arquivo nenhum para "lembrar" entre requests. O cliente reenvia o **mesmo arquivo** (ainda em memória no
+navegador) numa segunda chamada a `POST /imports`, agora com `sheet_name` preenchido. `ImportJob.sheet_name`
+guarda qual aba foi de fato usada, para histórico/auditoria. Ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md).
+
 ## O que este documento não decide ainda
 
-- Seleção de aba/planilha em arquivo `.xlsx` com múltiplas abas — hoje só a primeira aba não vazia é
-  lida (ver [IMPORT_FORMATS.md](IMPORT_FORMATS.md)).
 - Scanner de malware real no upload — não existe serviço compatível disponível hoje; a validação atual
   (extensão + assinatura de conteúdo real, ex.: bytes ZIP de um `.xlsx`) cobre o caso mais comum de
   arquivo renomeado, não substitui um scanner.

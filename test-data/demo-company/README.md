@@ -20,19 +20,23 @@ importador real, então esta massa de dados foi desenhada em torno de duas
 limitações verdadeiras do sistema (não hipotéticas — conferidas no código
 antes de gerar qualquer arquivo):
 
-1. **Um domínio por arquivo.** O importador (`app/modules/imports/domains.py`)
-   é estritamente um-domínio-por-upload — não existe "arquivo misto" com
-   financeiro + funil + campanhas juntos. Um único CSV/JSON com as três coisas
-   simplesmente não tem como ser importado pelo wizard real.
-2. **XLSX só lê a primeira planilha.** `parse_xlsx`
-   (`app/modules/imports/parsers.py`) usa só
-   `workbook.worksheets[0]` — qualquer outra aba é ignorada pelo importador
-   hoje (gap real, já documentado como "XLSX multi-sheet (deferred)" na
-   arquitetura de import/export). O arquivo XLSX desta massa tem 3 abas
-   (`Campanhas`, `Financeiro`, `Leads`) para servir de referência visual e
-   preparar o terreno para quando essa limitação for resolvida, mas **só a
-   aba `Campanhas` (a primeira) é realmente importável hoje** — é o que o
-   teste automatizado exercita de fato.
+1. **Um domínio por arquivo (upload).** O importador
+   (`app/modules/imports/domains.py`) é estritamente um-domínio-por-upload —
+   não existe "arquivo misto" com financeiro + funil + campanhas juntos num
+   único request. Um único CSV/JSON com as três coisas simplesmente não tem
+   como ser importado pelo wizard real; um `.xlsx` com 3 abas (uma por
+   domínio) precisa de 3 uploads, um por aba (ver "Como importar" abaixo) —
+   continua sendo um-domínio-por-upload, só que a fonte de cada upload é uma
+   aba diferente do mesmo arquivo físico, em vez de um arquivo físico
+   diferente.
+2. ~~XLSX só lia a primeira planilha~~ — **resolvido em 2026-08-31**
+   (`SheetSelectionRequiredError`, `POST /imports` com `sheet_name`): um
+   `.xlsx` de aba única continua sendo lido direto, sem passo extra; um de
+   várias abas (como o desta massa) devolve a lista de abas antes de criar
+   qualquer job, e quem importa escolhe qual aba é qual domínio. O arquivo
+   XLSX desta massa tem 3 abas (`Campanhas`, `Financeiro`, `Leads`) e as
+   **três são importáveis hoje**, cada uma com seu `sheet_name` explícito —
+   é o que o teste automatizado exercita de fato.
 
 Por isso, cada dataset (CSV, XLSX, JSON) vira um pequeno **conjunto de
 arquivos por domínio**, todos com o mesmo período/perfil mensal, em vez de um
@@ -63,14 +67,14 @@ test-data/demo-company/
 │   ├── demo-marketing-2026-02-to-2026-05.csv      (domínio CAMPAIGNS)
 │   └── demo-produtos-catalogo.csv                 (domínio PRODUCTS — bônus, catálogo estático)
 ├── xlsx/
-│   └── demo-marketing-historical.xlsx  (3 abas: Campanhas [importável], Financeiro, Leads [referência])
+│   └── demo-marketing-historical.xlsx  (3 abas, todas importáveis: Campanhas, Financeiro, Leads)
 ├── json/
 │   ├── demo-financeiro-2025-06-to-2025-09.json    (domínio FINANCIAL_PERIODS)
 │   ├── demo-funil-2025-06-to-2025-09.json         (domínio FUNNEL_SNAPSHOTS)
 │   └── demo-marketing-2025-06-to-2025-09.json     (domínio CAMPAIGNS)
 └── expected/
     ├── csv-kpis.json    (KPIs esperados do dataset CSV inteiro)
-    ├── xlsx-kpis.json   (KPIs esperados do dataset XLSX inteiro — só "marketing" é verificável via import real, ver acima)
+    ├── xlsx-kpis.json   (KPIs esperados do dataset XLSX inteiro — "executive" e "marketing")
     └── json-kpis.json   (KPIs esperados do dataset JSON inteiro)
 ```
 
@@ -127,9 +131,13 @@ existir antes via `POST /api/v1/organizations/{org_id}/marketing-channels`
 — o importador resolve canal por nome mas **nunca cria um canal
 automaticamente** (RN-005).
 
-Para o XLSX, o mesmo fluxo funciona sem nenhuma etapa extra — o upload lê só
-a primeira aba (`Campanhas`) automaticameente, então `domain=CAMPAIGNS` é o
-único domínio importável a partir desse arquivo hoje.
+Para o XLSX (3 abas), o mesmo fluxo se repete 3 vezes — uma por domínio —
+com um passo extra antes do passo 1: o primeiro upload sem `sheet_name`
+devolve `{"needs_sheet_selection": true, "sheets": ["Campanhas", "Financeiro", "Leads"]}`
+em vez de criar um job; reenvie o mesmo arquivo com `sheet_name` preenchido
+(`Campanhas` → `domain=CAMPAIGNS`, `Financeiro` → `domain=FINANCIAL_PERIODS`,
+`Leads` → `domain=FUNNEL_SNAPSHOTS`) para seguir o fluxo normal a partir do
+passo 1.
 
 ## KPIs esperados
 
@@ -141,12 +149,9 @@ recalculado à mão à parte, para o "esperado" nunca poder divergir do "real"
 por um engano de fórmula no gerador. Cada métrica vem no formato
 `{value, is_applicable, reason}`, igual ao `MetricResult` real.
 
-**Ressalva para o XLSX**: `expected/xlsx-kpis.json` inclui `executive`
-(financeiro+funil) e `marketing` (campanhas) para o dataset inteiro, mas só a
-seção `marketing` é confirmável importando o arquivo `.xlsx` de verdade (só a
-aba `Campanhas` é lida — ver seção acima). A seção `executive` desse arquivo
-serve de referência para quando/se a limitação de multi-sheet for resolvida,
-não como algo importável hoje a partir do `.xlsx`.
+`expected/xlsx-kpis.json` inclui `executive` (financeiro+funil) e `marketing`
+(campanhas) para o dataset inteiro — as duas seções são confirmáveis
+importando o `.xlsx` de verdade (as 3 abas, cada uma com seu `sheet_name`).
 
 ## Testes automatizados
 

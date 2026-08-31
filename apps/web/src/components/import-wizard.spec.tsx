@@ -238,6 +238,53 @@ describe("ImportWizard", () => {
     expect(screen.queryByText("Formato de data (campo Período)")).not.toBeInTheDocument();
   });
 
+  it(".xlsx com mais de uma aba: pede pra escolher a aba antes de mapear", async () => {
+    vi.mocked(api.postForm)
+      .mockResolvedValueOnce({ needs_sheet_selection: true, sheets: ["Financeiro", "Leads"] })
+      .mockResolvedValueOnce({
+        ...UPLOAD_RESPONSE,
+        job: { ...UPLOAD_RESPONSE.job, source_filename: "historico.xlsx", sheet_name: "Financeiro" },
+      });
+
+    render(<ImportWizard organizationId="org-1" />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(["conteudo"], "historico.xlsx", { type: "application/vnd.ms-excel" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    expect(await screen.findByText(/tem mais de uma aba/)).toBeInTheDocument();
+    const sheetSelect = screen.getByRole("combobox", { name: "Aba" });
+    expect(sheetSelect).toHaveValue("Financeiro");
+    fireEvent.change(sheetSelect, { target: { value: "Leads" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    await waitFor(() => {
+      expect(api.postForm).toHaveBeenCalledTimes(2);
+    });
+    const secondCallFormData = vi.mocked(api.postForm).mock.calls[1][1] as FormData;
+    expect(secondCallFormData.get("sheet_name")).toBe("Leads");
+    expect(await screen.findByText("historico.xlsx")).toBeInTheDocument();
+    expect(screen.getByText(/aba "Financeiro"/)).toBeInTheDocument();
+  });
+
+  it(".xlsx multi-aba: Cancelar na etapa de escolha de aba volta pro upload sem chamar DELETE", async () => {
+    vi.mocked(api.postForm).mockResolvedValue({ needs_sheet_selection: true, sheets: ["A", "B"] });
+
+    render(<ImportWizard organizationId="org-1" />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(["conteudo"], "multi.xlsx", { type: "application/vnd.ms-excel" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("combobox", { name: "Aba" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(api.del).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  });
+
   it("Marketing: preview mostra o erro de canal não encontrado (nunca cria canal por adivinhação)", async () => {
     vi.mocked(api.postForm).mockResolvedValue({
       job: { id: "job-1", source_filename: "campanhas.csv", status: "MAPPING_REQUIRED", total_rows: 1 },
