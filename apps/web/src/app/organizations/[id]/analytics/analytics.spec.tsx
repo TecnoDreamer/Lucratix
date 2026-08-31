@@ -3,7 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
 import { formatCompactNumber } from "@/lib/formatters";
-import type { ExecutiveDashboard, ExecutiveSeries, ExecutiveTargets, MarketingAnalytics, Target } from "@/lib/metrics";
+import type {
+  ExecutiveDashboard,
+  ExecutiveSeries,
+  ExecutiveTargets,
+  MarketingAnalytics,
+  MarketingByChannel,
+  Target,
+} from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
 import AnalyticsPage from "./page";
 
@@ -142,16 +149,41 @@ const FAKE_MARKETING: MarketingAnalytics = {
   cpa: fakeMetric(100),
 };
 
+const FAKE_MARKETING_BY_CHANNEL: MarketingByChannel = {
+  date_from: "2026-08-01",
+  date_to: "2026-08-31",
+  channels: [
+    {
+      channel_id: "channel-1",
+      channel_name: "Google Ads",
+      campaign_count: 2,
+      // Valores propositalmente diferentes dos de FAKE_MARKETING (o
+      // agregado) — evita colisão de texto entre o card de KPI e a linha
+      // da tabela de canal nos testes que checam ambos na mesma página.
+      roas: fakeResult(6.1),
+      roi: fakeResult(0.45),
+      ctr: fakeResult(0.08),
+      cpc: fakeResult(3.3),
+      cpm: fakeResult(150),
+      cpl: fakeResult(35),
+      cpa: fakeResult(220),
+    },
+  ],
+};
+
 function mockApiByUrl(overrides?: {
   dashboard?: ExecutiveDashboard;
   series?: ExecutiveSeries;
   targets?: ExecutiveTargets;
   rawTargets?: Target[];
   marketing?: MarketingAnalytics;
+  marketingByChannel?: MarketingByChannel;
 }) {
   vi.mocked(api.get).mockImplementation((url: string) => {
-    // Ordem importa: "/analytics/executive/targets" e "/.../series" contêm
-    // "/analytics/executive" como substring — checar os mais específicos
+    // Ordem importa: várias rotas contêm um prefixo mais curto de outra
+    // como substring ("/analytics/marketing/by-channel" contém
+    // "/analytics/marketing"; "/analytics/executive/targets" e "/.../series"
+    // contêm "/analytics/executive") — checar sempre a mais específica
     // primeiro. "/targets" no fim (sem query string) é a lista bruta que
     // TargetsPanel busca, diferente de "/analytics/executive/targets"
     // (progresso agregado, com query string de data).
@@ -160,6 +192,9 @@ function mockApiByUrl(overrides?: {
     }
     if (url.includes("/analytics/executive/series")) {
       return Promise.resolve(overrides?.series ?? FAKE_SERIES);
+    }
+    if (url.includes("/analytics/marketing/by-channel")) {
+      return Promise.resolve(overrides?.marketingByChannel ?? FAKE_MARKETING_BY_CHANNEL);
     }
     if (url.includes("/analytics/marketing")) {
       return Promise.resolve(overrides?.marketing ?? FAKE_MARKETING);
@@ -277,17 +312,18 @@ describe("AnalyticsPage", () => {
     mockApiByUrl();
     renderPage();
 
-    // 4 chamadas dependentes do período (executive, series, targets
-    // agregados, marketing) + 1 do TargetsPanel (lista bruta de metas, que
-    // não depende do período — busca só uma vez, no mount).
+    // 5 chamadas dependentes do período (executive, series, targets
+    // agregados, marketing, marketing por canal) + 1 do TargetsPanel (lista
+    // bruta de metas, que não depende do período — busca só uma vez, no
+    // mount).
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(5);
+      expect(api.get).toHaveBeenCalledTimes(6);
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(9);
+      expect(api.get).toHaveBeenCalledTimes(11);
     });
   });
 
@@ -531,11 +567,25 @@ describe("AnalyticsPage", () => {
         campaign_count: 0,
         roas: { current: { value: null, is_applicable: false, reason: "Sem campanhas no período" }, comparison: fakeMetric(0).comparison },
       },
+      marketingByChannel: { ...FAKE_MARKETING_BY_CHANNEL, channels: [] },
     });
     renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/métricas de marketing não/)).toBeInTheDocument();
     });
+    // Sem canal nenhum, a tabela de drill-down não renderiza (evita
+    // duplicar o aviso já mostrado acima).
+    expect(screen.queryByText("Por canal")).not.toBeInTheDocument();
+  });
+
+  it("renderiza a tabela de Marketing por canal com uma linha por canal", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Por canal")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Google Ads")).toBeInTheDocument();
   });
 });
