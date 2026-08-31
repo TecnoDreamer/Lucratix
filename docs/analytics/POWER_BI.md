@@ -1,6 +1,8 @@
 # Power BI — arquitetura (documentação, sem integração real)
 
 > **Escopo confirmado com o usuário em 2026-08-26** (ver `docs/auditoria/AUDITORIA_BI_RELATORIOS.md`, seção 7 e "Decisões confirmadas"): sem licença Power BI Pro/Premium nem Azure AD App Registration disponíveis hoje, esta rodada entrega **só arquitetura documentada e pontos de extensão no backend — nenhum código de integração real, nenhuma credencial, nenhum Service Principal**. Busca no repositório inteiro por `power.?bi`/`powerbi` (case-insensitive) confirma: zero ocorrências antes deste documento.
+>
+> **2026-08-31**: posicionado como a opção **premium/enterprise** de BI externo — `docs/analytics/LOOKER_STUDIO.md` cobre a opção **gratuita/freemium**. As duas pesquisas compartilham o mesmo pré-requisito (módulo de API key) e o mesmo modelo de segurança (`docs/security/POWER_BI_SECURITY.md`, Opção A).
 
 ## Duas formas de integração — trade-offs
 

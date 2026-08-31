@@ -18,9 +18,13 @@ Todos os gráficos do produto (o único existente hoje: linha de evolução mens
 - Se o número de tipos de gráfico crescer (barra, funil, stacked bar, scatter) a ponto de reescrever cada um à mão custar mais do que adotar o **Recharts** como padrão para os casos comuns (line/area/bar/stacked bar/sparkline).
 - Qualquer um dos dois casos acima é decisão de escopo/produto, não só técnica — confirmar com o usuário antes de adicionar a dependência (mesmo critério já usado para toda decisão de negócio deste projeto).
 
-## Fora de escopo nesta rodada: BI externo (Looker Studio / Power BI)
+## BI externo: Power BI (premium) e Looker Studio (gratuito) — ambos pesquisados, nenhum implementado
 
-O projeto já tinha, antes desta rodada, um plano pesquisado especificamente para **Power BI** (`docs/analytics/POWER_BI.md`): arquitetura (Power Query direto vs. Gateway), o gap real de autenticação (API não tem mecanismo de API key, só cookie de sessão — pensado pra SPA, não pra ferramenta externa) e o que seria exposto hoje. Decisão confirmada com o usuário: manter esse plano em vez de pesquisar Looker Studio do zero (ferramenta diferente, nunca avaliada neste projeto). Ver `docs/analytics/POWER_BI.md` para o estado completo — nenhuma integração de BI externo está implementada hoje, de nenhuma das duas ferramentas.
+Em 2026-08-30 o projeto já tinha um plano pesquisado pra **Power BI** (`docs/analytics/POWER_BI.md`), e a decisão foi manter só esse plano em vez de pesquisar Looker Studio. Em 2026-08-31 essa decisão foi revertida pelo usuário — Looker Studio foi pesquisado (`docs/analytics/LOOKER_STUDIO.md`) pra servir de camada **gratuita/freemium**, com Power BI posicionado como **premium/enterprise** (arquitetura sugerida por um prompt de monetização — ver seção "Fora de escopo: monetização/planos/entitlements" abaixo). As duas pesquisas compartilham o mesmo pré-requisito técnico real (módulo de API key por organização, não implementado) e o mesmo modelo de segurança (`docs/security/POWER_BI_SECURITY.md`, Opção A) — nenhuma integração de BI externo está implementada hoje, de nenhuma das duas ferramentas, só arquitetura documentada.
+
+## Fora de escopo: monetização, planos, entitlements, feature flags
+
+Um prompt separado (2026-08-31) pediu uma arquitetura comercial inteira — `Plan`/`Subscription`/`Feature`/`Addon`, feature matrix, estratégia de preço, modularização por planos (Starter/Growth/Pro/Enterprise). Não existe nenhum model de billing/plano no schema hoje (confirmado por auditoria — `apps/api/app/models/` não tem `Plan`, `Subscription`, `Feature` nem equivalente). Decisão confirmada com o usuário: escopo desta rodada ficou só na pesquisa de Looker Studio (documentada acima) e na geração de dados demo (ver `test-data/demo-company/README.md`) — a arquitetura de monetização em si (schema, entitlements, feature matrix, pricing strategy) fica pra uma rodada dedicada, por ser uma decisão de negócio grande demais pra decidir sem o usuário no processo passo a passo (preço real, modelo de cobrança, quais módulos entram em qual plano).
 
 ## Fora de escopo: drill-down de receita por canal/produto, cohorts
 
