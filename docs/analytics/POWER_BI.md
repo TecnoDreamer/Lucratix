@@ -42,6 +42,7 @@ Só o que já é sustentado pelos dados atuais (mesma limitação documentada em
 - `GET /analytics/executive` — receita, lucro, margem, CAC, conversão, ticket médio, recorrência, por intervalo de datas, agregado por organização/mês.
 - `GET /analytics/executive/series` — os mesmos 7 KPIs de `/analytics/executive`, mas um ponto por mês de calendário em vez de somado no intervalo inteiro — a fonte natural para um gráfico de linha/coluna por mês no Power BI, sem precisar que o próprio Power BI refaça a quebra mensal.
 - `GET /analytics/marketing` — ROAS, ROI, CTR, CPC, CPM, CPL, CPA, por intervalo de datas, agregado por campanha.
+- `GET /analytics/executive/targets` — meta definida pelo usuário (não um dado observado) cruzada com o real: progresso agregado no intervalo pra receita/lucro (as únicas métricas aditivas), meta bruta mês a mês pras outras 5 — útil pra visualização de "real vs. meta" no Power BI, mesma limitação de agregação documentada em `docs/analytics/CHART_DECISIONS.md`.
 - **Fora do alcance** (mesma razão da auditoria, seção 4): nada por produto, por cliente ou por venda individual — não existe modelo de vendas transacional hoje.
 
 ## Diagrama (estado futuro, se aprovado)

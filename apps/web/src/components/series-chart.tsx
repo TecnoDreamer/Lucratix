@@ -17,6 +17,11 @@ interface SeriesChartProps {
    * gráfico da grade soaria idêntico ("Evolução mensal") para quem não
    * enxerga o rótulo visual ao lado. */
   label?: string;
+  /** Meta de cada mês, mesma ordem/tamanho de `points` — `null` quando não
+   * há meta definida para aquele mês. Desenhada como linha tracejada,
+   * mesma lógica de "buraco" da linha de valor real (RN-003: nunca
+   * interpolada como se houvesse meta contínua onde não foi definida). */
+  targets?: (number | null)[];
 }
 
 const WIDTH = 300;
@@ -30,6 +35,23 @@ const MAX_VISIBLE_LABELS = 8;
 
 function formatCompactValue(value: number, percent?: boolean): string {
   return percent ? formatPercentage(value) : formatCompactNumber(value);
+}
+
+/** Constrói o `d` de um `<path>` de linha a partir de uma série com
+ * buracos (`null`) — reaproveitado pela linha de valor real e pela linha
+ * de meta, que têm exatamente a mesma regra de continuidade. */
+function buildLinePath(values: (number | null)[], x: (i: number) => number, y: (v: number) => number): string {
+  let path = "";
+  let segmentOpen = false;
+  values.forEach((v, i) => {
+    if (v === null) {
+      segmentOpen = false;
+      return;
+    }
+    path += `${segmentOpen ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)} `;
+    segmentOpen = true;
+  });
+  return path;
 }
 
 /** Gráfico de linha SVG minimalista, sem dependência externa (mesmo
@@ -46,10 +68,12 @@ function formatCompactValue(value: number, percent?: boolean): string {
  * `<title>` por ponto no SVG cobre só quem consegue apontar o mouse/foco em
  * cada círculo, não uma leitura sequencial normal da página.
  */
-export function SeriesChart({ points, percent, label }: SeriesChartProps) {
+export function SeriesChart({ points, percent, label, targets }: SeriesChartProps) {
   const gradientId = useId();
   const values = points.map((p) => (p.metric.is_applicable ? p.metric.value : null));
   const present = values.filter((v): v is number => v !== null);
+  const targetValues = targets ?? points.map(() => null);
+  const presentTargets = targetValues.filter((v): v is number => v !== null);
   const chartLabel = label ? `${label} — evolução mensal` : "Evolução mensal";
 
   if (present.length === 0) {
@@ -65,8 +89,11 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
     );
   }
 
-  const min = Math.min(...present);
-  const rawMax = Math.max(...present);
+  // Meta entra na escala (min/max) pra linha tracejada nunca ficar cortada
+  // fora do gráfico quando a meta está acima/abaixo de todo o dado real.
+  const allValues = [...present, ...presentTargets];
+  const min = Math.min(...allValues);
+  const rawMax = Math.max(...allValues);
   // Linha totalmente reta (todos os valores iguais): sem isso a escala
   // colapsaria em range=0 e a divisão abaixo geraria NaN.
   const max = min === rawMax ? min + 1 : rawMax;
@@ -75,7 +102,8 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
   const x = (i: number) => (points.length === 1 ? WIDTH / 2 : PADDING.left + (i * INNER_WIDTH) / (points.length - 1));
   const y = (v: number) => PADDING.top + INNER_HEIGHT * (1 - (v - min) / range);
 
-  let linePath = "";
+  const linePath = buildLinePath(values, x, y);
+  const targetPath = presentTargets.length > 0 ? buildLinePath(targetValues, x, y) : "";
   let areaPath = "";
   let segmentOpen = false;
   values.forEach((v, i) => {
@@ -83,8 +111,6 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
       segmentOpen = false;
       return;
     }
-    const cmd = segmentOpen ? "L" : "M";
-    linePath += `${cmd}${x(i).toFixed(1)},${y(v).toFixed(1)} `;
     areaPath += segmentOpen
       ? `L${x(i).toFixed(1)},${y(v).toFixed(1)} `
       : `M${x(i).toFixed(1)},${HEIGHT - PADDING.bottom} L${x(i).toFixed(1)},${y(v).toFixed(1)} `;
@@ -124,6 +150,21 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
             stroke="none"
           />
         )}
+
+        {targetPath && (
+          <path
+            d={targetPath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            strokeLinecap="round"
+            className="text-amber-500 dark:text-amber-400"
+          >
+            <title>Meta</title>
+          </path>
+        )}
+
         <path d={linePath} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
 
         {points.map((p, i) => {
@@ -133,6 +174,7 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
             <circle key={p.period} cx={x(i)} cy={y(v)} r={2.5} fill="currentColor">
               <title>
                 {formatMonthYear(p.period)}: {formatCompactValue(v, percent)}
+                {targetValues[i] !== null ? ` (meta: ${formatCompactValue(targetValues[i]!, percent)})` : ""}
               </title>
             </circle>
           );
@@ -161,6 +203,7 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
           <tr>
             <th scope="col">Mês</th>
             <th scope="col">Valor</th>
+            {targets && <th scope="col">Meta</th>}
           </tr>
         </thead>
         <tbody>
@@ -168,6 +211,9 @@ export function SeriesChart({ points, percent, label }: SeriesChartProps) {
             <tr key={p.period}>
               <td>{formatMonthYear(p.period)}</td>
               <td>{values[i] === null ? "sem dado" : formatCompactValue(values[i]!, percent)}</td>
+              {targets && (
+                <td>{targetValues[i] === null ? "sem meta" : formatCompactValue(targetValues[i]!, percent)}</td>
+              )}
             </tr>
           ))}
         </tbody>

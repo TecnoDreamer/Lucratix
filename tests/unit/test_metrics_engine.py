@@ -220,3 +220,27 @@ class TestComparePeriods:
         cmp = engine.compare_periods(baseline_value=0, current_value=500)
         assert cmp.absolute_change == 500
         assert cmp.percent_change is None
+
+
+class TestTargetProgress:
+    def test_current_below_target(self):
+        result = engine.target_progress(current=41500, target=50000)
+        assert result.is_applicable is True
+        assert result.value == pytest.approx(0.83)
+
+    def test_current_above_target(self):
+        result = engine.target_progress(current=60000, target=50000)
+        assert result.value == pytest.approx(1.2)
+
+    def test_target_missing_is_not_applicable(self):
+        result = engine.target_progress(current=41500, target=None)
+        assert result.is_applicable is False
+        assert "target" in (result.reason or "")
+
+    def test_target_zero_is_division_by_zero_not_applicable(self):
+        result = engine.target_progress(current=41500, target=0)
+        assert result.is_applicable is False
+
+    def test_current_missing_is_not_applicable(self):
+        result = engine.target_progress(current=None, target=50000)
+        assert result.is_applicable is False

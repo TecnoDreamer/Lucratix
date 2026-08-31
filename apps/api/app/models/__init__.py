@@ -13,6 +13,7 @@ from app.models.organization import Organization
 from app.models.password_reset_token import PasswordResetToken
 from app.models.product import Product
 from app.models.session import Session
+from app.models.target import Target, TargetMetric
 from app.models.user import User
 
 __all__ = [
@@ -36,5 +37,7 @@ __all__ = [
     "PasswordResetToken",
     "Product",
     "Session",
+    "Target",
+    "TargetMetric",
     "User",
 ]

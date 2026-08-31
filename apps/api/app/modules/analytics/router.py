@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context, require_role
 from app.models.membership import MembershipRole
-from app.modules.analytics.date_ranges import months_in_range, previous_equivalent_range
+from app.models.target import TargetMetric
+from app.modules.analytics.date_ranges import months_between, months_in_range, previous_equivalent_range
 from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import (
     aggregate_financials,
@@ -15,20 +16,25 @@ from app.modules.analytics.service import (
     compute_dashboard_metrics,
     compute_monthly_series,
 )
+from app.modules.analytics.targets_service import aggregate_target_progress, monthly_targets_by_period
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
 from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
+from app.modules.targets import repository as targets_repository
 from app.schemas.metrics import (
     DashboardRead,
     ExecutiveDashboardRead,
     ExecutiveSeriesRead,
+    ExecutiveTargetsRead,
     MarketingAnalyticsRead,
     MetricResultRead,
     MetricWithComparisonRead,
     MonthlyMetricsRead,
+    MonthlyTargetRead,
     PeriodComparisonRead,
+    TargetProgressRead,
 )
 
 router = APIRouter(prefix="/api/v1/organizations/{organization_id}", tags=["analytics"])
@@ -196,6 +202,57 @@ def get_executive_series(
             for point in monthly
         ],
     )
+
+
+@router.get("/analytics/executive/targets")
+def get_executive_targets(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> ExecutiveTargetsRead:
+    """Progresso em relacao a meta (`targets`) — mesma permissao dos outros
+    endpoints executivos (ANALYST+). Receita/lucro tem progresso agregado
+    pro intervalo inteiro (metricas aditivas); as outras 5 metricas (razoes)
+    so tem meta comparavel mes a mes, devolvida em `monthly` — ver
+    `analytics/targets_service.py`.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    targets = targets_repository.list_targets_in_range(db, ctx.organization_id, date_from, date_to)
+
+    financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    current_metrics = compute_dashboard_metrics(
+        aggregate_financials(financials), aggregate_funnels(funnels)
+    )
+
+    progress = {}
+    for key in _DASHBOARD_METRIC_KEYS:
+        result = aggregate_target_progress(TargetMetric(key), targets, current_metrics[key].value)
+        progress[key] = TargetProgressRead(
+            target_value=result.target_value,
+            percent_of_target=MetricResultRead.from_result(result.percent_of_target),
+        )
+
+    by_period = monthly_targets_by_period(targets)
+    monthly = [
+        MonthlyTargetRead(
+            period=month,
+            **{key: by_period.get(month, {}).get(key) for key in _DASHBOARD_METRIC_KEYS},
+        )
+        for month in months_between(date_from, date_to)
+    ]
+
+    return ExecutiveTargetsRead(date_from=date_from, date_to=date_to, monthly=monthly, **progress)
 
 
 @router.get("/analytics/marketing")

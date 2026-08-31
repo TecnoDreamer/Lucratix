@@ -48,6 +48,14 @@ Essa terceira etapa é o motivo de `AggregatedFinancials`/`AggregatedFunnel` exi
 
 `CampaignRead.roas`/`.ctr` (usado na tela de Marketing, `/marketing`) foi refatorado para delegar a `engine.roas`/`engine.ctr` em vez de reimplementar a fórmula inline — havia uma duplicação pré-existente que este trabalho corrigiu.
 
+## Metas por KPI/mês
+
+`targets` é uma tabela independente (`app/modules/targets/`, CRUD próprio em `GET`/`PUT`/`DELETE /targets`) — granularidade mensal, uma meta por organização+métrica+mês (`uq_targets_org_metric_period`), atualizável (diferente de `baselines`, que é append-only por design). `GET /analytics/executive/targets` cruza essa meta com o dado real já calculado:
+
+1. Receita e lucro são as únicas métricas dos 7 KPIs que são genuinamente **aditivas** (soma de dinheiro). As outras 5 (margem, CAC, conversão, ticket médio, recorrência) são **razões** — CAC = investimento/clientes, por exemplo. Somar a meta mensal de uma razão ao longo de um intervalo não representa "a meta do intervalo" de forma matematicamente válida (o mesmo problema de somar 5 CACs mensais e chamar de "CAC do trimestre", sem pesar pelo volume de cada mês).
+2. Por isso `analytics/targets_service.py::aggregate_target_progress` só soma e compara (`engine.target_progress`, mesmo padrão de `_safe_ratio`) pra receita/lucro — as outras 5 devolvem `target_value=None` com um motivo explícito, nunca um número agregado incorreto.
+3. `monthly_targets_by_period` devolve a meta bruta de cada mês, sem agregação — vale pras 7 métricas, porque comparar mês a mês (sem somar nada) é sempre válido independente de a métrica ser razão ou soma. É o que alimenta a linha de meta no gráfico de evolução (`SeriesChart`, prop `targets`).
+
 ## O que fica de fora (decisão de escopo já confirmada)
 
 Métricas de venda por produto (ex.: margem por SKU, ranking de produtos) continuam fora: não há dado transacional por produto no modelo atual (ver auditoria, seção 3). O que existia como lacuna documentada — ROAS/ROI/CTR/CPC/CPM/CPL/CPA sem endpoint — foi fechado nesta iteração.
