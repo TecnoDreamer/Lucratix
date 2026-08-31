@@ -2,6 +2,14 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-08-31
+
+### Added
+- Terceira rodada de evolução do Analytics (P0/P1, seguindo o mesmo "prompt mestre" de arquitetura das duas rodadas anteriores): direção semântica por métrica, insights determinísticos e exportação do gráfico de evolução — os itens do prompt que dependiam só de dado que já existe, sem precisar de dimensão nova (canal/produto) nem tabela nova (metas). Ver `docs/analytics/CHART_DECISIONS.md`.
+- **`MetricDefinition.direction`** (`higher_is_better`/`lower_is_better`, novo campo no catálogo central de métricas): corrige um bug real no `ComparisonBadge` da Visão Executiva — toda variação positiva era pintada de verde, inclusive para CAC/CPC/CPM/CPL/CPA, onde **subir é a notícia ruim**. Agora o ícone segue o sentido literal do número (subiu/desceu) e a cor segue o que é bom ou ruim pra aquela métrica especificamente. Populado para as 19 métricas do catálogo, com teste de integridade dedicado pros 5 "custo por X" (nenhum pode virar `higher_is_better` por engano). Também exibido no próprio `MetricHelp` ("↓ Menor é melhor"/"↑ Maior é melhor").
+- **`lib/insights.ts`**: até 3 observações determinísticas por período na Visão Executiva — a métrica de maior variação absoluta (o que merece investigação), receita↑+CAC↓ na mesma janela (crescimento eficiente), receita↑+margem↓ (alerta, sem afirmar causa). Só lê `percent_change` já calculado pelo backend para cada KPI — nunca inventa dado nem causalidade, nunca gera nada sem comparação aplicável. Painel novo (`InsightsPanel`) não renderiza nada quando não há insight.
+- **Exportação do gráfico de evolução mensal** (`lib/analytics-export.ts`): botão "Exportar CSV" na seção "Evolução mensal" gera um CSV client-side dos KPIs já buscados (`GET /analytics/executive/series`, sem chamada nova ao backend), com empresa/período/geração/fuso horário no cabeçalho e valores numéricos crus (não localizados) para reimportação/análise. Complementa a exportação de dado bruto já existente na Central de Dados (esse aqui é o dado *calculado*, mês a mês). `lib/browser-download.ts` (novo) extrai o gatilho de download do navegador de `export-panel.tsx`, que passa a reaproveitá-lo em vez de ter a própria cópia.
+
 ## 2026-08-30
 
 ### Added

@@ -51,6 +51,18 @@ describe("MetricHelp", () => {
     expect(tooltip).toHaveTextContent(/investimento em marketing/i);
   });
 
+  it("mostra a direção desejável — menor é melhor para CAC, maior é melhor para receita", () => {
+    render(<MetricHelp metric="cac" />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Menor é melhor");
+  });
+
+  it("mostra 'Maior é melhor' para uma métrica higher_is_better", () => {
+    render(<MetricHelp metric="revenue" />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Maior é melhor");
+  });
+
   it("clicar de novo fecha o painel (toggle)", () => {
     render(<MetricHelp metric="cac" />);
     const trigger = screen.getByRole("button");

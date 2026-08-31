@@ -20,6 +20,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     description:
       "Soma de tudo que a empresa faturou num período, antes de descontar custos, despesas ou impostos.",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["faturamento", "revenue"],
   },
   {
@@ -32,6 +33,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Lucro = Receita − Custos − Despesas − Impostos",
     example: "Receita de R$ 58.200, custos de R$ 24.500, despesas de R$ 9.300 → Lucro ≈ R$ 24.400",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["profit", "resultado"],
   },
   {
@@ -44,6 +46,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Margem = Lucro / Receita",
     example: "Lucro de R$ 24.400 sobre receita de R$ 58.200 → margem de ≈ 42%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["margem", "profit margin"],
   },
   {
@@ -57,6 +60,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "CAC = Investimento em Marketing / Novos Clientes",
     example: "Investimento de R$ 8.400 e 63 novos clientes → CAC ≈ R$ 133",
     unit: "currency",
+    direction: "lower_is_better",
     aliases: ["custo de aquisicao", "customer acquisition cost"],
   },
   {
@@ -70,6 +74,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "LTV = Ticket Médio × Frequência de Compra × Tempo de Retenção",
     example: "Ticket médio de R$ 135, compra 2x/ano, retenção de 3 anos → LTV = R$ 810",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["lifetime value", "valor vitalicio"],
   },
   {
@@ -83,6 +88,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "ROI = (Receita Atribuída − Investimento) / Investimento",
     example: "Investiu R$ 1.000 e a campanha gerou R$ 1.800 → ROI = 80%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["return on investment", "retorno"],
   },
   {
@@ -96,6 +102,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "ROAS = Receita Atribuída / Investimento",
     example: "Investiu R$ 3.200 em anúncios e atribuiu R$ 9.800 de receita → ROAS = 3,06",
     unit: "ratio",
+    direction: "higher_is_better",
     aliases: ["return on ad spend"],
   },
   {
@@ -107,6 +114,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Ticket Médio = Receita / Número de Vendas",
     example: "Receita de R$ 58.200 em 63 vendas → ticket médio ≈ R$ 924",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["average order value", "ticket"],
   },
   {
@@ -120,6 +128,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Churn = 1 − (Clientes Ativos no Fim / Clientes Ativos no Início)",
     example: "Começou o mês com 100 clientes ativos e terminou com 92 → churn de 8%",
     unit: "percent",
+    direction: "lower_is_better",
     aliases: ["cancelamento", "taxa de churn"],
   },
   {
@@ -131,6 +140,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Retenção = Clientes Ativos no Fim / Clientes Ativos no Início",
     example: "100 clientes no início, 92 no fim → retenção de 92%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["retencao"],
   },
   {
@@ -143,6 +153,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Recorrência = Clientes que Recompraram / Total de Clientes",
     example: "63 clientes no total, 21 recompraram → recorrência de 33%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["recompra", "fidelizacao"],
   },
   {
@@ -155,6 +166,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "Conversão = Conversões / Base (visitantes, leads, etc.)",
     example: "1.850 cliques e 44 conversões → taxa de conversão ≈ 2,4%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["taxa de conversao", "conversao"],
   },
   {
@@ -167,6 +179,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
       "Soma a receita recorrente (assinaturas, planos) de todos os clientes ativos num mês. É o indicador mais usado para acompanhar crescimento em negócios de assinatura.",
     formula: "MRR = soma da receita recorrente mensal de todos os clientes ativos",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["monthly recurring revenue", "receita recorrente"],
     note: "Ainda nao calculado automaticamente por nenhuma tela do sistema — cadastrado aqui para fins educacionais.",
   },
@@ -180,6 +193,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
       "Multiplica o MRR por 12 para estimar a receita recorrente anualizada. Usado para comparar tamanho/crescimento de negócios de assinatura ano a ano.",
     formula: "ARR = MRR × 12",
     unit: "currency",
+    direction: "higher_is_better",
     aliases: ["annual recurring revenue"],
     note: "Ainda nao calculado automaticamente por nenhuma tela do sistema — cadastrado aqui para fins educacionais.",
   },
@@ -194,6 +208,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
       "Divide o investimento em uma campanha pelo número de leads (pessoas que demonstraram interesse) gerados.",
     example: "Investimento de R$ 2.600 e 145 leads → CPL ≈ R$ 18",
     unit: "currency",
+    direction: "lower_is_better",
     aliases: ["custo por lead", "cost per lead"],
   },
   {
@@ -206,6 +221,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
       "Parecido com o CAC, mas mede o custo de uma conversão específica de uma campanha, não necessariamente um cliente novo pagante.",
     formula: "CPA = Investimento / Conversões",
     unit: "currency",
+    direction: "lower_is_better",
     aliases: ["custo por acao", "cost per acquisition"],
   },
   {
@@ -218,6 +234,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "CTR = Cliques / Impressões",
     example: "120.000 impressões e 1.850 cliques → CTR ≈ 1,5%",
     unit: "percent",
+    direction: "higher_is_better",
     aliases: ["click-through rate", "taxa de cliques"],
   },
   {
@@ -229,6 +246,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     formula: "CPC = Investimento / Cliques",
     description: "Divide o investimento total pelo número de cliques recebidos.",
     unit: "currency",
+    direction: "lower_is_better",
     aliases: ["cost per click", "custo por clique"],
   },
   {
@@ -240,6 +258,7 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     description: "Métrica clássica de mídia: mostra o custo de alcance, independente de cliques ou conversões.",
     formula: "CPM = (Investimento / Impressões) × 1000",
     unit: "currency_per_1000",
+    direction: "lower_is_better",
     aliases: ["custo por mil", "cost per mille"],
   },
 ];

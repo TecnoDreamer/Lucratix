@@ -1,10 +1,13 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
+import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
 import type { ExecutiveDashboard, ExecutiveSeries, MarketingAnalytics } from "@/lib/metrics";
+import type { Organization } from "@/lib/types";
 import AnalyticsPage from "./page";
 
 const mockPush = vi.fn();
+const mockTriggerBrowserDownload = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "org-123" }),
@@ -15,6 +18,13 @@ vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
   return { ...actual, api: { ...actual.api, get: vi.fn() } };
 });
+
+// Mesmo padrão de export-panel.spec.tsx (mockar downloadFile): o
+// componente só precisa disparar o download do browser, o que não é o que
+// este teste verifica — verifica-se o Blob/nome de arquivo passados.
+vi.mock("@/lib/browser-download", () => ({
+  triggerBrowserDownload: (...args: unknown[]) => mockTriggerBrowserDownload(...args),
+}));
 
 function fakeResult(value: number, isApplicable = true) {
   return { value: isApplicable ? value : null, is_applicable: isApplicable, reason: isApplicable ? null : "Sem dado" };
@@ -43,7 +53,7 @@ const FAKE_DASHBOARD: ExecutiveDashboard = {
   revenue: fakeMetric(58200, 0.124),
   profit: fakeMetric(20900, -0.05),
   margin: fakeMetric(0.359, null),
-  cac: fakeMetric(133.33),
+  cac: fakeMetric(133.33, 0.083), // valor distinto de propósito — CAC subir é uma má notícia (lower_is_better)
   conversion_rate: fakeMetric(0.07),
   average_ticket: fakeMetric(923.81),
   recurrence_rate: fakeMetric(0.333),
@@ -107,16 +117,43 @@ function mockApiByUrl(overrides?: {
   });
 }
 
+function fakeOrg(overrides: Partial<Organization> = {}): Organization {
+  return {
+    id: "org-123",
+    name: "Empresa Teste",
+    trade_name: null,
+    segment: null,
+    cnpj: null,
+    currency: "BRL",
+    timezone: "America/Sao_Paulo",
+    tracking_start_date: null,
+    notes: null,
+    created_at: "2026-01-01T00:00:00Z",
+    my_role: "ORGANIZATION_OWNER",
+    ...overrides,
+  };
+}
+
+function renderPage(ctxOverrides: Partial<OrganizationContextValue> = {}) {
+  const value: OrganizationContextValue = { organization: fakeOrg(), loading: false, error: null, ...ctxOverrides };
+  return render(
+    <OrganizationProvider value={value}>
+      <AnalyticsPage />
+    </OrganizationProvider>
+  );
+}
+
 afterEach(() => {
   cleanup();
   mockPush.mockReset();
+  mockTriggerBrowserDownload.mockReset();
   vi.mocked(api.get).mockReset();
 });
 
 describe("AnalyticsPage", () => {
   it("renderiza os 7 KPIs com o valor atual", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("58.200")).toBeInTheDocument();
@@ -130,7 +167,7 @@ describe("AnalyticsPage", () => {
 
   it("mostra a variação percentual positiva e negativa", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("+12,4%")).toBeInTheDocument();
@@ -140,7 +177,7 @@ describe("AnalyticsPage", () => {
 
   it("sem dado no período anterior, mostra 'n/d' em vez de 0%", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/n\/d/)).toBeInTheDocument();
@@ -149,7 +186,7 @@ describe("AnalyticsPage", () => {
 
   it("dado incompleto no período mostra o aviso de completude", async () => {
     mockApiByUrl({ dashboard: { ...FAKE_DASHBOARD, months_in_range: 3, months_with_financial_data: 1 } });
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/1 de 3 meses/)).toBeInTheDocument();
@@ -158,7 +195,7 @@ describe("AnalyticsPage", () => {
 
   it("período completo não mostra aviso de completude", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("58.200")).toBeInTheDocument();
@@ -168,7 +205,7 @@ describe("AnalyticsPage", () => {
 
   it("erro da API mostra mensagem", async () => {
     vi.mocked(api.get).mockRejectedValue(new ApiError(500, "Erro interno"));
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Erro interno")).toBeInTheDocument();
@@ -177,13 +214,12 @@ describe("AnalyticsPage", () => {
 
   it("trocar o preset refaz a chamada com o novo intervalo", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledTimes(3);
     });
 
-    const { fireEvent } = await import("@testing-library/react");
     fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
 
     await waitFor(() => {
@@ -193,7 +229,7 @@ describe("AnalyticsPage", () => {
 
   it("renderiza os gráficos de evolução mensal com os meses da série", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
@@ -208,7 +244,7 @@ describe("AnalyticsPage", () => {
 
   it("cada gráfico de evolução tem nome acessível e tabela alternativa para leitor de tela", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Receita — evolução mensal" })).toBeInTheDocument();
@@ -234,7 +270,7 @@ describe("AnalyticsPage", () => {
         ],
       },
     });
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
@@ -244,9 +280,81 @@ describe("AnalyticsPage", () => {
     expect(screen.getAllByText("ago/26", { selector: "text" }).length).toBe(7);
   });
 
+  it("cor da variação respeita a direção da métrica — CAC subir é ruim mesmo sendo uma variação positiva", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("+12,4%")).toBeInTheDocument();
+    });
+    // Receita subir é bom (higher_is_better) → verde.
+    expect(screen.getByText("+12,4%").closest("p")).toHaveClass("text-emerald-600");
+    // Lucro cair é ruim (higher_is_better) → vermelho.
+    expect(screen.getByText("-5%").closest("p")).toHaveClass("text-rose-600");
+    // CAC subir é ruim (lower_is_better) mesmo com percent_change positivo
+    // — o bug que este teste existe pra prevenir era pintar isso de verde.
+    expect(screen.getByText("+8,3%").closest("p")).toHaveClass("text-rose-600");
+  });
+
+  it("mostra observações determinísticas quando o dado sustenta (receita subiu, CAC caiu)", async () => {
+    mockApiByUrl({
+      dashboard: {
+        ...FAKE_DASHBOARD,
+        revenue: fakeMetric(58200, 0.124),
+        cac: fakeMetric(100, -0.1),
+      },
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Receita cresceu \+12,4% enquanto o CAC caiu 10%/)).toBeInTheDocument();
+    });
+  });
+
+  it("sem nenhuma comparação aplicável, não mostra painel de observações", async () => {
+    mockApiByUrl({
+      dashboard: {
+        ...FAKE_DASHBOARD,
+        revenue: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        profit: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        margin: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        cac: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        conversion_rate: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        average_ticket: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        recurrence_rate: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+      },
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("não aplicável").length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText(/teve a maior variação do período/)).not.toBeInTheDocument();
+  });
+
+  it("botão 'Exportar CSV' baixa a série com metadado de empresa, período e fuso horário", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Exportar CSV/ })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Exportar CSV/ }));
+
+    await waitFor(() => {
+      expect(mockTriggerBrowserDownload).toHaveBeenCalledTimes(1);
+    });
+    const [blob, filename] = mockTriggerBrowserDownload.mock.calls[0];
+    expect(filename).toBe("visao_executiva_2026-08-01_2026-08-31.csv");
+    const content = await blob.text();
+    expect(content).toContain("Empresa,Empresa Teste");
+    expect(content).toContain("Mês,Receita,Lucro,Margem,CAC,Conversão,Ticket médio,Recorrência");
+    expect(content).toContain("2026-07-01,50000");
+  });
+
   it("renderiza os KPIs de marketing (ROAS, ROI, CTR, CPC, CPM, CPL, CPA)", async () => {
     mockApiByUrl();
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("4,2")).toBeInTheDocument();
@@ -263,7 +371,7 @@ describe("AnalyticsPage", () => {
         roas: { current: { value: null, is_applicable: false, reason: "Sem campanhas no período" }, comparison: fakeMetric(0).comparison },
       },
     });
-    render(<AnalyticsPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText(/métricas de marketing não/)).toBeInTheDocument();
