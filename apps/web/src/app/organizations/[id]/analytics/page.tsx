@@ -11,6 +11,7 @@ import {
   type ExecutiveSeries,
   type ExecutiveTargets,
   type MarketingAnalytics,
+  type MarketingByChannel,
   type MetricWithComparison,
   type MonthlyMetrics,
   type TargetProgress,
@@ -25,6 +26,7 @@ import { DateRangeFilter } from "@/components/date-range-filter";
 import { SeriesChart } from "@/components/series-chart";
 import { InsightsPanel } from "@/components/insights-panel";
 import { TargetsPanel } from "@/components/targets-panel";
+import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
 import { computeExecutiveInsights } from "@/lib/insights";
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
@@ -198,6 +200,7 @@ export default function AnalyticsPage() {
   const [series, setSeries] = useState<ExecutiveSeries | null>(null);
   const [targets, setTargets] = useState<ExecutiveTargets | null>(null);
   const [marketing, setMarketing] = useState<MarketingAnalytics | null>(null);
+  const [marketingByChannel, setMarketingByChannel] = useState<MarketingByChannel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -251,6 +254,14 @@ export default function AnalyticsPage() {
         )
         .then((result) => {
           if (!cancelled) setMarketing(result);
+        })
+        .catch(handleError),
+      api
+        .get<MarketingByChannel>(
+          `/api/v1/organizations/${id}/analytics/marketing/by-channel?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+        )
+        .then((result) => {
+          if (!cancelled) setMarketingByChannel(result);
         })
         .catch(handleError),
     ]).finally(() => {
@@ -404,6 +415,17 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         marketing && <MetricGrid data={marketing} cards={MARKETING_CARDS} />
+      )}
+
+      {!loading && marketingByChannel && marketingByChannel.channels.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Por canal
+          </h3>
+          <div className="mt-2">
+            <MarketingByChannelTable channels={marketingByChannel.channels} />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -48,6 +48,10 @@ Essa terceira etapa é o motivo de `AggregatedFinancials`/`AggregatedFunnel` exi
 
 `CampaignRead.roas`/`.ctr` (usado na tela de Marketing, `/marketing`) foi refatorado para delegar a `engine.roas`/`engine.ctr` em vez de reimplementar a fórmula inline — havia uma duplicação pré-existente que este trabalho corrigiu.
 
+## Marketing por canal (drill-down)
+
+`GET /analytics/marketing/by-channel` reaproveita a mesma `list_campaigns_in_range` do endpoint agregado, agrupa em memória por `channel_id` (nenhuma query nova) e chama `aggregate_campaigns`/`compute_marketing_metrics` uma vez por grupo em vez de uma vez para todas as campanhas juntas — mesmas funções puras do endpoint agregado, sem fórmula nova. Nome do canal resolvido em lote via `get_channels_by_ids` (mesmo padrão usado pela exportação, evita N+1). Sem comparação com período anterior nesta primeira versão — o eixo é "canal A vs. canal B no mesmo período", não "antes vs. depois".
+
 ## Metas por KPI/mês
 
 `targets` é uma tabela independente (`app/modules/targets/`, CRUD próprio em `GET`/`PUT`/`DELETE /targets`) — granularidade mensal, uma meta por organização+métrica+mês (`uq_targets_org_metric_period`), atualizável (diferente de `baselines`, que é append-only por design). `GET /analytics/executive/targets` cruza essa meta com o dado real já calculado:

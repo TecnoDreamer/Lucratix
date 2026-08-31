@@ -143,6 +143,28 @@ export interface ExecutiveTargets {
   monthly: MonthlyTarget[];
 }
 
+/** Drill-down de `MarketingAnalytics` por canal — mesmas 7 métricas, cada
+ * uma agregada só das campanhas daquele canal, sem comparação com período
+ * anterior (o eixo aqui é "canal A vs. canal B", não "antes vs. depois"). */
+export interface ChannelMarketing {
+  channel_id: string;
+  channel_name: string;
+  campaign_count: number;
+  roas: MetricResult;
+  roi: MetricResult;
+  ctr: MetricResult;
+  cpc: MetricResult;
+  cpm: MetricResult;
+  cpl: MetricResult;
+  cpa: MetricResult;
+}
+
+export interface MarketingByChannel {
+  date_from: string;
+  date_to: string;
+  channels: ChannelMarketing[];
+}
+
 export interface MarketingAnalytics {
   date_from: string;
   date_to: string;

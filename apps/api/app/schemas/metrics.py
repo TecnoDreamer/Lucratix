@@ -1,3 +1,4 @@
+import uuid
 from datetime import date
 
 from pydantic import BaseModel
@@ -160,3 +161,32 @@ class MarketingAnalyticsRead(BaseModel):
     cpm: MetricWithComparisonRead
     cpl: MetricWithComparisonRead
     cpa: MetricWithComparisonRead
+
+
+class ChannelMarketingRead(BaseModel):
+    """As mesmas 7 métricas de `MarketingAnalyticsRead`, mas agregadas só
+    das campanhas de um canal — sem comparação com período anterior (RF
+    diferente: aqui o "antes/depois" já não é o eixo, é "canal A vs. canal
+    B" no mesmo período)."""
+
+    channel_id: uuid.UUID
+    channel_name: str
+    campaign_count: int
+
+    roas: MetricResultRead
+    roi: MetricResultRead
+    ctr: MetricResultRead
+    cpc: MetricResultRead
+    cpm: MetricResultRead
+    cpl: MetricResultRead
+    cpa: MetricResultRead
+
+
+class MarketingByChannelRead(BaseModel):
+    """Drill-down de `GET /analytics/marketing` por canal — mesmo critério
+    de campanha incluída (`marketing/repository.py::list_campaigns_in_range`).
+    Só canais com pelo menos uma campanha no intervalo aparecem."""
+
+    date_from: date
+    date_to: date
+    channels: list[ChannelMarketingRead]

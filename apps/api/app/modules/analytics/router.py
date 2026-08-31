@@ -1,3 +1,5 @@
+import uuid
+from collections import defaultdict
 from datetime import date
 from typing import Literal
 
@@ -6,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context, require_role
+from app.models.campaign import Campaign
 from app.models.membership import MembershipRole
 from app.models.target import TargetMetric
 from app.modules.analytics.date_ranges import months_between, months_in_range, previous_equivalent_range
@@ -24,11 +27,13 @@ from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
 from app.modules.targets import repository as targets_repository
 from app.schemas.metrics import (
+    ChannelMarketingRead,
     DashboardRead,
     ExecutiveDashboardRead,
     ExecutiveSeriesRead,
     ExecutiveTargetsRead,
     MarketingAnalyticsRead,
+    MarketingByChannelRead,
     MetricResultRead,
     MetricWithComparisonRead,
     MonthlyMetricsRead,
@@ -299,3 +304,51 @@ def get_marketing_analytics(
         campaign_count=len(campaigns),
         **metrics_with_comparison,
     )
+
+
+@router.get("/analytics/marketing/by-channel")
+def get_marketing_by_channel(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> MarketingByChannelRead:
+    """Drill-down de `/analytics/marketing` por canal — mesmas 7 metricas,
+    cada uma agregada so das campanhas daquele canal em vez de todas juntas.
+    Mesma permissao e mesmo criterio de campanha incluida do endpoint
+    agregado. Sem comparacao com periodo anterior nesta primeira versao
+    (o eixo aqui e "canal A vs. canal B", nao "antes vs. depois") — `campaigns.
+    channel_id` (RESTRICT na FK) garante que todo canal referenciado por uma
+    campanha continua existindo, entao a resolucao de nome nunca falha.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    campaigns = marketing_repository.list_campaigns_in_range(db, ctx.organization_id, date_from, date_to)
+
+    campaigns_by_channel: dict[uuid.UUID, list[Campaign]] = defaultdict(list)
+    for campaign in campaigns:
+        campaigns_by_channel[campaign.channel_id].append(campaign)
+
+    channels_by_id = marketing_repository.get_channels_by_ids(
+        db, ctx.organization_id, set(campaigns_by_channel.keys())
+    )
+
+    channels = []
+    for channel_id, channel_campaigns in campaigns_by_channel.items():
+        metrics = compute_marketing_metrics(aggregate_campaigns(channel_campaigns))
+        channel = channels_by_id.get(channel_id)
+        channels.append(
+            ChannelMarketingRead(
+                channel_id=channel_id,
+                channel_name=channel.name if channel else "Canal removido",
+                campaign_count=len(channel_campaigns),
+                **{key: MetricResultRead.from_result(metrics[key]) for key in _MARKETING_METRIC_KEYS},
+            )
+        )
+    channels.sort(key=lambda c: c.channel_name)
+
+    return MarketingByChannelRead(date_from=date_from, date_to=date_to, channels=channels)
