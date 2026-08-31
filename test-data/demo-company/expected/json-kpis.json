@@ -1,0 +1,99 @@
+{
+  "dataset": "json",
+  "profile": "pico_sazonalidade_desaceleracao",
+  "months": [
+    "2025-06-01",
+    "2025-07-01",
+    "2025-08-01",
+    "2025-09-01"
+  ],
+  "month_labels": {
+    "2025-06-01": "bom",
+    "2025-07-01": "medio",
+    "2025-08-01": "medio",
+    "2025-09-01": "fraco"
+  },
+  "financial_periods": 4,
+  "funnel_snapshots": 4,
+  "campaigns": 8,
+  "channels": [
+    "Google Ads",
+    "Facebook",
+    "Instagram",
+    "Organico"
+  ],
+  "executive": {
+    "revenue": {
+      "value": 168069.65,
+      "is_applicable": true,
+      "reason": null
+    },
+    "profit": {
+      "value": 62477.63999999999,
+      "is_applicable": true,
+      "reason": null
+    },
+    "margin": {
+      "value": 0.3717365984875913,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cac": {
+      "value": 58.78815856777493,
+      "is_applicable": true,
+      "reason": null
+    },
+    "conversion_rate": {
+      "value": 0.09829059829059829,
+      "is_applicable": true,
+      "reason": null
+    },
+    "average_ticket": {
+      "value": 429.84565217391304,
+      "is_applicable": true,
+      "reason": null
+    },
+    "recurrence_rate": {
+      "value": 0.26854219948849106,
+      "is_applicable": true,
+      "reason": null
+    }
+  },
+  "marketing": {
+    "roas": {
+      "value": 2.072384581549965,
+      "is_applicable": true,
+      "reason": null
+    },
+    "roi": {
+      "value": 1.0723845815499653,
+      "is_applicable": true,
+      "reason": null
+    },
+    "ctr": {
+      "value": 0.023136110974841223,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpc": {
+      "value": 3.8565323764475616,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpm": {
+      "value": 89.22516103955896,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpl": {
+      "value": 24.967687434002112,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpa": {
+      "value": 123.79267015706807,
+      "is_applicable": true,
+      "reason": null
+    }
+  }
+}

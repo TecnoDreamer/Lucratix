@@ -1,0 +1,99 @@
+{
+  "dataset": "xlsx",
+  "profile": "bom_queda_recuperacao",
+  "months": [
+    "2025-10-01",
+    "2025-11-01",
+    "2025-12-01",
+    "2026-01-01"
+  ],
+  "month_labels": {
+    "2025-10-01": "bom",
+    "2025-11-01": "medio",
+    "2025-12-01": "fraco",
+    "2026-01-01": "transicao"
+  },
+  "financial_periods": 4,
+  "funnel_snapshots": 4,
+  "campaigns": 8,
+  "channels": [
+    "Google Ads",
+    "LinkedIn",
+    "Email",
+    "Referral"
+  ],
+  "executive": {
+    "revenue": {
+      "value": 164418.16,
+      "is_applicable": true,
+      "reason": null
+    },
+    "profit": {
+      "value": 60789.49999999999,
+      "is_applicable": true,
+      "reason": null
+    },
+    "margin": {
+      "value": 0.3697249744188841,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cac": {
+      "value": 64.41244565217391,
+      "is_applicable": true,
+      "reason": null
+    },
+    "conversion_rate": {
+      "value": 0.10079430293070392,
+      "is_applicable": true,
+      "reason": null
+    },
+    "average_ticket": {
+      "value": 446.78847826086957,
+      "is_applicable": true,
+      "reason": null
+    },
+    "recurrence_rate": {
+      "value": 0.266304347826087,
+      "is_applicable": true,
+      "reason": null
+    }
+  },
+  "marketing": {
+    "roas": {
+      "value": 2.6094659254908925,
+      "is_applicable": true,
+      "reason": null
+    },
+    "roi": {
+      "value": 1.6094659254908925,
+      "is_applicable": true,
+      "reason": null
+    },
+    "ctr": {
+      "value": 0.022570422675921818,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpc": {
+      "value": 3.889004957507082,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpm": {
+      "value": 87.77648567969021,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpl": {
+      "value": 24.679887640449437,
+      "is_applicable": true,
+      "reason": null
+    },
+    "cpa": {
+      "value": 121.35414364640883,
+      "is_applicable": true,
+      "reason": null
+    }
+  }
+}

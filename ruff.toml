@@ -19,3 +19,7 @@ known-first-party = ["app"]
 # ruido neste contexto (mesma logica do per-file-ignore de S105 ja aplicado a
 # app/core/config.py e app/seed.py no pyproject da API).
 "tests/**" = ["S105", "S106", "S107"]
+# Gerador de dados demo: `random.Random` com seed fixa e determinismo
+# deliberado (reprodutibilidade), nunca uso criptografico — S311 nao se
+# aplica aqui.
+"test-data/demo-company/generate_demo_data.py" = ["S311"]

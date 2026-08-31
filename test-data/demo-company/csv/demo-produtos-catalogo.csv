@@ -1,0 +1,6 @@
+﻿Nome do produto,Categoria,Valor unitario,Custo,Ativo
+Plano Essencial,Assinatura,129.9,38.0,True
+Plano Pro,Assinatura,249.9,62.0,True
+Plano Enterprise,Assinatura,890.0,210.0,True
+Consultoria Avulsa,Servico,450.0,120.0,True
+Plano Legado,Assinatura,89.9,30.0,False

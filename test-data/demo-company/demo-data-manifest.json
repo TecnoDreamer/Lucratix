@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Empresa Demo — massa de dados de importacao",
+  "seed": 20260831,
+  "generated_at": "2026-08-31T13:47:26.798673+00:00",
+  "datasets": [
+    {
+      "key": "csv",
+      "profile": "recuperacao_progressiva",
+      "period_from": "2026-02-01",
+      "period_to": "2026-05-01",
+      "month_labels": [
+        "fraco",
+        "medio",
+        "bom",
+        "transicao"
+      ],
+      "channels": [
+        "Google Ads",
+        "Meta Ads",
+        "Instagram",
+        "Organico"
+      ],
+      "records": {
+        "financial_periods": 4,
+        "funnel_snapshots": 4,
+        "campaigns": 8
+      },
+      "files": [
+        "csv/demo-financeiro-2026-02-to-2026-05.csv",
+        "csv/demo-funil-2026-02-to-2026-05.csv",
+        "csv/demo-marketing-2026-02-to-2026-05.csv"
+      ],
+      "sha256": "73935599e0edacddc0b893f683558867c069193db168972b9442e4041599c4a3"
+    },
+    {
+      "key": "xlsx",
+      "profile": "bom_queda_recuperacao",
+      "period_from": "2025-10-01",
+      "period_to": "2026-01-01",
+      "month_labels": [
+        "bom",
+        "medio",
+        "fraco",
+        "transicao"
+      ],
+      "channels": [
+        "Google Ads",
+        "LinkedIn",
+        "Email",
+        "Referral"
+      ],
+      "records": {
+        "financial_periods": 4,
+        "funnel_snapshots": 4,
+        "campaigns": 8
+      },
+      "files": [
+        "xlsx/demo-marketing-historical.xlsx"
+      ],
+      "sha256": "1067aaf7c08ba81cd616f4a361dc6e3bb1489392d52931472236c10dfb2fc2f6"
+    },
+    {
+      "key": "json",
+      "profile": "pico_sazonalidade_desaceleracao",
+      "period_from": "2025-06-01",
+      "period_to": "2025-09-01",
+      "month_labels": [
+        "bom",
+        "medio",
+        "medio",
+        "fraco"
+      ],
+      "channels": [
+        "Google Ads",
+        "Facebook",
+        "Instagram",
+        "Organico"
+      ],
+      "records": {
+        "financial_periods": 4,
+        "funnel_snapshots": 4,
+        "campaigns": 8
+      },
+      "files": [
+        "json/demo-financeiro-2025-06-to-2025-09.json",
+        "json/demo-funil-2025-06-to-2025-09.json",
+        "json/demo-marketing-2025-06-to-2025-09.json"
+      ],
+      "sha256": "44a42f0bccd827f77b309422ef3ec66bfe4c59201eb1b4de83b9310991e3a1f6"
+    }
+  ]
+}
