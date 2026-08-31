@@ -1,3 +1,5 @@
+import { formatDecimal, formatPercentage } from "@/lib/formatters";
+
 /** Primeiro dia do mês corrente, no formato usado pelos endpoints de
  * dashboard/analytics (YYYY-MM-01). Usado tanto pelo Dashboard dedicado
  * quanto pelo resumo de KPIs da página inicial da empresa. */
@@ -102,17 +104,12 @@ export interface MarketingAnalytics {
  * aplicável" quando não há dado suficiente em um dos dois lados (RN-003). */
 export function formatPercentChange(comparison: PeriodComparison): string {
   if (comparison.percent_change === null) return "não aplicável";
-  const pct = comparison.percent_change * 100;
-  const sign = pct > 0 ? "+" : "";
-  return `${sign}${pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+  return formatPercentage(comparison.percent_change, { signed: true });
 }
 
 export function formatMetric(metric: MetricResult, options?: { percent?: boolean }): string {
   if (!metric.is_applicable || metric.value === null) {
     return "não aplicável";
   }
-  if (options?.percent) {
-    return `${(metric.value * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
-  }
-  return metric.value.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+  return options?.percent ? formatPercentage(metric.value) : formatDecimal(metric.value);
 }

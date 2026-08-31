@@ -121,8 +121,11 @@ describe("AnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("58.200")).toBeInTheDocument();
     });
-    expect(screen.getByText("35,9%")).toBeInTheDocument();
-    expect(screen.getByText("133,33")).toBeInTheDocument();
+    // selector: "p" restringe ao texto do card de KPI — a tabela sr-only do
+    // gráfico de evolução (mês a mês) pode formatar um ponto da série com o
+    // mesmo texto por coincidência (ex.: mesma margem arredondada).
+    expect(screen.getByText("35,9%", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByText("133,33", { selector: "p" })).toBeInTheDocument();
   });
 
   it("mostra a variação percentual positiva e negativa", async () => {
@@ -195,10 +198,27 @@ describe("AnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
     });
-    // Um gráfico por KPI (7), cada um com rótulos de mês no eixo X —
-    // confirma que os dados da série chegaram ao componente.
-    expect(screen.getAllByText("jul/26").length).toBe(7);
-    expect(screen.getAllByText("ago/26").length).toBe(7);
+    // Um gráfico por KPI (7), cada um com rótulos de mês no eixo X (SVG
+    // <text>) — confirma que os dados da série chegaram ao componente. A
+    // tabela sr-only de cada gráfico repete o mesmo mês em <td>, por isso
+    // o selector restringe ao eixo visual.
+    expect(screen.getAllByText("jul/26", { selector: "text" }).length).toBe(7);
+    expect(screen.getAllByText("ago/26", { selector: "text" }).length).toBe(7);
+  });
+
+  it("cada gráfico de evolução tem nome acessível e tabela alternativa para leitor de tela", async () => {
+    mockApiByUrl();
+    render(<AnalyticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Receita — evolução mensal" })).toBeInTheDocument();
+    });
+    // Gráfico não é a única representação: tabela sr-only com os mesmos
+    // dados mês a mês, para quem usa leitor de tela.
+    expect(screen.getByText("Receita — evolução mensal, por mês")).toBeInTheDocument();
+    const table = screen.getByText("Receita — evolução mensal, por mês").closest("table");
+    expect(table).not.toBeNull();
+    expect(table).toHaveClass("sr-only");
   });
 
   it("mês sem dado na série não quebra o gráfico (buraco, não zero)", async () => {
@@ -221,7 +241,7 @@ describe("AnalyticsPage", () => {
     });
     // O mês sem dado não faz o gráfico quebrar nem some da lista de meses no
     // eixo X — só não desenha ponto/linha ali (buraco, RN-003).
-    expect(screen.getAllByText("ago/26").length).toBe(7);
+    expect(screen.getAllByText("ago/26", { selector: "text" }).length).toBe(7);
   });
 
   it("renderiza os KPIs de marketing (ROAS, ROI, CTR, CPC, CPM, CPL, CPA)", async () => {
