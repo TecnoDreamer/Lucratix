@@ -258,7 +258,9 @@ def test_json_export_round_trips_imported_campaigns(client):
 
 
 def test_xlsx_upload_without_sheet_name_requires_selection(client):
-    org_id = _register_login_and_create_org(client, "demo.xlsxnosheet@example.com", "Empresa Demo XLSX Sem Aba")
+    org_id = _register_login_and_create_org(
+        client, "demo.xlsxnosheet@example.com", "Empresa Demo XLSX Sem Aba"
+    )
     resp = client.post(
         f"/api/v1/organizations/{org_id}/imports",
         data={"domain": "campaigns"},
