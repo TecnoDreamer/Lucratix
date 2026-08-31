@@ -27,6 +27,7 @@ import { SeriesChart } from "@/components/series-chart";
 import { InsightsPanel } from "@/components/insights-panel";
 import { TargetsPanel } from "@/components/targets-panel";
 import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
+import { CorrelationPanel } from "@/components/correlation-panel";
 import { computeExecutiveInsights } from "@/lib/insights";
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
@@ -368,6 +369,10 @@ export default function AnalyticsPage() {
 
       <div className="mt-10">
         <TargetsPanel organizationId={id} onSaved={refetchTargets} />
+      </div>
+
+      <div className="mt-6">
+        <CorrelationPanel organizationId={id} dateFrom={range.dateFrom} dateTo={range.dateTo} />
       </div>
 
       <div className="mt-10 flex items-center justify-between gap-2">

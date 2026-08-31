@@ -4,6 +4,7 @@ import { api, ApiError } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
 import { formatCompactNumber } from "@/lib/formatters";
 import type {
+  ExecutiveCorrelation,
   ExecutiveDashboard,
   ExecutiveSeries,
   ExecutiveTargets,
@@ -171,6 +172,20 @@ const FAKE_MARKETING_BY_CHANNEL: MarketingByChannel = {
   ],
 };
 
+const FAKE_CORRELATION: ExecutiveCorrelation = {
+  date_from: "2026-08-01",
+  date_to: "2026-08-31",
+  metric_x: "revenue",
+  metric_y: "cac",
+  months_used: 3,
+  correlation: { value: 0.85, is_applicable: true, reason: null },
+  points: [
+    { period: "2026-06-01", x: 10000, y: 100 },
+    { period: "2026-07-01", x: 20000, y: 90 },
+    { period: "2026-08-01", x: 30000, y: 80 },
+  ],
+};
+
 function mockApiByUrl(overrides?: {
   dashboard?: ExecutiveDashboard;
   series?: ExecutiveSeries;
@@ -178,20 +193,25 @@ function mockApiByUrl(overrides?: {
   rawTargets?: Target[];
   marketing?: MarketingAnalytics;
   marketingByChannel?: MarketingByChannel;
+  correlation?: ExecutiveCorrelation;
 }) {
   vi.mocked(api.get).mockImplementation((url: string) => {
     // Ordem importa: várias rotas contêm um prefixo mais curto de outra
     // como substring ("/analytics/marketing/by-channel" contém
-    // "/analytics/marketing"; "/analytics/executive/targets" e "/.../series"
-    // contêm "/analytics/executive") — checar sempre a mais específica
-    // primeiro. "/targets" no fim (sem query string) é a lista bruta que
-    // TargetsPanel busca, diferente de "/analytics/executive/targets"
-    // (progresso agregado, com query string de data).
+    // "/analytics/marketing"; "/analytics/executive/targets", "/.../series"
+    // e "/.../correlation" contêm "/analytics/executive") — checar sempre a
+    // mais específica primeiro. "/targets" no fim (sem query string) é a
+    // lista bruta que TargetsPanel busca, diferente de
+    // "/analytics/executive/targets" (progresso agregado, com query string
+    // de data).
     if (url.includes("/analytics/executive/targets")) {
       return Promise.resolve(overrides?.targets ?? FAKE_TARGETS);
     }
     if (url.includes("/analytics/executive/series")) {
       return Promise.resolve(overrides?.series ?? FAKE_SERIES);
+    }
+    if (url.includes("/analytics/executive/correlation")) {
+      return Promise.resolve(overrides?.correlation ?? FAKE_CORRELATION);
     }
     if (url.includes("/analytics/marketing/by-channel")) {
       return Promise.resolve(overrides?.marketingByChannel ?? FAKE_MARKETING_BY_CHANNEL);
@@ -312,18 +332,19 @@ describe("AnalyticsPage", () => {
     mockApiByUrl();
     renderPage();
 
-    // 5 chamadas dependentes do período (executive, series, targets
-    // agregados, marketing, marketing por canal) + 1 do TargetsPanel (lista
-    // bruta de metas, que não depende do período — busca só uma vez, no
-    // mount).
+    // 6 chamadas dependentes do período (executive, series, targets
+    // agregados, marketing, marketing por canal, correlação — essa última
+    // do CorrelationPanel, que também depende de dateFrom/dateTo) + 1 do
+    // TargetsPanel (lista bruta de metas, que não depende do período —
+    // busca só uma vez, no mount).
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(6);
+      expect(api.get).toHaveBeenCalledTimes(7);
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(11);
+      expect(api.get).toHaveBeenCalledTimes(13);
     });
   });
 
@@ -510,6 +531,20 @@ describe("AnalyticsPage", () => {
     });
     expect(screen.getByLabelText("Métrica")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salvar meta" })).toBeInTheDocument();
+  });
+
+  it("renderiza a seção de Correlação com o coeficiente calculado", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Correlação entre métricas")).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/Correlação forte positiva/)).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Métrica X")).toBeInTheDocument();
+    expect(screen.getByLabelText("Métrica Y")).toBeInTheDocument();
   });
 
   it("salvar uma meta rebusca o progresso agregado, sem esperar o período mudar", async () => {

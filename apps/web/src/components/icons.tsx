@@ -374,3 +374,16 @@ export function IconTrash(props: IconProps) {
     </svg>
   );
 }
+
+export function IconScatter(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 20V4M4 20h16" />
+      <circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="10" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="10" cy="17" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="7" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}

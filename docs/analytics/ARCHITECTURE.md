@@ -60,6 +60,10 @@ Essa terceira etapa é o motivo de `AggregatedFinancials`/`AggregatedFunnel` exi
 2. Por isso `analytics/targets_service.py::aggregate_target_progress` só soma e compara (`engine.target_progress`, mesmo padrão de `_safe_ratio`) pra receita/lucro — as outras 5 devolvem `target_value=None` com um motivo explícito, nunca um número agregado incorreto.
 3. `monthly_targets_by_period` devolve a meta bruta de cada mês, sem agregação — vale pras 7 métricas, porque comparar mês a mês (sem somar nada) é sempre válido independente de a métrica ser razão ou soma. É o que alimenta a linha de meta no gráfico de evolução (`SeriesChart`, prop `targets`).
 
+## Correlação entre métricas mensais
+
+`GET /analytics/executive/correlation` reaproveita `compute_monthly_series` (a mesma série mensal de `/analytics/executive/series`) — nenhum acesso a banco novo. `analytics/correlation_service.py::compute_correlation` pareia os dois valores de cada mês, filtra pra só os meses em que ambos são aplicáveis (um par com um lado ausente distorceria o coeficiente) e chama `engine.py::correlation`, que usa `statistics.correlation` da biblioteca padrão do Python — nenhuma dependência nova, nenhuma fórmula reimplementada. Mínimo de 3 pares pra calcular (com 2 pontos, qualquer reta conecta os dois perfeitamente); menos que isso, ou uma das duas séries sem variância, vira `is_applicable=False` com um motivo explícito, nunca um coeficiente enganoso.
+
 ## O que fica de fora (decisão de escopo já confirmada)
 
 Métricas de venda por produto (ex.: margem por SKU, ranking de produtos) continuam fora: não há dado transacional por produto no modelo atual (ver auditoria, seção 3). O que existia como lacuna documentada — ROAS/ROI/CTR/CPC/CPM/CPL/CPA sem endpoint — foi fechado nesta iteração.

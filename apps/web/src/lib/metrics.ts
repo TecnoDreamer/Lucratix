@@ -96,6 +96,20 @@ export type TargetMetricKey =
   | "average_ticket"
   | "recurrence_rate";
 
+/** Rótulo/unidade dos 7 KPIs da Visão Executiva — mesma lista usada pelos
+ * seletores de meta (`TargetsPanel`) e de correlação (`CorrelationPanel`).
+ * Fonte única: antes duplicada em cada componente, extraída aqui pra não
+ * triplicar "Receita"/"Margem"/percent:true pela terceira vez. */
+export const EXECUTIVE_METRIC_OPTIONS: { key: TargetMetricKey; label: string; percent?: boolean }[] = [
+  { key: "revenue", label: "Receita" },
+  { key: "profit", label: "Lucro" },
+  { key: "margin", label: "Margem", percent: true },
+  { key: "cac", label: "CAC" },
+  { key: "conversion_rate", label: "Conversão", percent: true },
+  { key: "average_ticket", label: "Ticket médio" },
+  { key: "recurrence_rate", label: "Recorrência", percent: true },
+];
+
 export interface Target {
   id: string;
   organization_id: string;
@@ -141,6 +155,28 @@ export interface ExecutiveTargets {
   average_ticket: TargetProgress;
   recurrence_rate: TargetProgress;
   monthly: MonthlyTarget[];
+}
+
+/** Um ponto do gráfico de dispersão — um por mês do intervalo, mesmo
+ * quando uma das duas métricas está ausente naquele mês (`x`/`y` ficam
+ * `null`, nunca 0). */
+export interface CorrelationPoint {
+  period: string;
+  x: number | null;
+  y: number | null;
+}
+
+/** Correlação de Pearson entre duas métricas mensais da Visão Executiva —
+ * `correlation.is_applicable=false` quando há menos de 3 meses com as duas
+ * métricas aplicáveis, ou quando uma delas não varia no período. */
+export interface ExecutiveCorrelation {
+  date_from: string;
+  date_to: string;
+  metric_x: TargetMetricKey;
+  metric_y: TargetMetricKey;
+  months_used: number;
+  correlation: MetricResult;
+  points: CorrelationPoint[];
 }
 
 /** Drill-down de `MarketingAnalytics` por canal — mesmas 7 métricas, cada

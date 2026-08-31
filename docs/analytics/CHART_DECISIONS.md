@@ -22,13 +22,14 @@ Todos os gráficos do produto (o único existente hoje: linha de evolução mens
 
 O projeto já tinha, antes desta rodada, um plano pesquisado especificamente para **Power BI** (`docs/analytics/POWER_BI.md`): arquitetura (Power Query direto vs. Gateway), o gap real de autenticação (API não tem mecanismo de API key, só cookie de sessão — pensado pra SPA, não pra ferramenta externa) e o que seria exposto hoje. Decisão confirmada com o usuário: manter esse plano em vez de pesquisar Looker Studio do zero (ferramenta diferente, nunca avaliada neste projeto). Ver `docs/analytics/POWER_BI.md` para o estado completo — nenhuma integração de BI externo está implementada hoje, de nenhuma das duas ferramentas.
 
-## Fora de escopo: drill-down de receita por canal, cohorts, correlação
+## Fora de escopo: drill-down de receita por canal/produto, cohorts
 
 Dependem de coisas que os dados atuais não sustentam sem inventar:
 
-- **Drill-down de receita/lucro/CAC (Visão Executiva) → canal/produto → período**: precisaria de filtro por dimensão (canal, produto) nos endpoints agregados, que `docs/analytics/FILTERS.md` já documenta como não implementado por falta de vínculo real entre essas dimensões e `financial_periods`/`funnel_snapshots`. (Marketing por canal é diferente — ver "Entregue" abaixo.)
-- **Cohorts/retenção (heatmap)**: exigiria dado longitudinal por cliente (data de aquisição × atividade por período), que não existe — hoje só há contagens agregadas por mês.
-- **Correlação (scatter)**: mesma limitação — sem granularidade por cliente/venda individual para calcular uma correlação estatisticamente válida sem inventar.
+- **Drill-down de receita/lucro/CAC (Visão Executiva) → canal/produto → período**: precisaria de filtro por dimensão (canal, produto) nos endpoints agregados, que `docs/analytics/FILTERS.md` já documenta como não implementado por falta de vínculo real entre essas dimensões e `financial_periods`/`funnel_snapshots`. (Marketing por canal é diferente — ver "Entregue" abaixo.) Receita/lucro *por produto* precisaria de algo ainda maior: `products` é só catálogo hoje, sem nenhuma venda registrada — não há como atribuir receita a um produto sem um modelo de vendas transacional, que não existe.
+- **Cohorts/retenção (heatmap)**: mesma raiz do item acima — exigiria identidade de cliente individual e histórico de compra (`customers` + `sales`/`orders`), que não existem — hoje só há contagens agregadas por mês. Cohorts e receita por produto compartilham exatamente essa mesma peça faltante; construir um modelo de vendas transacional destravaria os dois ao mesmo tempo, mas é uma decisão de produto grande (como o dado entra: digitação manual, importação, integração), não uma decisão técnica a se tomar sozinho.
+
+**Correlação entre métricas mensais não está mais nesta lista** — ver "Entregue" abaixo; era um exagero classificá-la como dependente de dado ausente.
 
 ## Entregue (2026-08-31): direção semântica, insights automáticos, exportação
 
@@ -55,3 +56,11 @@ Quinta rodada — o único drill-down que sobrou que não dependia de dado ausen
 - **`GET /analytics/marketing/by-channel`**: mesmas 7 métricas de `/analytics/marketing` (ROAS, ROI, CTR, CPC, CPM, CPL, CPA), reaproveitando `aggregate_campaigns`/`compute_marketing_metrics` sem nenhuma fórmula nova — só agrupadas por canal em vez de somadas todas juntas. Mesma permissão (ANALYST+), mesmo critério de campanha incluída de `list_campaigns_in_range`.
 - **Sem comparação com período anterior nesta primeira versão** — o eixo aqui é "canal A vs. canal B no mesmo período", não "antes vs. depois" (diferente de `/analytics/marketing` e `/analytics/executive`). Poderia ser adicionado depois se fizer falta.
 - Frontend: `MarketingByChannelTable` — uma linha por canal (nome, nº de campanhas, 7 métricas), sem estado vazio próprio (o aviso "Nenhuma campanha..." já mostrado pela seção Marketing cobre o caso, sem duplicar mensagem).
+
+## Entregue (2026-08-31): correlação entre métricas mensais
+
+Sexta rodada. Ao contrário do que este documento dizia antes, correlação entre duas métricas mensais **não dependia de dado ausente** — é buildável direto da mesma série mensal de `/analytics/executive/series`, sem tabela nova. O que de fato limita é ter meses suficientes de histórico acumulado (não uma questão de arquitetura).
+
+- **`GET /analytics/executive/correlation`**: coeficiente de Pearson (`statistics.correlation`, biblioteca padrão do Python — nenhuma dependência nova) entre duas das 7 métricas mensais, mais os pontos pro gráfico de dispersão. Mínimo de 3 meses com as duas métricas aplicáveis pra calcular (`engine.py::correlation`) — com 2 pontos, qualquer reta conecta os dois perfeitamente (r sempre ±1), o que não significa nada. `is_applicable=False` também quando uma das duas métricas não varia no período (correlação matematicamente indefinida, nunca 0).
+- **Nunca afirma causalidade** — mesmo espírito de `PeriodComparison` (que deliberadamente não tem campo de "causa") e dos insights determinísticos.
+- Frontend: `CorrelationChart` (gráfico de dispersão SVG artesanal, mesma convenção do resto) + `CorrelationPanel` (dois seletores de métrica — X/Y não podem ser iguais, opção correspondente fica desabilitada no outro seletor — e a interpretação textual do coeficiente, `lib/correlation.ts`, com faixas de força que seguem uma convenção comum, não um padrão universal).
