@@ -27,6 +27,13 @@ Um usuário sem nenhuma membership ativa não pode selecionar/operar em nenhuma 
 ### RN-009 — Hierarquia de papéis
 `PLATFORM_ADMIN` > `ORGANIZATION_OWNER` > `ORGANIZATION_ADMIN` > `ANALYST` > `VIEWER`. Um papel só pode atribuir a outro usuário um papel igual ou inferior ao seu próprio dentro da mesma organização (exceto `PLATFORM_ADMIN`, que é global e concedido fora do escopo de uma organização).
 
+**Status (2026-08-31):** checagem real, não só regra em texto. `require_platform_admin`
+(`app/core/deps.py`) protege todo `/api/v1/platform/*` — 403 sem `User.is_platform_admin=True`. Concedido
+fora da aplicação (nunca autopromoção via API): `app/scripts/grant_platform_admin.py`, rodado direto
+contra o banco. `PLATFORM_ADMIN` pode revogar até um `ORGANIZATION_OWNER` (não tem papel dentro da
+organização, então a checagem de rank de `_ensure_can_assign_role`/`revoke_access` não se aplica a ele).
+Ver [ACCESS_CONTROL.md](../security/ACCESS_CONTROL.md).
+
 ### RN-010 — `VIEWER` é somente leitura
 Usuários com papel `VIEWER` não podem criar, alterar ou excluir nenhum dado. Para leitura, a regra não é uniforme entre todas as telas — decisão confirmada com o usuário em 2026-08-27, tela por tela (ver `docs/auditoria/AUDITORIA_BI_RELATORIOS.md`):
 

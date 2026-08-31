@@ -13,6 +13,12 @@ Convenção: cada requisito tem ID único `RF-XXX`, prioridade (`P0` crítico ao
 - **Pós-condições:** usuário criado, senha armazenada com hash (nunca em texto plano).
 - **Regras:** [RN-011](business-rules.md#rn-011), [RN-012](business-rules.md#rn-012).
 - **Prioridade:** P0.
+- **Status (2026-08-31):** implementado nos dois atores. Visitante: `POST /auth/register`. `PLATFORM_ADMIN`
+  (e, dentro de uma organização, `ORGANIZATION_ADMIN`+): `POST /organizations/{id}/memberships` ou
+  `POST /platform/organizations/{id}/memberships` criam a conta na hora quando o e-mail ainda não existe
+  (`app/modules/auth/service.py::create_user_with_reset_token`) — sem senha em texto plano, a pessoa
+  define a própria pelo mesmo fluxo de "esqueci minha senha". Ver
+  [ACCESS_CONTROL.md](../security/ACCESS_CONTROL.md).
 
 ### RF-002 — Login
 - **Ator:** Usuário cadastrado.
@@ -78,6 +84,11 @@ Convenção: cada requisito tem ID único `RF-XXX`, prioridade (`P0` crítico ao
 - **Ator:** `ORGANIZATION_OWNER`, `PLATFORM_ADMIN`.
 - **Fluxo:** usuário altera o papel de um membro existente dentro dos papéis permitidos (`ORGANIZATION_ADMIN`, `ANALYST`, `VIEWER`).
 - **Regras:** [RN-009](business-rules.md#rn-009), [RN-010](business-rules.md#rn-010).
+- **Status (2026-08-31):** implementado nos dois atores — `PATCH /organizations/{id}/memberships/{id}`
+  (`ORGANIZATION_ADMIN`+, dentro da própria organização) e
+  `PATCH /platform/organizations/{id}/memberships/{id}` (`PLATFORM_ADMIN`, qualquer organização, sem
+  precisar de membership nela). Concessão/revogação de acesso e o painel de gestão em
+  `docs/security/ACCESS_CONTROL.md`.
 - **Prioridade:** P0.
 
 ---

@@ -67,6 +67,34 @@ describe("OrganizationsPage", () => {
     expect(screen.getByText("Empresa B")).toBeInTheDocument();
   });
 
+  it("não mostra o link do Painel Admin para quem não é Super Admin", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    render(<OrganizationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(FAKE_USER.name)).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("link", { name: /Painel Admin/ })).not.toBeInTheDocument();
+  });
+
+  it("mostra o link do Painel Admin para quem é Super Admin", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, is_platform_admin: true });
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    render(<OrganizationsPage />);
+
+    const link = await screen.findByRole("link", { name: /Painel Admin/ });
+    expect(link).toHaveAttribute("href", "/admin");
+  });
+
   it("mostra o estado vazio quando não há empresas", async () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);

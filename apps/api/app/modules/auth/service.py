@@ -1,3 +1,4 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
@@ -45,16 +46,12 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     return user
 
 
-def request_password_reset(db: Session, email: str) -> str | None:
-    """RF-004. Retorna o token bruto SOMENTE para o chamador decidir se expoe
-    (ex.: em ambiente de desenvolvimento, sem servico de e-mail — ver
-    auth/router.py). Retorna None se o e-mail nao existir; a resposta HTTP
-    ao cliente deve ser identica nos dois casos (RN-012).
-    """
-    user = db.query(User).filter(User.email == email).one_or_none()
-    if user is None or not user.is_active:
-        return None
-
+def _issue_password_reset_token(db: Session, user: User) -> str:
+    """Gera e persiste um token de definicao/redefinicao de senha para um
+    usuario ja resolvido — extraido de `request_password_reset` para ser
+    reaproveitado por `create_user_with_reset_token` (RF-001, conta criada
+    por um admin: o funcionario define a propria senha pelo mesmo fluxo de
+    "esqueci minha senha", nunca recebe uma senha em texto puro)."""
     raw_token, token_hash = generate_password_reset_token()
     db.add(
         PasswordResetToken(
@@ -64,6 +61,35 @@ def request_password_reset(db: Session, email: str) -> str | None:
         )
     )
     return raw_token
+
+
+def request_password_reset(db: Session, email: str) -> str | None:
+    """RF-004. Retorna o token bruto SOMENTE para o chamador decidir se expoe
+    (ex.: em ambiente de desenvolvimento, sem servico de e-mail — ver
+    auth/router.py). Retorna None se o e-mail nao existir; a resposta HTTP
+    ao cliente deve ser identica nos dois casos (RN-012).
+    """
+    user = db.query(User).filter(User.email == email).one_or_none()
+    if user is None or not user.is_active:
+        return None
+    return _issue_password_reset_token(db, user)
+
+
+def create_user_with_reset_token(db: Session, *, name: str, email: str) -> tuple[User, str] | None:
+    """RF-001 ("Ator: ... ou PLATFORM_ADMIN convidando") — cria uma conta sem
+    senha utilizavel (placeholder aleatorio, nunca comunicado a ninguem) e ja
+    devolve um token de definicao de senha, reaproveitando o mesmo mecanismo
+    de "esqueci minha senha" (nenhum model/endpoint novo). Retorna None se o
+    e-mail ja existir — o chamador decide a mensagem de erro."""
+    existing = db.query(User).filter(User.email == email).one_or_none()
+    if existing is not None:
+        return None
+
+    user = User(name=name, email=email, password_hash=hash_password(secrets.token_urlsafe(32)))
+    db.add(user)
+    db.flush()
+    raw_token = _issue_password_reset_token(db, user)
+    return user, raw_token
 
 
 def confirm_password_reset(db: Session, raw_token: str, new_password: str) -> bool:
