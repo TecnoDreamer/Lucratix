@@ -52,6 +52,10 @@ class ImportJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     domain: Mapped[str] = mapped_column(String(50), nullable=False)
     source_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_format: Mapped[str] = mapped_column(String(10), nullable=False)
+    # Aba do .xlsx que foi de fato lida (auto-selecionada quando o arquivo só
+    # tem uma, ou escolhida pelo usuário quando tem mais de uma — ver
+    # parsers.py::SheetSelectionRequiredError). None para CSV/JSON.
+    sheet_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(
         String(30), nullable=False, default=ImportJobStatus.UPLOADED.value
     )

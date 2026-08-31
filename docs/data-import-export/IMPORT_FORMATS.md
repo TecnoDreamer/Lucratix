@@ -21,10 +21,17 @@ automaticamente. Suporta exportações brasileiras comuns com `;` como separador
 
 ### XLSX
 
-Só a **primeira aba não vazia** é lida — seleção de aba fica para uma versão futura. Primeira linha da
-aba é o cabeçalho. Linhas totalmente em branco no meio da planilha são ignoradas (não contam como
-linha de dado nem geram erro). Células já vêm tipadas pelo `openpyxl` (`int`/`float`/`date`/`datetime`),
-o motor de transformação aceita ambos os casos (célula tipada ou string crua vinda de CSV/JSON).
+Arquivo com **uma única aba**: essa aba é lida automaticamente, sem passo extra (comportamento
+original, 2026-08-29). Arquivo com **mais de uma aba**: `POST /imports` sem `sheet_name` devolve
+`{"needs_sheet_selection": true, "sheets": [...]}` (HTTP 200, nenhum job criado, nada persistido — não
+há storage de arquivo entre requests, ver [ARCHITECTURE.md](ARCHITECTURE.md)) em vez do
+`ImportJobCreateResponse` normal; o cliente reenvia o **mesmo arquivo** com `sheet_name` preenchido
+(2026-08-31 — antes disso só a primeira aba era lida, sem opção). Nunca escolhe a aba sozinho quando há
+mais de uma — ambiguidade vira pergunta pro usuário, não adivinhação. Primeira linha da aba escolhida é
+o cabeçalho. Linhas totalmente em branco no meio da planilha são ignoradas (não contam como linha de
+dado nem geram erro). Células já vêm tipadas pelo `openpyxl` (`int`/`float`/`date`/`datetime`), o motor
+de transformação aceita ambos os casos (célula tipada ou string crua vinda de CSV/JSON). O nome da aba
+efetivamente lida fica em `ImportJob.sheet_name` (histórico/auditoria).
 
 ### JSON
 

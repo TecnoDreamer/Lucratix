@@ -7,7 +7,7 @@ import { buttonPrimary, buttonSecondary, select as selectClass, sectionTitle, ta
 import { Alert, Badge, Card } from "@/components/ui";
 import { IconUpload } from "@/components/icons";
 
-type Step = "upload" | "mapping" | "preview" | "done";
+type Step = "upload" | "sheet" | "mapping" | "preview" | "done";
 type DuplicateStrategy = "skip" | "update";
 type DateFormat = "DMY" | "MDY" | "ISO";
 
@@ -28,6 +28,7 @@ interface MappingSuggestion {
 interface ImportJob {
   id: string;
   source_filename: string;
+  sheet_name: string | null;
   status: string;
   total_rows: number | null;
 }
@@ -36,6 +37,17 @@ interface ImportJobCreateResponse {
   job: ImportJob;
   suggested_mapping: MappingSuggestion[];
   domain_fields: DomainField[];
+}
+
+interface XlsxSheetSelectionRequired {
+  needs_sheet_selection: true;
+  sheets: string[];
+}
+
+type ImportUploadResponse = ImportJobCreateResponse | XlsxSheetSelectionRequired;
+
+function needsSheetSelection(response: ImportUploadResponse): response is XlsxSheetSelectionRequired {
+  return "needs_sheet_selection" in response && response.needs_sheet_selection === true;
 }
 
 interface ValidationSummary {
@@ -123,6 +135,8 @@ export function ImportWizard({
   const [domain, setDomain] = useState(DATA_DOMAINS[0].key);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [sheetOptions, setSheetOptions] = useState<string[]>([]);
+  const [selectedSheet, setSelectedSheet] = useState<string>("");
 
   const [job, setJob] = useState<ImportJob | null>(null);
   const [domainFields, setDomainFields] = useState<DomainField[]>([]);
@@ -148,6 +162,8 @@ export function ImportWizard({
     setStep("upload");
     setError(null);
     setFile(null);
+    setSheetOptions([]);
+    setSelectedSheet("");
     setJob(null);
     setDomainFields([]);
     setHeaders([]);
@@ -177,8 +193,13 @@ export function ImportWizard({
     }
   }
 
-  async function handleUpload(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /** Comum às duas chamadas de upload (primeira tentativa, e o reenvio do
+   * MESMO arquivo depois que o usuário escolhe a aba) — o arquivo .xlsx com
+   * mais de uma aba não gera job na primeira chamada (ver
+   * `needsSheetSelection`), então o wizard guarda o `File` em memória e
+   * refaz o POST com `sheet_name` preenchido, sem pedir pra escolher o
+   * arquivo de novo. */
+  async function submitUpload(sheetName?: string) {
     if (!file) return;
     setError(null);
     setUploading(true);
@@ -186,10 +207,18 @@ export function ImportWizard({
       const formData = new FormData();
       formData.append("domain", domain);
       formData.append("file", file);
-      const response = await api.postForm<ImportJobCreateResponse>(
+      if (sheetName) formData.append("sheet_name", sheetName);
+      const response = await api.postForm<ImportUploadResponse>(
         `/api/v1/organizations/${organizationId}/imports`,
         formData
       );
+
+      if (needsSheetSelection(response)) {
+        setSheetOptions(response.sheets);
+        setSelectedSheet(response.sheets[0] ?? "");
+        setStep("sheet");
+        return;
+      }
 
       const suggestionByHeader: Record<string, MappingSuggestion> = {};
       const initialMapping: Record<string, string> = {};
@@ -209,6 +238,16 @@ export function ImportWizard({
     } finally {
       setUploading(false);
     }
+  }
+
+  async function handleUpload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitUpload();
+  }
+
+  async function handleSheetSubmit() {
+    if (!selectedSheet) return;
+    await submitUpload(selectedSheet);
   }
 
   function handleMappingChange(header: string, canonicalField: string) {
@@ -345,10 +384,47 @@ export function ImportWizard({
         </form>
       )}
 
+      {step === "sheet" && (
+        <div className="mt-4 flex flex-col gap-3">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-700 dark:text-slate-300">{file?.name}</span> tem mais
+            de uma aba. Qual aba corresponde a <strong>{DATA_DOMAINS.find((d) => d.key === domain)?.label}</strong>?
+          </p>
+          <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
+            Aba
+            <select
+              value={selectedSheet}
+              onChange={(e) => setSelectedSheet(e.target.value)}
+              className={`${selectClass} w-auto`}
+            >
+              {sheetOptions.map((sheetOption) => (
+                <option key={sheetOption} value={sheetOption}>
+                  {sheetOption}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex gap-2">
+            <button type="button" onClick={resetWizard} className={buttonSecondary}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSheetSubmit()}
+              disabled={!selectedSheet || uploading}
+              className={buttonPrimary}
+            >
+              {uploading ? "Enviando..." : "Continuar"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {step === "mapping" && job && (
         <div className="mt-4 flex flex-col gap-4">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            <span className="font-medium text-slate-700 dark:text-slate-300">{job.source_filename}</span> —{" "}
+            <span className="font-medium text-slate-700 dark:text-slate-300">{job.source_filename}</span>
+            {job.sheet_name ? ` (aba "${job.sheet_name}")` : ""} —{" "}
             {job.total_rows ?? 0} linha(s). Confirme para qual campo cada coluna do arquivo corresponde.
           </p>
 

@@ -111,10 +111,14 @@ def create_import_job_from_upload(
     filename: str,
     file_format: str,
     content: bytes,
+    sheet_name: str | None = None,
 ) -> tuple[ImportJob, list[MappingSuggestion]]:
     domain = _require_domain(domain_key)
     validate_file(filename=filename, content=content, declared_format=file_format)
-    parsed = parse_file(file_format, content)
+    # SheetSelectionRequiredError (xlsx com mais de uma aba, sem escolha
+    # ainda) propaga para o router sem ser tratada aqui — nada é persistido
+    # nesse caso (ver XlsxSheetSelectionRequired em schemas/import_job.py).
+    parsed = parse_file(file_format, content, sheet_name=sheet_name)
 
     remembered = _get_remembered_mapping(db, organization_id, domain_key)
     suggestions = suggest_mapping(parsed.headers, domain, remembered)
@@ -130,6 +134,7 @@ def create_import_job_from_upload(
         domain=domain_key,
         source_filename=filename[:255],
         file_format=file_format,
+        sheet_name=parsed.sheet_name,
         status=ImportJobStatus.MAPPING_REQUIRED.value,
         headers=parsed.headers,
         raw_rows=raw_rows,

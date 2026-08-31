@@ -4,6 +4,20 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-08-31
 
+### Added (importação)
+- Seleção de aba em arquivo `.xlsx` com múltiplas abas — antes só a primeira aba não vazia era lida
+  (limitação documentada desde 2026-08-29), qualquer outra ficava inacessível. `POST /imports` aceita
+  `sheet_name` opcional: `.xlsx` de aba única continua lido direto, sem passo extra (comportamento
+  inalterado); `.xlsx` de várias abas devolve `{"needs_sheet_selection": true, "sheets": [...]}` (HTTP
+  200, nenhum job criado) em vez de escolher sozinho qual aba importar — o cliente reenvia o mesmo
+  arquivo com `sheet_name` preenchido, sem precisar de storage de arquivo entre requests (mantém a
+  decisão de arquitetura original intacta). Novo `ImportJob.sheet_name` (migration
+  `0011_import_job_sheet_name`) guarda qual aba foi de fato usada, pra histórico/auditoria. Frontend:
+  `ImportWizard` ganhou uma etapa entre upload e mapeamento (escolher a aba) quando necessário, mantendo
+  o arquivo já selecionado em memória — sem pedir pra escolher de novo. Motivado pelo próprio dataset
+  demo gerado nesta mesma rodada, cujo `.xlsx` (3 abas) só tinha a primeira realmente importável antes
+  desta mudança; `tests/api/test_demo_data_import.py` foi atualizado para importar as 3 abas.
+
 ### Added (dados demo / testes)
 - `test-data/demo-company/`: massa de dados fictícia, determinística (seed fixa `20260831`) e testável ponta a ponta contra o pipeline real de importação → Analytics → exportação, em três formatos (CSV, XLSX, JSON) — 12 meses de história cobertos no total (jun/2025–mai/2026, sem sobreposição entre datasets), cada um com perfil mensal diferente dos outros dois. Gerada por `generate_demo_data.py`, que reaproveita as funções reais de métrica (`app/modules/metrics/engine.py`) para computar os KPIs esperados (`expected/*.json`) — nunca um número recalculado à mão à parte. Desvio documentado (`README.md` do dataset) de duas limitações reais do sistema, não hipotéticas: o importador é estritamente um-domínio-por-arquivo (sem "arquivo misto"), e `parse_xlsx` só lê a primeira planilha — por isso o XLSX (3 abas: Campanhas/Financeiro/Leads) só tem a aba `Campanhas` realmente importável hoje, e os demais datasets viram um pequeno conjunto de arquivos por domínio em vez de um arquivo monolítico. Período do XLSX (out/2025–jan/2026) resolve um conflito real do prompt de origem (pedia 10 meses, contradizendo a própria regra de 4 meses por arquivo) escolhendo 4 meses que não colidem com o seed de desenvolvimento (`app/seed.py`, relativo a `date.today()`, nunca datas fixas). Cenários intencionais: `null` válido (impostos não apurados no primeiro mês, `mqls` não rastreado por mudança de ferramenta), `0` válido (sem recompra no primeiro mês, período novo), campanha de ROAS alto e campanha de ROAS baixo (abaixo de 1, prejuízo real) em cada dataset, cabeçalhos com alias intencional (`Faturamento`, `Sessoes`, `Novos clientes`...) para exercitar a sugestão automática de mapeamento. `tests/api/test_demo_data_import.py` (11 testes novos) roda o fluxo real via `TestClient` para cada arquivo — upload → mapeamento → preview → confirmação → persistência → Analytics → exportação — comparando contra `expected/*.json`. Escopo confirmado com o usuário: só geração de dados demo nesta rodada — a arquitetura de monetização/planos/entitlements pedida no mesmo prompt ficou fora de escopo (ver `docs/analytics/CHART_DECISIONS.md`).
 

@@ -4,10 +4,10 @@ os três formatos (CSV, XLSX, JSON), comparando o resultado com os KPIs
 pré-computados em `expected/*.json` (mesma fonte de verdade: as funções reais
 de `app/modules/metrics/engine.py`, nunca recalculadas à mão aqui).
 
-Cobre a ressalva documentada em `test-data/demo-company/README.md`: o
-arquivo XLSX só tem sua primeira aba (Campanhas) importável hoje
-(`parse_xlsx` só lê `workbook.worksheets[0]`) — os testes desse dataset
-verificam só a seção "marketing" por esse motivo real, não por omissão.
+O arquivo XLSX tem 3 abas (Campanhas/Financeiro/Leads) — desde a seleção de
+aba em .xlsx multi-aba (2026-08-31, `POST /imports` com `sheet_name`), as
+três são importáveis (cada uma com seu `sheet_name` explícito), não só a
+primeira. Ver `test-data/demo-company/README.md`.
 """
 
 import json
@@ -43,14 +43,19 @@ def _suggested_mapping_dict(create_resp_json: dict) -> dict[str, str]:
     }
 
 
-def _import_file(client, org_id: str, domain: str, path: Path) -> dict:
+def _import_file(client, org_id: str, domain: str, path: Path, *, sheet_name: str | None = None) -> dict:
     """Roda o fluxo completo (upload -> mapeamento sugerido -> confirmação)
     e devolve o resumo de confirmação — igual ao que o wizard real faz,
-    aceitando a sugestão automática de mapeamento sem edição manual."""
+    aceitando a sugestão automática de mapeamento sem edição manual.
+    `sheet_name` só se aplica a .xlsx com mais de uma aba (ver
+    parsers.py::SheetSelectionRequiredError)."""
     file_format = path.suffix.lstrip(".")
+    data = {"domain": domain}
+    if sheet_name is not None:
+        data["sheet_name"] = sheet_name
     create = client.post(
         f"/api/v1/organizations/{org_id}/imports",
-        data={"domain": domain},
+        data=data,
         files={"file": (path.name, path.read_bytes(), _CONTENT_TYPES[file_format])},
     )
     assert create.status_code == 201, create.text
@@ -245,33 +250,58 @@ def test_json_export_round_trips_imported_campaigns(client):
 
 
 # ---------------------------------------------------------------------------
-# XLSX — só a primeira aba (Campanhas) é lida pelo importador hoje
-# (parse_xlsx só usa workbook.worksheets[0]). Ver README.md do dataset.
+# XLSX — 3 abas (Campanhas/Financeiro/Leads). Desde a seleção de aba em
+# .xlsx multi-aba (2026-08-31), as três são importáveis, cada uma com seu
+# `sheet_name` explícito — sem escolha, o upload pede pra escolher (ver
+# tests/api/test_imports.py::test_xlsx_multi_sheet_without_sheet_name_requires_selection).
 # ---------------------------------------------------------------------------
 
 
-def test_xlsx_dataset_imports_first_sheet_only_and_matches_expected_marketing_kpis(client):
+def test_xlsx_upload_without_sheet_name_requires_selection(client):
+    org_id = _register_login_and_create_org(client, "demo.xlsxnosheet@example.com", "Empresa Demo XLSX Sem Aba")
+    resp = client.post(
+        f"/api/v1/organizations/{org_id}/imports",
+        data={"domain": "campaigns"},
+        files={
+            "file": (
+                "demo-marketing-historical.xlsx",
+                (DEMO_DIR / "xlsx" / "demo-marketing-historical.xlsx").read_bytes(),
+                _CONTENT_TYPES["xlsx"],
+            )
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"needs_sheet_selection": True, "sheets": ["Campanhas", "Financeiro", "Leads"]}
+
+
+def test_xlsx_dataset_imports_all_three_sheets_and_matches_expected_kpis(client):
     expected = _load_expected("xlsx")
     org_id = _register_login_and_create_org(client, "demo.xlsx@example.com", "Empresa Demo XLSX")
     _create_channels(client, org_id, expected["channels"])
+    xlsx_path = DEMO_DIR / "xlsx" / "demo-marketing-historical.xlsx"
 
-    campaigns = _import_file(
-        client, org_id, "campaigns", DEMO_DIR / "xlsx" / "demo-marketing-historical.xlsx"
-    )
+    campaigns = _import_file(client, org_id, "campaigns", xlsx_path, sheet_name="Campanhas")
     assert campaigns["created_rows"] == expected["campaigns"]
 
+    fin = _import_file(client, org_id, "financial_periods", xlsx_path, sheet_name="Financeiro")
+    assert fin["created_rows"] == expected["financial_periods"]
+
+    funnel = _import_file(client, org_id, "funnel_snapshots", xlsx_path, sheet_name="Leads")
+    assert funnel["created_rows"] == expected["funnel_snapshots"]
+
     date_from, date_to = expected["months"][0], expected["months"][-1]
+    executive = client.get(
+        f"/api/v1/organizations/{org_id}/analytics/executive",
+        params={"date_from": date_from, "date_to": date_to},
+    ).json()
+    _assert_metrics_match(executive, expected["executive"], "executive")
+
     marketing = client.get(
         f"/api/v1/organizations/{org_id}/analytics/marketing",
         params={"date_from": date_from, "date_to": date_to},
     ).json()
     assert marketing["campaign_count"] == expected["campaigns"]
     _assert_metrics_match(marketing, expected["marketing"], "marketing")
-
-    # Confirma a limitação real, na prática: como o arquivo tem financeiro
-    # numa aba não lida, nenhum financial_period foi criado a partir dele.
-    financials = client.get(f"/api/v1/organizations/{org_id}/financials").json()
-    assert financials == []
 
 
 # ---------------------------------------------------------------------------
