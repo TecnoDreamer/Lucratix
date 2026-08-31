@@ -23,6 +23,7 @@ const PLATFORM_ADMIN: User = {
   name: "Super Admin",
   email: "admin@example.com",
   is_platform_admin: true,
+  email_verified: true,
 };
 
 const REGULAR_USER: User = {
@@ -30,6 +31,7 @@ const REGULAR_USER: User = {
   name: "Usuário Comum",
   email: "comum@example.com",
   is_platform_admin: false,
+  email_verified: true,
 };
 
 afterEach(() => {

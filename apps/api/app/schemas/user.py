@@ -28,6 +28,14 @@ class PasswordChange(BaseModel):
     new_password: str = Field(min_length=8, max_length=255)
 
 
+class EmailVerificationConfirm(BaseModel):
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,3 +43,4 @@ class UserRead(BaseModel):
     name: str
     email: EmailStr
     is_platform_admin: bool
+    email_verified: bool

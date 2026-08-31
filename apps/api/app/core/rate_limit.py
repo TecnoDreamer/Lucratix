@@ -41,3 +41,7 @@ login_rate_limiter = RateLimiter(max_attempts=10, window_seconds=60)
 # um endpoint que aciona envio de e-mail (quando essa integracao existir)
 # vira vetor de spam/abuso contra a caixa de entrada de terceiros.
 password_reset_rate_limiter = RateLimiter(max_attempts=5, window_seconds=300)
+# RF-001: mesmo raciocinio do limiter acima, agora que o envio de e-mail
+# de verdade existe (app/core/email.py) — o comentario ali de "quando essa
+# integracao existir" era sobre isto.
+email_verification_rate_limiter = RateLimiter(max_attempts=5, window_seconds=300)

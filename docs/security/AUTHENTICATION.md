@@ -12,7 +12,31 @@ JWT stateless quanto a assinatura/expiração, mas com sessão única validada n
 
 Fluxo de link único, sem etapa de código/OTP separada: `POST /password-reset/request` (e-mail) → token opaco de 256 bits, hash SHA-256 armazenado (`app/models/password_reset_token.py`), TTL de 1 hora, uso único → `POST /password-reset/confirm` (token + nova senha). Resposta de `/request` é **sempre idêntica** independente de o e-mail existir (RN-012, evita enumeração de contas).
 
-**Sem serviço de e-mail integrado** (limitação conhecida, já documentada antes desta rodada): fora de produção, a resposta de `/request` inclui `dev_token` diretamente, e o frontend (`apps/web/src/app/esqueci-senha/page.tsx`) mostra um link de continuidade com esse token — únicamente fora de produção (`settings.is_production`), nunca em produção. Antes de um deploy real de recuperação de senha para usuários finais, é preciso integrar um serviço de envio de e-mail e remover esse campo incondicionalmente (já sinalizado no código-fonte).
+## Verificação de e-mail (RF-001, 2026-08-31)
+
+RF-001 sempre previu *"sistema cria usuário com status `pending`/`active`"* — implementado agora. Cadastro (`POST /auth/register`) gera um `EmailVerificationToken` (mesma forma de `PasswordResetToken`, tabela separada — nunca reaproveita o mesmo token para os dois propósitos) e envia um e-mail de confirmação. `POST /auth/verify-email` confirma; `POST /auth/resend-verification` reenvia (genérico + rate limited, RN-012). `GET /auth/me` devolve `email_verified: bool` (nunca o timestamp cru).
+
+**Decisão deliberada: verificação nunca bloqueia login.** Uma conta continua 100% usável antes de verificar o e-mail — o frontend ("Suas empresas") mostra um lembrete não bloqueante com botão de reenviar, nunca uma tela de bloqueio. Motivo: bloquear travaria o próprio fluxo de conta criada por um admin/Super Admin (`docs/security/ACCESS_CONTROL.md`), que já usa o mesmo mecanismo de token para a pessoa definir a senha — forçar verificação antes de qualquer acesso duplicaria essa fricção sem necessidade. Pode virar bloqueante depois, é uma decisão de produto separada, não técnica.
+
+### Envio de e-mail real (Resend)
+
+`app/core/email.py::send_email` — `urllib.request` da biblioteca padrão (POST para a API do Resend), **nenhuma dependência nova**. Configuração via variável de ambiente:
+
+| Variável | Obrigatória | Efeito |
+|---|---|---|
+| `RESEND_API_KEY` | Não (padrão: vazia) | Sem ela, `send_email` nunca tenta rede — devolve `False` direto, custo zero. **Liga a feature sozinha quando a env var aparecer**, sem precisar de deploy de código novo. |
+| `EMAIL_FROM` | Não (padrão: `Lucratix <onboarding@resend.dev>`) | Trocar para um endereço do domínio verificado assim que existir. |
+| `FRONTEND_BASE_URL` | Não (padrão: `http://localhost:3000`) | Base pra montar o link completo dentro do corpo do e-mail. |
+
+**Passo a passo pra ativar de verdade** (fora do escopo do que a IA pode fazer sozinha — exige uma conta em nome do usuário):
+1. Criar conta grátis em [resend.com](https://resend.com) (sem cartão).
+2. Gerar uma API key e colocar em `RESEND_API_KEY` — direto no `.env` local e na variável de ambiente do Railway em produção. Nunca precisa compartilhar o valor da chave fora desses dois lugares.
+3. **Verificar um domínio próprio** (registros DNS — SPF/DKIM — no provedor do domínio). Sem isso, o Resend só entrega para o e-mail com que a própria conta Resend foi criada (sandbox `onboarding@resend.dev`) — inútil para usuários reais. Ver [resend.com/docs/knowledge-base/403-error-resend-dev-domain](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+4. Atualizar `EMAIL_FROM` pra usar o domínio verificado.
+
+Enquanto isso não é feito, o sistema continua funcionando exatamente como antes desta rodada: `dev_token` na resposta (fora de produção), sem regressão nenhuma.
+
+**Autenticação por WhatsApp — pesquisado, não implementado.** Mensagem de verificação (OTP) é categoria "Authentication" no WhatsApp Business Platform, e a própria Meta documenta que **não é gratuita por padrão** — cobrada desde a primeira mensagem, mesmo dentro do "free tier" de conversas de serviço (que só cobre conversas iniciadas pelo cliente, nunca uma mensagem que a plataforma dispara sozinha). Ver [developers.facebook.com/docs/whatsapp/pricing](https://developers.facebook.com/docs/whatsapp/pricing). Não existe caminho honesto de fazer isso de graça em escala real — fica fora de escopo até haver decisão explícita de assumir esse custo por mensagem.
 
 ## Rate limiting
 
@@ -22,6 +46,7 @@ Em memória, por instância (`app/core/rate_limit.py`) — limitação conhecida
 |---|---|
 | `POST /auth/login` | 10 tentativas / 60s, por IP + e-mail alvo |
 | `POST /auth/password-reset/request` | 5 tentativas / 300s, por IP + e-mail alvo (adicionado nesta rodada — não existia; o endpoint podia ser chamado sem limite) |
+| `POST /auth/resend-verification` | 5 tentativas / 300s, por IP + e-mail alvo (mesmo raciocínio — vetor de spam contra caixa de entrada de terceiros agora que o envio de e-mail é real) |
 
 ## O que **não** existe (decisão deliberada, não lacuna esquecida)
 

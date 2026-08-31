@@ -1,6 +1,7 @@
 from app.models.audit_log import AuditLog
 from app.models.baseline import Baseline
 from app.models.campaign import Campaign
+from app.models.email_verification_token import EmailVerificationToken
 from app.models.experiment import Experiment, ExperimentStatus, ExperimentVariant
 from app.models.financial_period import FinancialPeriod
 from app.models.funnel_snapshot import FunnelSnapshot
@@ -20,6 +21,7 @@ __all__ = [
     "AuditLog",
     "Baseline",
     "Campaign",
+    "EmailVerificationToken",
     "Experiment",
     "ExperimentStatus",
     "ExperimentVariant",

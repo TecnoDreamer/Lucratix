@@ -43,8 +43,11 @@ def grant_access(
     name: str | None = None,
 ) -> tuple[Membership, User, str | None]:
     """Devolve (membership, user, raw_reset_token). `raw_reset_token` so vem
-    preenchido quando a conta foi criada agora nesta chamada — uma conta que
-    ja existia nunca tem a senha mexida por este fluxo."""
+    preenchido quando a conta foi criada agora nesta chamada E o envio de
+    e-mail de verdade falhou/nao esta configurado (dev_token, mesma regra de
+    `auth.service.request_password_reset`) — uma conta que ja existia nunca
+    tem a senha mexida por este fluxo, e uma conta nova cujo e-mail foi
+    enviado com sucesso tambem nao expoe nada aqui."""
     user = repository.find_user_by_email(db, email)
     raw_token: str | None = None
 
