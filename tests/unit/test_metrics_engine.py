@@ -244,3 +244,39 @@ class TestTargetProgress:
     def test_current_missing_is_not_applicable(self):
         result = engine.target_progress(current=None, target=50000)
         assert result.is_applicable is False
+
+
+class TestCorrelation:
+    def test_perfect_positive_correlation(self):
+        result = engine.correlation([1, 2, 3, 4], [10, 20, 30, 40])
+        assert result.is_applicable is True
+        assert result.value == pytest.approx(1.0)
+
+    def test_perfect_negative_correlation(self):
+        result = engine.correlation([1, 2, 3, 4], [40, 30, 20, 10])
+        assert result.value == pytest.approx(-1.0)
+
+    def test_no_correlation_between_unrelated_series(self):
+        # x sobe, y oscila sem padrao — correlacao proxima de zero.
+        result = engine.correlation([1, 2, 3, 4, 5], [3, 1, 4, 1, 5])
+        assert result.is_applicable is True
+        assert -0.5 < result.value < 0.5
+
+    def test_fewer_than_3_points_is_not_applicable(self):
+        result = engine.correlation([1, 2], [10, 20])
+        assert result.is_applicable is False
+        assert "3" in (result.reason or "")
+
+    def test_zero_points_is_not_applicable(self):
+        result = engine.correlation([], [])
+        assert result.is_applicable is False
+
+    def test_constant_series_is_undefined_not_applicable(self):
+        # y nunca muda — correlacao matematicamente indefinida, nunca 0.
+        result = engine.correlation([1, 2, 3], [5, 5, 5])
+        assert result.is_applicable is False
+        assert result.value is None
+
+    def test_mismatched_lengths_raises(self):
+        with pytest.raises(ValueError):
+            engine.correlation([1, 2, 3], [1, 2])

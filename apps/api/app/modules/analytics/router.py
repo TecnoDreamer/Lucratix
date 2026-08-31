@@ -11,6 +11,7 @@ from app.core.deps import OrganizationContext, get_organization_context, require
 from app.models.campaign import Campaign
 from app.models.membership import MembershipRole
 from app.models.target import TargetMetric
+from app.modules.analytics.correlation_service import compute_correlation
 from app.modules.analytics.date_ranges import months_between, months_in_range, previous_equivalent_range
 from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import (
@@ -28,7 +29,9 @@ from app.modules.metrics.engine import compare_periods
 from app.modules.targets import repository as targets_repository
 from app.schemas.metrics import (
     ChannelMarketingRead,
+    CorrelationPointRead,
     DashboardRead,
+    ExecutiveCorrelationRead,
     ExecutiveDashboardRead,
     ExecutiveSeriesRead,
     ExecutiveTargetsRead,
@@ -53,6 +56,9 @@ router = APIRouter(prefix="/api/v1/organizations/{organization_id}", tags=["anal
 # Ver docs/requirements/business-rules.md, RN-010.
 
 _BaselineMetric = Literal["revenue", "profit", "margin", "cac"]
+_CorrelationMetric = Literal[
+    "revenue", "profit", "margin", "cac", "conversion_rate", "average_ticket", "recurrence_rate"
+]
 _DASHBOARD_METRIC_KEYS = (
     "revenue",
     "profit",
@@ -258,6 +264,53 @@ def get_executive_targets(
     ]
 
     return ExecutiveTargetsRead(date_from=date_from, date_to=date_to, monthly=monthly, **progress)
+
+
+@router.get("/analytics/executive/correlation")
+def get_executive_correlation(
+    date_from: date,
+    date_to: date,
+    metric_x: _CorrelationMetric,
+    metric_y: _CorrelationMetric,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> ExecutiveCorrelationRead:
+    """Correlacao de Pearson entre duas metricas mensais da Visao Executiva
+    — nao depende de dado novo, reaproveita a mesma serie mensal de
+    `/analytics/executive/series` (`compute_monthly_series`). Mesma
+    permissao dos outros endpoints executivos (ANALYST+).
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+    if metric_x == metric_y:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metric_x e metric_y precisam ser metricas diferentes",
+        )
+
+    financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    monthly = compute_monthly_series(date_from, date_to, financials, funnels)
+
+    correlation_result, points = compute_correlation(monthly, metric_x, metric_y)
+    months_used = sum(1 for p in points if p.x is not None and p.y is not None)
+
+    return ExecutiveCorrelationRead(
+        date_from=date_from,
+        date_to=date_to,
+        metric_x=metric_x,
+        metric_y=metric_y,
+        months_used=months_used,
+        correlation=MetricResultRead.from_result(correlation_result),
+        points=[CorrelationPointRead(period=p.period, x=p.x, y=p.y) for p in points],
+    )
 
 
 @router.get("/analytics/marketing")

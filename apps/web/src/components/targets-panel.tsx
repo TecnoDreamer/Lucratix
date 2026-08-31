@@ -2,31 +2,18 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
-import type { Target, TargetMetricKey } from "@/lib/metrics";
+import { EXECUTIVE_METRIC_OPTIONS, type Target, type TargetMetricKey } from "@/lib/metrics";
 import { formatCompactNumber, formatMonthYear, formatPercentage } from "@/lib/formatters";
 import { buttonGhost, buttonPrimary, input as inputClass, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, Card } from "@/components/ui";
 import { IconTarget, IconTrash } from "@/components/icons";
 
-// Mesmos 7 KPIs de CARDS em analytics/page.tsx — lista pequena e estável,
-// duplicada aqui deliberadamente (é configuração de rótulo/apresentação,
-// não fórmula de negócio; a fórmula de verdade continua só no backend).
-const TARGET_METRICS: { key: TargetMetricKey; label: string; percent?: boolean }[] = [
-  { key: "revenue", label: "Receita" },
-  { key: "profit", label: "Lucro" },
-  { key: "margin", label: "Margem", percent: true },
-  { key: "cac", label: "CAC" },
-  { key: "conversion_rate", label: "Conversão", percent: true },
-  { key: "average_ticket", label: "Ticket médio" },
-  { key: "recurrence_rate", label: "Recorrência", percent: true },
-];
-
 function metricLabel(key: TargetMetricKey): string {
-  return TARGET_METRICS.find((m) => m.key === key)?.label ?? key;
+  return EXECUTIVE_METRIC_OPTIONS.find((m) => m.key === key)?.label ?? key;
 }
 
 function isPercentMetric(key: TargetMetricKey): boolean {
-  return TARGET_METRICS.find((m) => m.key === key)?.percent ?? false;
+  return EXECUTIVE_METRIC_OPTIONS.find((m) => m.key === key)?.percent ?? false;
 }
 
 function currentMonthValue(): string {
@@ -142,7 +129,7 @@ export function TargetsPanel({
             onChange={(e) => setMetric(e.target.value as TargetMetricKey)}
             className={`${inputClass} w-auto`}
           >
-            {TARGET_METRICS.map((m) => (
+            {EXECUTIVE_METRIC_OPTIONS.map((m) => (
               <option key={m.key} value={m.key}>
                 {m.label}
               </option>

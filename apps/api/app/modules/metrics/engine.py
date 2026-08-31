@@ -14,6 +14,7 @@ numeros, devolve MetricResult. Isso o torna testavel em isolamento
 assincronos.
 """
 
+import statistics
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -184,6 +185,42 @@ def target_progress(current: Number | None, target: Number | None) -> MetricResu
     meta ausente ou zero, ou valor atual ausente, vira `is_applicable=False`
     (RN-003), nunca 0% ou excecao."""
     return _safe_ratio(current, target, numerator_field="current", denominator_field="target")
+
+
+# Minimo de pares pra calcular correlacao — com 2 pontos, qualquer reta
+# conecta os dois perfeitamente (r sempre +-1), o que nao significa nada
+# estatisticamente. 3 e o minimo pra o numero comecar a ter algum sentido,
+# mesmo sendo ainda pouco (a UI mostra `months_used` pra transparencia —
+# RN-003, nunca apresentar um numero sem contexto de quanto dado o sustenta).
+_MIN_CORRELATION_POINTS = 3
+
+
+def correlation(x: list[Number], y: list[Number]) -> MetricResult:
+    """Correlacao de Pearson entre duas series pareadas (mesmo indice = mesmo
+    mes, ja filtradas pelo chamador pra so incluir meses com as duas
+    metricas aplicaveis — ver `analytics/correlation_service.py`). Nunca
+    afirma causalidade, so a correlacao observada (mesmo espirito de
+    `PeriodComparison`, que deliberadamente nao tem campo de "causa").
+    """
+    if len(x) != len(y):
+        raise ValueError("x e y precisam ter o mesmo tamanho")
+    if len(x) < _MIN_CORRELATION_POINTS:
+        return MetricResult(
+            value=None,
+            is_applicable=False,
+            reason=f"poucos meses com as duas métricas aplicáveis (mínimo {_MIN_CORRELATION_POINTS})",
+        )
+    try:
+        r = statistics.correlation([_as_float(v) for v in x], [_as_float(v) for v in y])
+    except statistics.StatisticsError:
+        # Uma das duas series nao varia no periodo (todo mes com o mesmo
+        # valor) — correlacao matematicamente indefinida, nao "0".
+        return MetricResult(
+            value=None,
+            is_applicable=False,
+            reason="uma das métricas não varia no período — correlação indefinida",
+        )
+    return MetricResult.ok(r)
 
 
 def recurrence_rate(repeat_customers: Number | None, total_customers: Number | None) -> MetricResult:

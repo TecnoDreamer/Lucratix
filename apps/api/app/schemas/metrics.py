@@ -190,3 +190,28 @@ class MarketingByChannelRead(BaseModel):
     date_from: date
     date_to: date
     channels: list[ChannelMarketingRead]
+
+
+class CorrelationPointRead(BaseModel):
+    """Um ponto do gráfico de dispersão — um por mês do intervalo, mesmo
+    quando uma das duas métricas está ausente naquele mês (`x`/`y` ficam
+    `None`, nunca 0 — RN-003)."""
+
+    period: date
+    x: float | None
+    y: float | None
+
+
+class ExecutiveCorrelationRead(BaseModel):
+    """Correlação de Pearson entre duas métricas mensais da Visão Executiva.
+    `correlation.is_applicable=False` quando há menos de 3 meses com as
+    duas métricas aplicáveis, ou quando uma delas não varia no período —
+    nunca um coeficiente calculado sobre poucos pontos ou indefinido."""
+
+    date_from: date
+    date_to: date
+    metric_x: str
+    metric_y: str
+    months_used: int
+    correlation: MetricResultRead
+    points: list[CorrelationPointRead]
