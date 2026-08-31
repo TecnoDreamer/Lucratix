@@ -39,6 +39,11 @@ class ExperimentVariantSummaryRead(BaseModel):
     sample_size: int | None
     conversions: int | None
     conversion_rate: MetricResultRead
+    # p-valor do teste-z de duas proporções contra a variante Controle (a
+    # primeira da lista) — None na própria Controle, e em qualquer variante
+    # enquanto `has_sufficient_sample` for False (ver analysis.py).
+    p_value: float | None = None
+    is_significant: bool | None = None
 
 
 class ExperimentRead(BaseModel):
@@ -60,3 +65,4 @@ class ExperimentResultRead(BaseModel):
     has_sufficient_sample: bool
     leading_variant_name: str | None
     note: str
+    significance_alpha: float

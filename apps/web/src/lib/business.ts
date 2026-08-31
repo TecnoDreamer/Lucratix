@@ -86,10 +86,16 @@ export interface ExperimentResult {
     sample_size: number | null;
     conversions: number | null;
     conversion_rate: { value: number | null; is_applicable: boolean; reason: string | null };
+    // p-valor do teste-z de duas proporções contra a variante Controle
+    // (a primeira da lista) — null na própria Controle, e em qualquer
+    // variante enquanto has_sufficient_sample for false.
+    p_value: number | null;
+    is_significant: boolean | null;
   }[];
   has_sufficient_sample: boolean;
   leading_variant_name: string | null;
   note: string;
+  significance_alpha: number;
 }
 
 export function formatValue(value: number | null): string {

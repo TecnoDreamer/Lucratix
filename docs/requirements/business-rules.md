@@ -42,7 +42,7 @@ Não pode haver dois usuários com o mesmo e-mail na plataforma.
 Respostas de cadastro, login e recuperação de senha não revelam se um e-mail específico já está cadastrado.
 
 ### RN-013 — Experimento não declara vencedor automaticamente
-O sistema não marca uma variante como "vencedora" apenas por ter taxa de conversão numericamente maior. A declaração de resultado deve considerar tamanho de amostra e, quando implementado, significância estatística — enquanto isso não estiver implementado, o sistema apresenta os números brutos e evita a palavra "vencedor" na ausência desse critério.
+O sistema não marca uma variante como "vencedora" apenas por ter taxa de conversão numericamente maior. A declaração de resultado considera tamanho de amostra mínimo (30 por variante) e, a partir de 2026-08-31, significância estatística real: teste-z de duas proporções (`apps/api/app/modules/experiments/analysis.py`), cada variante comparada contra a Controle, nível de confiança de 95%. Mesmo com o teste implementado, o sistema nunca usa a palavra "vencedor" — devolve `is_significant`/`p_value` por variante e deixa a decisão para quem lê o resultado (ver nota explícita sobre "peeking" e ausência de correção para múltiplas comparações no próprio `note` da resposta).
 
 ### RN-014 — Produto inativo não é excluído fisicamente
 Produtos/serviços marcados como inativos permanecem no histórico (para preservar integridade de registros financeiros/campanhas passadas que os referenciam), apenas deixam de aparecer como opção para novos lançamentos.

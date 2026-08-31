@@ -115,10 +115,13 @@ def get_experiment_result(
                 sample_size=v.sample_size,
                 conversions=v.conversions,
                 conversion_rate=MetricResultRead.from_result(v.conversion_rate),
+                p_value=v.p_value,
+                is_significant=v.is_significant,
             )
             for v in summary.variants
         ],
         has_sufficient_sample=summary.has_sufficient_sample,
         leading_variant_name=summary.leading_variant_name,
         note=summary.note,
+        significance_alpha=summary.significance_alpha,
     )

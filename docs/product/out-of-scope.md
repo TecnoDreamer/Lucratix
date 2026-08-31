@@ -13,7 +13,10 @@ Estes itens são reconhecidos como valiosos, mas **não fazem parte do MVP**. Fi
 
 ## Análise estatística avançada de experimentos
 
-- Testes de significância estatística formal para CRO/A-B testing ficam preparados na arquitetura, mas o motor de cálculo estatístico completo não é obrigatório no MVP — o importante é **não declarar vencedor prematuramente**.
+- **Teste-z de duas proporções implementado em 2026-08-31** (`apps/api/app/modules/experiments/analysis.py`, RN-013) — cada variante comparada contra a Controle, nível de confiança de 95%, biblioteca padrão do Python (`statistics.NormalDist`, sem dependência nova). O que **continua** fora de escopo, documentado deliberadamente:
+  - **Teste omnibus (qui-quadrado)** para experimentos com 3+ variantes — hoje são N-1 comparações par-a-par contra a Controle, sem correção para múltiplas comparações (ex.: Bonferroni). Um omnibus exigiria a função gama incompleta regularizada, que a biblioteca padrão não oferece pronta.
+  - **Sequential testing / correção para "peeking"** (olhar o resultado repetidamente antes do fim planejado do experimento infla falso positivo) — o `note` da resposta avisa sobre isso textualmente, mas o sistema não impede nem corrige matematicamente.
+  - Poder estatístico / cálculo de tamanho de amostra necessário antes do experimento começar (só o piso arbitrário de 30 por variante existe hoje).
 
 ## Machine Learning
 
