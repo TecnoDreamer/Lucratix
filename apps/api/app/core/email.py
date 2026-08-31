@@ -41,9 +41,11 @@ def send_email(*, to: str, subject: str, html: str) -> bool:
         },
     )
     try:
-        # S310: URL e a constante _RESEND_URL acima, nunca dado de entrada —
-        # nao existe risco de esquema arbitrario (file://, etc.) aqui.
-        with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:  # noqa: S310
+        # S310/B310: URL e a constante _RESEND_URL acima, nunca dado de
+        # entrada — nao existe risco de esquema arbitrario (file://, etc.)
+        # aqui. noqa (ruff) e nosec (bandit, CI roda os dois separadamente)
+        # pelo mesmo motivo.
+        with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:  # noqa: S310 # nosec B310
             status_code = int(response.status)
             return 200 <= status_code < 300
     except (urllib.error.URLError, TimeoutError) as exc:

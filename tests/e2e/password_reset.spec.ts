@@ -11,7 +11,11 @@ test("fluxo completo: esqueci a senha -> redefinir -> logar com a senha nova", a
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Cadastrar" }).click();
-  await page.waitForURL("**/login");
+  await expect(page.getByText(/Cadastro recebido/i)).toBeVisible();
+  // Sem RESEND_API_KEY (ambiente de e2e), o cadastro para no formulario
+  // (banner de dev_token) em vez de redirecionar sozinho — ver
+  // helpers.ts::registerAndLogin.
+  await page.goto("/login");
 
   await page.getByRole("link", { name: "Esqueci minha senha" }).click();
   await page.waitForURL("**/esqueci-senha");

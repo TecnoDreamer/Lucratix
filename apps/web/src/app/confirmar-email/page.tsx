@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { buttonPrimary, link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
@@ -24,23 +24,35 @@ function ConfirmEmailContent() {
   const token = searchParams.get("token");
   const [status, setStatus] = useState<Status>(token ? "loading" : "error");
   const [error, setError] = useState<string | null>(null);
+  // O token de verificacao e de uso unico (ver auth/service.py) — sem essa
+  // guarda, o efeito duplo do React Strict Mode em desenvolvimento chamaria
+  // /verify-email duas vezes, a segunda sempre falhando ("token ja usado")
+  // e sobrescrevendo o sucesso real da primeira com um "Link invalido" falso.
+  //
+  // Importante: NAO combinar essa guarda com uma flag `cancelled` fechada
+  // sobre a cleanup do efeito. O Strict Mode roda montagem->desmontagem->
+  // remontagem uma vez em dev; a cleanup da PRIMEIRA invocacao dispara nesse
+  // ciclo mesmo com firedRef ja true (que so bloqueia a SEGUNDA chamada de
+  // rede). Se o `.then()`/`.catch()` daquela primeira chamada checassem uma
+  // `cancelled` fechada nessa mesma cleanup, o unico request real (que
+  // continua em voo) teria sua resposta 200 OK descartada silenciosamente —
+  // a tela ficava presa em "Confirmando..." para sempre, mesmo com o backend
+  // confirmando o e-mail com sucesso. firedRef sozinho ja garante uma unica
+  // chamada; nao ha necessidade de um segundo mecanismo de cancelamento.
+  const firedRef = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
+    if (!token || firedRef.current) return;
+    firedRef.current = true;
     api
       .post("/api/v1/auth/verify-email", { token })
       .then(() => {
-        if (!cancelled) setStatus("success");
+        setStatus("success");
       })
       .catch((err: unknown) => {
-        if (cancelled) return;
         setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
         setStatus("error");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [token]);
 
   return (

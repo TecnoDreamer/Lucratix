@@ -20,7 +20,13 @@ export async function registerAndLogin(page: Page, emailPrefix: string): Promise
   await page.getByRole("button", { name: "Cadastrar" }).click();
   await expect(page.getByText(/Cadastro recebido/i)).toBeVisible();
 
-  await page.waitForURL("**/login", { timeout: 5000 });
+  // Sem RESEND_API_KEY (ambiente de CI/e2e), o cadastro devolve dev_token e
+  // a pagina PARA no formulario (banner de confirmacao de e-mail) em vez de
+  // redirecionar sozinha para /login — decisao deliberada (RF-001, ver
+  // docs/security/AUTHENTICATION.md: verificar e-mail nunca e obrigatorio
+  // pra logar). Ir direto pra /login em vez de esperar um redirect que so
+  // acontece quando o e-mail de verdade e enviado.
+  await page.goto("/login");
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
