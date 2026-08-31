@@ -99,6 +99,48 @@ class ExecutiveSeriesRead(BaseModel):
     points: list[MonthlyMetricsRead]
 
 
+class TargetProgressRead(BaseModel):
+    """Progresso em relação à meta somada ao longo do intervalo — só
+    aplicável para receita/lucro (metricas aditivas). Para as outras 5
+    métricas (razões: margem, CAC, conversão, ticket médio, recorrência),
+    `target_value` vem None e `percent_of_target.reason` explica por quê —
+    a meta delas só é comparável mês a mês (ver `points_with_targets`)."""
+
+    target_value: float | None
+    percent_of_target: MetricResultRead
+
+
+class MonthlyTargetRead(BaseModel):
+    """Meta bruta (sem comparação) de cada KPI para um mês específico —
+    `None` quando não há meta definida para aquele KPI naquele mês. Usado
+    pela linha de meta no gráfico de evolução; ao contrário de
+    `TargetProgressRead`, vale para as 7 métricas (não é uma soma)."""
+
+    period: date
+    revenue: float | None
+    profit: float | None
+    margin: float | None
+    cac: float | None
+    conversion_rate: float | None
+    average_ticket: float | None
+    recurrence_rate: float | None
+
+
+class ExecutiveTargetsRead(BaseModel):
+    date_from: date
+    date_to: date
+
+    revenue: TargetProgressRead
+    profit: TargetProgressRead
+    margin: TargetProgressRead
+    cac: TargetProgressRead
+    conversion_rate: TargetProgressRead
+    average_ticket: TargetProgressRead
+    recurrence_rate: TargetProgressRead
+
+    monthly: list[MonthlyTargetRead]
+
+
 class MarketingAnalyticsRead(BaseModel):
     """Métricas de campanha por intervalo de datas — ROAS, ROI, CTR, CPC,
     CPM, CPL, CPA. Campanhas sem `start_date` nem `end_date` são excluídas

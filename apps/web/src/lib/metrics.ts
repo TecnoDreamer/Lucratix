@@ -85,6 +85,64 @@ export interface ExecutiveSeries {
   points: MonthlyMetrics[];
 }
 
+/** As únicas métricas que aceitam meta hoje — mesmo conjunto do backend
+ * (`app/models/target.py::TargetMetric`). */
+export type TargetMetricKey =
+  | "revenue"
+  | "profit"
+  | "margin"
+  | "cac"
+  | "conversion_rate"
+  | "average_ticket"
+  | "recurrence_rate";
+
+export interface Target {
+  id: string;
+  organization_id: string;
+  metric: TargetMetricKey;
+  period: string;
+  value: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Progresso em relação à meta somada ao longo do intervalo — só aplicável
+ * pra receita/lucro (métricas aditivas); as outras 5 vêm com `target_value:
+ * null` e `percent_of_target.reason` explicando por quê (ver
+ * `analytics/targets_service.py`). */
+export interface TargetProgress {
+  target_value: number | null;
+  percent_of_target: MetricResult;
+}
+
+/** Meta bruta de cada KPI para um mês — `null` quando não definida.
+ * Alimenta a linha de meta no gráfico de evolução (vale pras 7 métricas,
+ * diferente de `TargetProgress`, que só vale pra receita/lucro). */
+export interface MonthlyTarget {
+  period: string;
+  revenue: number | null;
+  profit: number | null;
+  margin: number | null;
+  cac: number | null;
+  conversion_rate: number | null;
+  average_ticket: number | null;
+  recurrence_rate: number | null;
+}
+
+export interface ExecutiveTargets {
+  date_from: string;
+  date_to: string;
+  revenue: TargetProgress;
+  profit: TargetProgress;
+  margin: TargetProgress;
+  cac: TargetProgress;
+  conversion_rate: TargetProgress;
+  average_ticket: TargetProgress;
+  recurrence_rate: TargetProgress;
+  monthly: MonthlyTarget[];
+}
+
 export interface MarketingAnalytics {
   date_from: string;
   date_to: string;

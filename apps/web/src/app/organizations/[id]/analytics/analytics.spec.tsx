@@ -2,7 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
-import type { ExecutiveDashboard, ExecutiveSeries, MarketingAnalytics } from "@/lib/metrics";
+import { formatCompactNumber } from "@/lib/formatters";
+import type { ExecutiveDashboard, ExecutiveSeries, ExecutiveTargets, MarketingAnalytics, Target } from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
 import AnalyticsPage from "./page";
 
@@ -16,7 +17,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
-  return { ...actual, api: { ...actual.api, get: vi.fn() } };
+  return { ...actual, api: { ...actual.api, get: vi.fn(), put: vi.fn(), del: vi.fn() } };
 });
 
 // Mesmo padrão de export-panel.spec.tsx (mockar downloadFile): o
@@ -86,6 +87,46 @@ const FAKE_SERIES: ExecutiveSeries = {
   ],
 };
 
+function notApplicableProgress(reason: string) {
+  return { target_value: null, percent_of_target: { value: null, is_applicable: false, reason } };
+}
+
+// Cenário padrão: nenhuma meta definida — mesmo comportamento de antes
+// desta feature existir (nenhum "% da meta" nem linha tracejada).
+const FAKE_TARGETS: ExecutiveTargets = {
+  date_from: "2026-07-01",
+  date_to: "2026-08-31",
+  revenue: notApplicableProgress("dado ausente: target"),
+  profit: notApplicableProgress("dado ausente: target"),
+  margin: notApplicableProgress("meta não agregável"),
+  cac: notApplicableProgress("meta não agregável"),
+  conversion_rate: notApplicableProgress("meta não agregável"),
+  average_ticket: notApplicableProgress("meta não agregável"),
+  recurrence_rate: notApplicableProgress("meta não agregável"),
+  monthly: [
+    {
+      period: "2026-07-01",
+      revenue: null,
+      profit: null,
+      margin: null,
+      cac: null,
+      conversion_rate: null,
+      average_ticket: null,
+      recurrence_rate: null,
+    },
+    {
+      period: "2026-08-01",
+      revenue: null,
+      profit: null,
+      margin: null,
+      cac: null,
+      conversion_rate: null,
+      average_ticket: null,
+      recurrence_rate: null,
+    },
+  ],
+};
+
 const FAKE_MARKETING: MarketingAnalytics = {
   date_from: "2026-08-01",
   date_to: "2026-08-31",
@@ -104,14 +145,30 @@ const FAKE_MARKETING: MarketingAnalytics = {
 function mockApiByUrl(overrides?: {
   dashboard?: ExecutiveDashboard;
   series?: ExecutiveSeries;
+  targets?: ExecutiveTargets;
+  rawTargets?: Target[];
   marketing?: MarketingAnalytics;
 }) {
   vi.mocked(api.get).mockImplementation((url: string) => {
-    if (url.includes("/analytics/marketing")) {
-      return Promise.resolve(overrides?.marketing ?? FAKE_MARKETING);
+    // Ordem importa: "/analytics/executive/targets" e "/.../series" contêm
+    // "/analytics/executive" como substring — checar os mais específicos
+    // primeiro. "/targets" no fim (sem query string) é a lista bruta que
+    // TargetsPanel busca, diferente de "/analytics/executive/targets"
+    // (progresso agregado, com query string de data).
+    if (url.includes("/analytics/executive/targets")) {
+      return Promise.resolve(overrides?.targets ?? FAKE_TARGETS);
     }
     if (url.includes("/analytics/executive/series")) {
       return Promise.resolve(overrides?.series ?? FAKE_SERIES);
+    }
+    if (url.includes("/analytics/marketing")) {
+      return Promise.resolve(overrides?.marketing ?? FAKE_MARKETING);
+    }
+    if (url.includes("/analytics/executive")) {
+      return Promise.resolve(overrides?.dashboard ?? FAKE_DASHBOARD);
+    }
+    if (url.endsWith("/targets")) {
+      return Promise.resolve(overrides?.rawTargets ?? []);
     }
     return Promise.resolve(overrides?.dashboard ?? FAKE_DASHBOARD);
   });
@@ -148,6 +205,8 @@ afterEach(() => {
   mockPush.mockReset();
   mockTriggerBrowserDownload.mockReset();
   vi.mocked(api.get).mockReset();
+  vi.mocked(api.put).mockReset();
+  vi.mocked(api.del).mockReset();
 });
 
 describe("AnalyticsPage", () => {
@@ -207,8 +266,10 @@ describe("AnalyticsPage", () => {
     vi.mocked(api.get).mockRejectedValue(new ApiError(500, "Erro interno"));
     renderPage();
 
+    // Duas seções buscam dado de forma independente (a página e o
+    // TargetsPanel) — cada uma mostra seu próprio erro quando falha.
     await waitFor(() => {
-      expect(screen.getByText("Erro interno")).toBeInTheDocument();
+      expect(screen.getAllByText("Erro interno").length).toBeGreaterThan(0);
     });
   });
 
@@ -216,14 +277,17 @@ describe("AnalyticsPage", () => {
     mockApiByUrl();
     renderPage();
 
+    // 4 chamadas dependentes do período (executive, series, targets
+    // agregados, marketing) + 1 do TargetsPanel (lista bruta de metas, que
+    // não depende do período — busca só uma vez, no mount).
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(3);
+      expect(api.get).toHaveBeenCalledTimes(5);
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledTimes(6);
+      expect(api.get).toHaveBeenCalledTimes(9);
     });
   });
 
@@ -350,6 +414,103 @@ describe("AnalyticsPage", () => {
     expect(content).toContain("Empresa,Empresa Teste");
     expect(content).toContain("Mês,Receita,Lucro,Margem,CAC,Conversão,Ticket médio,Recorrência");
     expect(content).toContain("2026-07-01,50000");
+  });
+
+  it("mostra o progresso da meta de receita no card do KPI", async () => {
+    mockApiByUrl({
+      targets: {
+        ...FAKE_TARGETS,
+        revenue: {
+          target_value: 60000,
+          percent_of_target: { value: 58200 / 60000, is_applicable: true, reason: null },
+        },
+      },
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/97%/)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/da meta/)).toBeInTheDocument();
+  });
+
+  it("métrica sem progresso agregado de meta (razão, ex.: margem) não mostra '% da meta'", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("58.200")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/da meta/)).not.toBeInTheDocument();
+  });
+
+  it("linha de meta do gráfico de evolução usa o valor mensal bruto (não o agregado)", async () => {
+    mockApiByUrl({
+      targets: {
+        ...FAKE_TARGETS,
+        monthly: [
+          { ...FAKE_TARGETS.monthly[0], revenue: 52000 },
+          { ...FAKE_TARGETS.monthly[1], revenue: 60000 },
+        ],
+      },
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Evolução mensal")).toBeInTheDocument();
+    });
+    const table = screen.getByText("Receita — evolução mensal, por mês").closest("table")!;
+    const rows = Array.from(table.querySelectorAll("tbody tr")).map((tr) => tr.textContent ?? "");
+    expect(rows[0]).toContain(formatCompactNumber(52000));
+    expect(rows[1]).toContain(formatCompactNumber(60000));
+  });
+
+  it("renderiza a seção de Metas com o formulário e a lista de metas já definidas", async () => {
+    mockApiByUrl({ rawTargets: [] });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Metas")).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Métrica")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Salvar meta" })).toBeInTheDocument();
+  });
+
+  it("salvar uma meta rebusca o progresso agregado, sem esperar o período mudar", async () => {
+    mockApiByUrl({ rawTargets: [] });
+    vi.mocked(api.put).mockResolvedValue({
+      id: "t1",
+      organization_id: "org-123",
+      metric: "revenue",
+      period: "2026-08-01",
+      value: 60000,
+      created_by: null,
+      created_at: "2026-08-01T00:00:00Z",
+      updated_at: "2026-08-01T00:00:00Z",
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Metas")).toBeInTheDocument();
+    });
+    // 5 chamadas do carregamento inicial (4 da página + 1 do TargetsPanel).
+    const callsBeforeSave = vi.mocked(api.get).mock.calls.length;
+
+    fireEvent.change(screen.getByLabelText(/^Meta/), { target: { value: "60000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar meta" }));
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalled();
+    });
+    // refetchTargets busca de novo /analytics/executive/targets — mais uma
+    // chamada de GET, sem trocar o período nem recarregar a página inteira.
+    await waitFor(() => {
+      expect(vi.mocked(api.get).mock.calls.length).toBeGreaterThan(callsBeforeSave);
+    });
+    const targetsCalls = vi
+      .mocked(api.get)
+      .mock.calls.filter(([url]) => (url as string).includes("/analytics/executive/targets"));
+    expect(targetsCalls.length).toBeGreaterThanOrEqual(2);
   });
 
   it("renderiza os KPIs de marketing (ROAS, ROI, CTR, CPC, CPM, CPL, CPA)", async () => {

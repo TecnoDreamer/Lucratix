@@ -9,11 +9,14 @@ import {
   formatPercentChange,
   type ExecutiveDashboard,
   type ExecutiveSeries,
+  type ExecutiveTargets,
   type MarketingAnalytics,
   type MetricWithComparison,
   type MonthlyMetrics,
+  type TargetProgress,
 } from "@/lib/metrics";
 import { getMetricById } from "@/domain/metrics/metric-utils";
+import { formatPercentage } from "@/lib/formatters";
 import { sectionTitle, buttonSecondary } from "@/lib/ui";
 import { useOrganization } from "@/contexts/organization-context";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -21,6 +24,7 @@ import { MetricHelp } from "@/components/metric-help";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { SeriesChart } from "@/components/series-chart";
 import { InsightsPanel } from "@/components/insights-panel";
+import { TargetsPanel } from "@/components/targets-panel";
 import { computeExecutiveInsights } from "@/lib/insights";
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
@@ -93,11 +97,35 @@ function ComparisonBadge({
   );
 }
 
-function MetricGrid<T extends object>({ data, cards }: { data: T; cards: CardConfig<T>[] }) {
+function TargetProgressLine({ progress }: { progress: TargetProgress }) {
+  // Só receita/lucro têm progresso agregado (metas somáveis) — as outras 5
+  // vêm com target_value null e um motivo em vez de "0% da meta" (ver
+  // analytics/targets_service.py). Sem meta definida, não mostra nada.
+  if (progress.target_value === null) return null;
+  return (
+    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      {progress.percent_of_target.is_applicable && progress.percent_of_target.value !== null
+        ? formatPercentage(progress.percent_of_target.value)
+        : "não aplicável"}{" "}
+      da meta
+    </p>
+  );
+}
+
+function MetricGrid<T extends object>({
+  data,
+  cards,
+  targetProgress,
+}: {
+  data: T;
+  cards: CardConfig<T>[];
+  targetProgress?: Partial<Record<string, TargetProgress>>;
+}) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {cards.map(({ key, label, percent, icon: Icon }, i) => {
         const metric = data[key] as unknown as MetricWithComparison;
+        const progress = targetProgress?.[key];
         return (
           <Card key={key} hover className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
             <div className="flex items-center justify-between">
@@ -116,6 +144,7 @@ function MetricGrid<T extends object>({ data, cards }: { data: T; cards: CardCon
               <p className="mt-1 text-xs text-slate-400">{metric.current.reason}</p>
             )}
             {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
+            {progress && <TargetProgressLine progress={progress} />}
           </Card>
         );
       })}
@@ -123,7 +152,11 @@ function MetricGrid<T extends object>({ data, cards }: { data: T; cards: CardCon
   );
 }
 
-function SeriesGrid({ series }: { series: ExecutiveSeries }) {
+function SeriesGrid({ series, targets }: { series: ExecutiveSeries; targets?: ExecutiveTargets | null }) {
+  // period -> valor da meta daquele mês, pra cruzar com series.points na
+  // mesma ordem/tamanho (SeriesChart espera um array paralelo a `points`).
+  const targetsByPeriod = new Map(targets?.monthly.map((m) => [m.period, m]) ?? []);
+
   return (
     <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {CARDS.map(({ key, label, percent, icon: Icon }, i) => (
@@ -142,6 +175,11 @@ function SeriesGrid({ series }: { series: ExecutiveSeries }) {
               points={series.points.map((p) => ({ period: p.period, metric: p[key as DashboardMetricKey] }))}
               percent={percent}
               label={label}
+              targets={
+                targets
+                  ? series.points.map((p) => targetsByPeriod.get(p.period)?.[key as DashboardMetricKey] ?? null)
+                  : undefined
+              }
             />
           </div>
         </Card>
@@ -158,6 +196,7 @@ export default function AnalyticsPage() {
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [data, setData] = useState<ExecutiveDashboard | null>(null);
   const [series, setSeries] = useState<ExecutiveSeries | null>(null);
+  const [targets, setTargets] = useState<ExecutiveTargets | null>(null);
   const [marketing, setMarketing] = useState<MarketingAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -199,6 +238,14 @@ export default function AnalyticsPage() {
         })
         .catch(handleError),
       api
+        .get<ExecutiveTargets>(
+          `/api/v1/organizations/${id}/analytics/executive/targets?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+        )
+        .then((result) => {
+          if (!cancelled) setTargets(result);
+        })
+        .catch(handleError),
+      api
         .get<MarketingAnalytics>(
           `/api/v1/organizations/${id}/analytics/marketing?date_from=${range.dateFrom}&date_to=${range.dateTo}`
         )
@@ -216,10 +263,42 @@ export default function AnalyticsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, range.dateFrom, range.dateTo]);
 
+  // TargetsPanel busca/atualiza a lista bruta de metas por conta própria,
+  // mas o progresso agregado (cards + linha do gráfico) só é buscado aqui —
+  // sem isso, criar/remover uma meta só refletiria depois de trocar o
+  // período. Não é a mesma request do efeito acima (que dispara em loading
+  // completo); essa é silenciosa, só atualiza `targets` quando termina.
+  async function refetchTargets() {
+    try {
+      const result = await api.get<ExecutiveTargets>(
+        `/api/v1/organizations/${id}/analytics/executive/targets?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+      );
+      setTargets(result);
+    } catch {
+      // Falha aqui não deve derrubar o resto da tela — o fetch inicial já
+      // trouxe um estado válido; só a atualização pós-salvar fica sem efeito.
+    }
+  }
+
   const incomplete =
     data && (data.months_with_financial_data < data.months_in_range || data.months_with_funnel_data < data.months_in_range);
 
   const insights = data ? computeExecutiveInsights(data) : [];
+
+  // MetricGrid também é usado pra Marketing (MARKETING_CARDS), cujas chaves
+  // (roas, cpc, ...) não existem em ExecutiveTargets — por isso a prop é um
+  // Record genérico, montado só com as 7 chaves que targets de fato tem.
+  const targetProgress: Partial<Record<string, TargetProgress>> | undefined = targets
+    ? {
+        revenue: targets.revenue,
+        profit: targets.profit,
+        margin: targets.margin,
+        cac: targets.cac,
+        conversion_rate: targets.conversion_rate,
+        average_ticket: targets.average_ticket,
+        recurrence_rate: targets.recurrence_rate,
+      }
+    : undefined;
 
   function handleExportSeries() {
     if (!series) return;
@@ -271,10 +350,14 @@ export default function AnalyticsPage() {
           ))}
         </div>
       ) : (
-        data && <MetricGrid data={data} cards={CARDS} />
+        data && <MetricGrid data={data} cards={CARDS} targetProgress={targetProgress} />
       )}
 
       {!loading && <InsightsPanel insights={insights} />}
+
+      <div className="mt-10">
+        <TargetsPanel organizationId={id} onSaved={refetchTargets} />
+      </div>
 
       <div className="mt-10 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -296,7 +379,7 @@ export default function AnalyticsPage() {
           ))}
         </div>
       ) : (
-        series && <SeriesGrid series={series} />
+        series && <SeriesGrid series={series} targets={targets} />
       )}
 
       <div className="mt-10 flex items-center gap-2">

@@ -178,6 +178,14 @@ def churn_rate(active_end: Number | None, active_start: Number | None) -> Metric
     return MetricResult.ok(1 - retention.value)
 
 
+def target_progress(current: Number | None, target: Number | None) -> MetricResult:
+    """Progresso em relacao a uma meta — `current / target` (ex.: 0.83 =
+    83% da meta atingida). Mesma semantica de seguranca de `_safe_ratio`:
+    meta ausente ou zero, ou valor atual ausente, vira `is_applicable=False`
+    (RN-003), nunca 0% ou excecao."""
+    return _safe_ratio(current, target, numerator_field="current", denominator_field="target")
+
+
 def recurrence_rate(repeat_customers: Number | None, total_customers: Number | None) -> MetricResult:
     return _safe_ratio(
         repeat_customers,

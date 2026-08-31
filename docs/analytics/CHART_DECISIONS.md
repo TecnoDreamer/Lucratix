@@ -22,12 +22,11 @@ Todos os gráficos do produto (o único existente hoje: linha de evolução mens
 
 O projeto já tinha, antes desta rodada, um plano pesquisado especificamente para **Power BI** (`docs/analytics/POWER_BI.md`): arquitetura (Power Query direto vs. Gateway), o gap real de autenticação (API não tem mecanismo de API key, só cookie de sessão — pensado pra SPA, não pra ferramenta externa) e o que seria exposto hoje. Decisão confirmada com o usuário: manter esse plano em vez de pesquisar Looker Studio do zero (ferramenta diferente, nunca avaliada neste projeto). Ver `docs/analytics/POWER_BI.md` para o estado completo — nenhuma integração de BI externo está implementada hoje, de nenhuma das duas ferramentas.
 
-## Fora de escopo: drill-down, metas/annotations, cohorts, correlação
+## Fora de escopo: drill-down, cohorts, correlação
 
 Dependem de coisas que os dados atuais não sustentam sem inventar:
 
-- **Drill-down KPI → canal/campanha → período**: precisaria de filtro por dimensão (canal, produto) nos endpoints agregados, que `docs/analytics/FILTERS.md` já documenta como não implementado por falta de vínculo real entre essas dimensões e `financial_periods`/`funnel_snapshots`.
-- **Metas/annotations**: não existe conceito de meta no schema hoje (nenhuma tabela `targets`/`goals`).
+- **Drill-down KPI → canal/campanha → período**: precisaria de filtro por dimensão (canal, produto) nos endpoints agregados, que `docs/analytics/FILTERS.md` já documenta como não implementado por falta de vínculo real entre essas dimensões e `financial_periods`/`funnel_snapshots`. (Marketing por canal, usando `campaigns.channel_id` que já existe, é diferente — dado sustenta, só não foi implementado ainda.)
 - **Cohorts/retenção (heatmap)**: exigiria dado longitudinal por cliente (data de aquisição × atividade por período), que não existe — hoje só há contagens agregadas por mês.
 - **Correlação (scatter)**: mesma limitação — sem granularidade por cliente/venda individual para calcular uma correlação estatisticamente válida sem inventar.
 
@@ -39,4 +38,12 @@ Terceira rodada desta evolução — os itens que dependiam só de dado que já 
 - **Insights determinísticos** (`lib/insights.ts`): até 3 observações por período — maior variação absoluta (o que merece investigação), receita↑+CAC↓ (crescimento eficiente), receita↑+margem↓ (alerta, sem afirmar causa). Só lê `percent_change` já calculado pelo backend; nunca gera nada sem comparação aplicável.
 - **Exportação do gráfico de evolução** (`lib/analytics-export.ts`): CSV client-side dos KPIs mensais já buscados (`GET /analytics/executive/series`), com empresa/período/geração/fuso horário no cabeçalho — sem chamada nova ao backend. Complementa (não substitui) a exportação de dado bruto já existente na Central de Dados.
 
-Ainda fora de escopo: Recharts/ApexCharts, Looker Studio, drill-down, metas/annotations, cohorts, correlação — cada um pela razão já registrada acima.
+Ainda fora de escopo até aqui: Recharts/ApexCharts, Looker Studio, drill-down por canal/produto, cohorts, correlação — cada um pela razão já registrada acima.
+
+## Entregue (2026-08-31): metas por KPI/mês
+
+Quarta rodada — o item recomendado como maior valor de negócio entre os que restavam, e o único que não depende de nenhum dado que não existe (o próprio usuário fornece a meta).
+
+- **`targets`** (tabela nova, migration `0010_targets`): meta mensal por organização+métrica (`revenue`, `profit`, `margin`, `cac`, `conversion_rate`, `average_ticket`, `recurrence_rate` — os mesmos 7 KPIs da Visão Executiva; Marketing/ROAS fica de fora por ora). Granularidade mensal, mesmo grão de `FinancialPeriod`/`FunnelSnapshot` — decisão explícita, sem meta por intervalo livre. CRUD completo (`GET`/`PUT`/`DELETE /targets`), ANALYST+ pra escrever, qualquer membro pra ler (mesmo critério de `financials`).
+- **Progresso agregado só pra receita/lucro.** `GET /analytics/executive/targets` soma a meta mensal ao longo do intervalo selecionado e compara com o atual — mas isso só é matematicamente válido pra métrica genuinamente aditiva (receita, lucro). As outras 5 (margem, CAC, conversão, ticket médio, recorrência) são **razões** (ex.: CAC = investimento/clientes) — somar a meta mensal delas não representa "a meta do intervalo" sem pesar pelo volume de cada mês, o mesmo problema de somar 5 CACs mensais e chamar de "CAC do trimestre". Por isso essas 5 só comparam meta mês a mês (linha tracejada no gráfico de evolução, que nunca agrega), nunca num card de "% da meta" pro intervalo inteiro.
+- Frontend: `TargetsPanel` (form + lista + remoção) na própria página de Analytics — sem gate de papel adicional na UI, porque a página inteira já exige ANALYST+ pra ser alcançada (RN-010); o backend segue exigindo ANALYST+ em `PUT`/`DELETE` independente disso.
