@@ -18,7 +18,9 @@ Convenção: cada requisito tem ID único `RF-XXX`, prioridade (`P0` crítico ao
   `POST /platform/organizations/{id}/memberships` criam a conta na hora quando o e-mail ainda não existe
   (`app/modules/auth/service.py::create_user_with_reset_token`) — sem senha em texto plano, a pessoa
   define a própria pelo mesmo fluxo de "esqueci minha senha". Ver
-  [ACCESS_CONTROL.md](../security/ACCESS_CONTROL.md).
+  [ACCESS_CONTROL.md](../security/ACCESS_CONTROL.md). O `pending`/`active` também está implementado agora:
+  `User.email_verified_at`, `POST /auth/verify-email`, `POST /auth/resend-verification` — nunca bloqueia
+  login (decisão deliberada, ver [AUTHENTICATION.md](../security/AUTHENTICATION.md)).
 
 ### RF-002 — Login
 - **Ator:** Usuário cadastrado.

@@ -7,7 +7,7 @@ import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonGhost, buttonPrimary, card, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { CompanyCard } from "@/components/company-card";
-import { IconAlertCircle, IconLogOut, IconPlus, IconSearch, IconShieldCheck, IconSparkles } from "@/components/icons";
+import { IconAlertCircle, IconLogOut, IconMail, IconPlus, IconSearch, IconShieldCheck, IconSparkles } from "@/components/icons";
 import { currentMonthPeriod, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization, User } from "@/lib/types";
 
@@ -38,6 +38,10 @@ export default function OrganizationsPage() {
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState("");
+
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendDevToken, setResendDevToken] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,6 +115,25 @@ export default function OrganizationsPage() {
     }
   }
 
+  async function handleResendVerification() {
+    if (!user) return;
+    setResending(true);
+    setResendMessage(null);
+    setResendDevToken(null);
+    try {
+      const res = await api.post<{ message: string; dev_token?: string }>(
+        "/api/v1/auth/resend-verification",
+        { email: user.email }
+      );
+      setResendMessage(res.message);
+      setResendDevToken(res.dev_token ?? null);
+    } catch (err) {
+      setResendMessage(err instanceof ApiError ? err.message : "Não foi possível reenviar o e-mail.");
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleLogout() {
     await api.post("/api/v1/auth/logout");
     router.push("/login");
@@ -173,6 +196,39 @@ export default function OrganizationsPage() {
           </button>
         </div>
       </div>
+
+      {user && !user.email_verified && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+          <span className="inline-flex items-center gap-2">
+            <IconMail className="h-4 w-4 shrink-0" />
+            Confirme seu e-mail ({user.email}) para garantir o acesso à sua conta.
+          </span>
+          <button
+            type="button"
+            onClick={() => void handleResendVerification()}
+            disabled={resending}
+            className="shrink-0 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
+          >
+            {resending ? "Enviando..." : "Reenviar e-mail de confirmação"}
+          </button>
+          {resendMessage && (
+            <p className="w-full break-all text-xs text-amber-700 dark:text-amber-400">
+              {resendMessage}
+              {resendDevToken && (
+                <>
+                  {" "}
+                  <Link
+                    href={`/confirmar-email?token=${encodeURIComponent(resendDevToken)}`}
+                    className="underline"
+                  >
+                    Confirmar agora (modo desenvolvimento) →
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+      )}
 
       {!loading && organizations.length > SEARCH_THRESHOLD && (
         <label className="relative mt-6 block max-w-sm">

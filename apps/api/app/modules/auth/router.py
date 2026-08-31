@@ -15,7 +15,11 @@ from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.rate_limit import login_rate_limiter, password_reset_rate_limiter
+from app.core.rate_limit import (
+    email_verification_rate_limiter,
+    login_rate_limiter,
+    password_reset_rate_limiter,
+)
 from app.core.security import (
     SESSION_REVOKED_DETAIL,
     InvalidTokenError,
@@ -35,14 +39,18 @@ from app.models.user import User
 from app.modules.auth.service import (
     authenticate_user,
     change_password,
+    confirm_email_verification,
     confirm_password_reset,
     register_user,
     request_password_reset,
+    resend_verification_email,
 )
 from app.schemas.user import (
+    EmailVerificationConfirm,
     PasswordChange,
     PasswordResetConfirm,
     PasswordResetRequest,
+    ResendVerificationRequest,
     UserLogin,
     UserRead,
     UserRegister,
@@ -87,16 +95,23 @@ def _set_auth_cookies(response: Response, db: Session, user: User) -> None:
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(data: UserRegister, db: Session = Depends(get_db)) -> dict[str, str]:
-    created = register_user(db, data)
+    created, raw_token = register_user(db, data)
     if created:
         db.commit()
     # Resposta identica independente de o e-mail ja existir (RN-012, RF-001).
-    return {
+    response: dict[str, str] = {
         "message": (
             "Cadastro recebido. Se o e-mail informado ainda nao estiver em uso, "
-            "sua conta foi criada e voce ja pode fazer login."
+            "sua conta foi criada e voce ja pode fazer login. Enviamos um e-mail "
+            "de confirmação — verificar não é obrigatório para usar a plataforma."
         )
     }
+    # dev_token so vem preenchido quando uma conta foi criada agora E o
+    # envio de e-mail de verdade falhou/nao esta configurado (mesmo padrao
+    # de password-reset/request, ver auth/service.py::register_user).
+    if not settings.is_production and raw_token is not None:
+        response["dev_token"] = raw_token
+    return response
 
 
 @router.post("/login")
@@ -225,12 +240,11 @@ def request_password_reset_route(
     db.commit()
 
     response: dict[str, str] = {"message": _RESET_REQUEST_MESSAGE}
-    # Limitacao conhecida do MVP (RF-004): sem servico de envio de e-mail
-    # integrado, o token e devolvido diretamente na resposta em ambiente
-    # NAO-producao, para permitir testar o fluxo ponta a ponta. Isto NUNCA
-    # deve acontecer com ENV=production (RN-012 relaxada deliberadamente
-    # apenas fora de producao) — antes de um deploy real, substituir por
-    # envio de e-mail e remover este campo incondicionalmente.
+    # RF-004: e-mail de verdade existe agora (app/core/email.py) — raw_token
+    # so volta aqui quando o envio falhou/RESEND_API_KEY nao esta configurada,
+    # e mesmo assim NUNCA em producao (RN-012 relaxada deliberadamente so
+    # fora de producao, pra continuar dando pra testar o fluxo ponta a ponta
+    # sem um provedor de e-mail configurado).
     if not settings.is_production and raw_token is not None:
         response["dev_token"] = raw_token
     return response
@@ -269,3 +283,46 @@ def change_password_route(
     )
     db.commit()
     return {"message": "Senha alterada com sucesso."}
+
+
+@router.post("/verify-email")
+def verify_email_route(
+    data: EmailVerificationConfirm, db: Session = Depends(get_db)
+) -> dict[str, str]:
+    success = confirm_email_verification(db, data.token)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalido ou expirado"
+        )
+    db.commit()
+    return {"message": "E-mail confirmado com sucesso."}
+
+
+_RESEND_VERIFICATION_MESSAGE = (
+    "Se o e-mail informado estiver cadastrado e ainda não verificado, "
+    "enviamos um novo link de confirmação."
+)
+
+
+@router.post("/resend-verification")
+def resend_verification_route(
+    data: ResendVerificationRequest, request: Request, db: Session = Depends(get_db)
+) -> dict[str, str]:
+    # RNF-005: mesmo raciocinio do rate limit de password-reset — sem isso,
+    # o endpoint vira vetor de spam contra a caixa de entrada de terceiros
+    # (ver core/rate_limit.py).
+    client_host = request.client.host if request.client else "unknown"
+    rate_limit_key = f"{client_host}:{data.email}"
+    if not email_verification_rate_limiter.check(rate_limit_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas. Tente novamente em instantes.",
+        )
+
+    raw_token = resend_verification_email(db, data.email)
+    db.commit()
+
+    response: dict[str, str] = {"message": _RESEND_VERIFICATION_MESSAGE}
+    if not settings.is_production and raw_token is not None:
+        response["dev_token"] = raw_token
+    return response

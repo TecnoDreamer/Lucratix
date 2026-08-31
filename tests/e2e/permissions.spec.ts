@@ -27,7 +27,11 @@ test("usuario com papel VIEWER nao consegue registrar baseline (RN-010)", async 
     await viewerPage.getByLabel("E-mail").fill(viewerEmail);
     await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
     await viewerPage.getByRole("button", { name: "Cadastrar" }).click();
-    await viewerPage.waitForURL("**/login");
+    await expect(viewerPage.getByText(/Cadastro recebido/i)).toBeVisible();
+    // Sem RESEND_API_KEY (ambiente de e2e), o cadastro para no formulario
+    // (banner de dev_token) em vez de redirecionar sozinho — ver
+    // helpers.ts::registerAndLogin.
+    await viewerPage.goto("/login");
 
     // Owner convida o viewer para a organizacao com papel VIEWER (via API,
     // ja que nao ha tela de convite no MVP - so o endpoint, ver RF-011).
@@ -81,7 +85,11 @@ test("sidebar esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém
     await viewerPage.getByLabel("E-mail").fill(viewerEmail);
     await viewerPage.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
     await viewerPage.getByRole("button", { name: "Cadastrar" }).click();
-    await viewerPage.waitForURL("**/login");
+    await expect(viewerPage.getByText(/Cadastro recebido/i)).toBeVisible();
+    // Sem RESEND_API_KEY (ambiente de e2e), o cadastro para no formulario
+    // (banner de dev_token) em vez de redirecionar sozinho — ver
+    // helpers.ts::registerAndLogin.
+    await viewerPage.goto("/login");
 
     await ownerPage.request.post(`http://localhost:8000/api/v1/organizations/${orgUrl.split("/").pop()}/memberships`, {
       data: { email: viewerEmail, role: "VIEWER" },

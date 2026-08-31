@@ -118,4 +118,24 @@ describe("api client (fetch)", () => {
       ).rejects.toThrow("Domínio não suportado.");
     });
   });
+
+  describe("_errorDetail (via api.post)", () => {
+    it("converte o array de erros de validação do FastAPI/Pydantic (422) numa string legível", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            detail: [
+              { type: "missing", loc: ["body", "name"], msg: "Field required" },
+              { type: "missing", loc: ["body", "email"], msg: "Field required" },
+            ],
+          }),
+          { status: 422 }
+        )
+      );
+
+      await expect(api.post("/api/v1/auth/register", {})).rejects.toThrow(
+        "Field required; Field required"
+      );
+    });
+  });
 });

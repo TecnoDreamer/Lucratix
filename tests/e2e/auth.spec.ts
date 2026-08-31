@@ -1,6 +1,36 @@
 import { expect, test } from "@playwright/test";
 import { TEST_PASSWORD, registerAndLogin, uniqueEmail } from "./helpers";
 
+test("cadastro sem RESEND_API_KEY mostra o link de confirmar e-mail, e confirmar funciona ponta a ponta", async ({
+  page,
+}) => {
+  const email = uniqueEmail("verify-e2e");
+
+  await page.goto("/register");
+  await page.getByLabel("Nome").fill("Usuário E2E");
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  const confirmLink = page.getByRole("link", { name: /Continuar para confirmar o e-mail/ });
+  await expect(confirmLink).toBeVisible();
+  await confirmLink.click();
+
+  await expect(page.getByRole("heading", { name: "E-mail confirmado" })).toBeVisible({
+    timeout: 10000,
+  });
+  await page.getByRole("link", { name: "Ir para Suas empresas" }).click();
+  await page.waitForURL("**/login");
+
+  // Login normalmente e confirma que o lembrete de e-mail nao aparece mais
+  // (ja foi verificado no passo acima).
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForURL("**/organizations");
+  await expect(page.getByText(/Confirme seu e-mail/)).not.toBeVisible();
+});
+
 test("usuario consegue se cadastrar, entrar e sair", async ({ page }) => {
   await registerAndLogin(page, "auth-e2e");
 
@@ -19,7 +49,10 @@ test("login com senha errada mostra mensagem generica", async ({ page }) => {
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Cadastrar" }).click();
-  await page.waitForURL("**/login");
+  // Sem RESEND_API_KEY (ambiente de e2e), o cadastro para no formulario
+  // (banner de dev_token) em vez de redirecionar sozinho — ver
+  // helpers.ts::registerAndLogin.
+  await page.goto("/login");
 
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha", { exact: true }).fill("senha-errada");

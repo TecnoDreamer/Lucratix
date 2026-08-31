@@ -4,6 +4,33 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-08-31
 
+### Added (verificação de e-mail)
+- E-mail transacional real (RF-001) — cadastro nunca enviava e-mail de confirmação nenhum, porque nenhum
+  serviço de envio existia. Pedido de autenticação por e-mail e WhatsApp; pesquisado antes de prometer
+  algo: WhatsApp (mensagem de verificação = categoria "Authentication") **não é gratuito por padrão**
+  segundo a própria documentação da Meta, cobrado desde a primeira mensagem — fora de escopo até haver
+  decisão explícita de assumir esse custo. E-mail via Resend é genuinamente grátis em volume razoável
+  (3.000/mês) — escolhido e implementado.
+- `app/core/email.py::send_email` — `urllib.request` da biblioteca padrão, **nenhuma dependência nova**
+  (POST direto pra API REST do Resend). Sem `RESEND_API_KEY` configurada, nunca tenta rede — devolve
+  `False` (comportamento idêntico ao de antes desta rodada, liga sozinho quando a env var aparecer).
+  Reaproveitado por três fluxos que já existiam e ficavam presos no fallback `dev_token`: cadastro (novo,
+  esta rodada), reset de senha e criação de conta por admin/Super Admin (memberships, painel de Super
+  Admin) — um só ponto de envio para os quatro casos.
+- Nova tabela `email_verification_tokens` (migration `0012_email_verification`) — mesma forma de
+  `PasswordResetToken`, tabela separada de propósito (nunca reaproveita o mesmo token para os dois usos).
+  `User.email_verified_at` (RN-004: ausência ≠ falso). `generate_password_reset_token`/
+  `hash_password_reset_token` renomeados para `generate_opaque_token`/`hash_opaque_token`
+  (`app/core/security.py`) — o primitivo sempre foi genérico, o nome é que estava específico demais
+  agora que serve dois propósitos.
+- `POST /auth/verify-email`, `POST /auth/resend-verification` (genérico + rate limited, RN-012),
+  `GET /auth/me` ganha `email_verified: bool`. **Decisão deliberada: nunca bloqueia login** — evita travar
+  o próprio fluxo de conta criada por admin, que já usa token pra definir senha; vira lembrete não
+  bloqueante em "Suas empresas", com botão de reenviar. Frontend: nova página `/confirmar-email`,
+  banner de `dev_token` no cadastro (mesmo padrão de `esqueci-senha/page.tsx`).
+- `docs/security/AUTHENTICATION.md`: passo a passo completo pra ativar o Resend de verdade (conta, API
+  key, verificação de domínio — essa parte exige o usuário, não é algo que a IA faz sozinha).
+
 ### Added (controle de acesso)
 - Níveis de acesso reais e painel de Super Admin (RF-001, RF-012, RN-009) — já especificados desde o
   início do projeto (`docs/product/personas.md`, "Administrador(a) da Plataforma"), nunca implementados:

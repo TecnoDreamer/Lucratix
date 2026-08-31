@@ -25,6 +25,7 @@ const FAKE_USER: User = {
   name: "Usuária Teste",
   email: "teste@example.com",
   is_platform_admin: false,
+  email_verified: true,
 };
 
 function fakeOrg(overrides: Partial<Organization> = {}): Organization {
@@ -93,6 +94,68 @@ describe("OrganizationsPage", () => {
 
     const link = await screen.findByRole("link", { name: /Painel Admin/ });
     expect(link).toHaveAttribute("href", "/admin");
+  });
+
+  it("não mostra aviso de e-mail quando já verificado", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+
+    render(<OrganizationsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(FAKE_USER.name)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Confirme seu e-mail/)).not.toBeInTheDocument();
+  });
+
+  it("mostra aviso não bloqueante de e-mail não verificado, com botão de reenviar", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, email_verified: false });
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+    vi.mocked(api.post).mockResolvedValue({
+      message: "Se o e-mail informado estiver cadastrado e ainda não verificado...",
+    });
+
+    render(<OrganizationsPage />);
+
+    expect(await screen.findByText(/Confirme seu e-mail/)).toBeInTheDocument();
+    // A empresa continua acessível normalmente — aviso nunca bloqueia nada.
+    expect(screen.getByRole("button", { name: "Criar" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Reenviar e-mail de confirmação" }));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith("/api/v1/auth/resend-verification", {
+        email: FAKE_USER.email,
+      });
+    });
+    expect(
+      await screen.findByText(/Se o e-mail informado estiver cadastrado e ainda não verificado/)
+    ).toBeInTheDocument();
+  });
+
+  it("mostra o link de confirmar em modo dev quando resend-verification devolve dev_token", async () => {
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, email_verified: false });
+      if (path.includes("/organizations/summary")) return Promise.resolve([]);
+      return Promise.resolve([]);
+    });
+    vi.mocked(api.post).mockResolvedValue({
+      message: "Se o e-mail informado estiver cadastrado e ainda não verificado...",
+      dev_token: "token-reenvio",
+    });
+
+    render(<OrganizationsPage />);
+    await screen.findByText(/Confirme seu e-mail/);
+    fireEvent.click(screen.getByRole("button", { name: "Reenviar e-mail de confirmação" }));
+
+    const link = await screen.findByRole("link", { name: /Confirmar agora/ });
+    expect(link).toHaveAttribute("href", "/confirmar-email?token=token-reenvio");
   });
 
   it("mostra o estado vazio quando não há empresas", async () => {

@@ -11,12 +11,15 @@ import { AuthHero } from "@/components/auth-hero";
 import { BrandLogo } from "@/components/brand-logo";
 import { PasswordInput } from "@/components/password-input";
 
+type RegisterResponse = { message: string; dev_token?: string };
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [devToken, setDevToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,13 +28,20 @@ export default function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await api.post<{ message: string }>("/api/v1/auth/register", {
+      const res = await api.post<RegisterResponse>("/api/v1/auth/register", {
         name,
         email,
         password,
       });
       setMessage(res.message);
-      setTimeout(() => router.push("/login"), 1500);
+      // Só adia o redirect quando há um dev_token pra mostrar (ambiente sem
+      // provedor de e-mail configurado) — com e-mail de verdade enviado,
+      // mantém a experiência original (vai direto pro login).
+      if (res.dev_token) {
+        setDevToken(res.dev_token);
+      } else {
+        setTimeout(() => router.push("/login"), 1500);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
     } finally {
@@ -100,6 +110,17 @@ export default function RegisterPage() {
 
             {error && <Alert>{error}</Alert>}
             {message && <Alert tone="success">{message}</Alert>}
+            {devToken && (
+              <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                <p className="font-semibold">Modo desenvolvimento — sem envio de e-mail configurado</p>
+                <Link
+                  href={`/confirmar-email?token=${encodeURIComponent(devToken)}`}
+                  className="mt-1 inline-block break-all underline"
+                >
+                  Continuar para confirmar o e-mail →
+                </Link>
+              </div>
+            )}
 
             <button type="submit" disabled={submitting} className={`${buttonPrimary} mt-1 w-full py-2.5`}>
               {submitting ? "Enviando..." : "Cadastrar"}

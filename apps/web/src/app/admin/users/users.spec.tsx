@@ -20,7 +20,13 @@ afterEach(() => {
   vi.mocked(api.patch).mockReset();
 });
 
-const ME: User = { id: "admin-1", name: "Super Admin", email: "admin@example.com", is_platform_admin: true };
+const ME: User = {
+  id: "admin-1",
+  name: "Super Admin",
+  email: "admin@example.com",
+  is_platform_admin: true,
+  email_verified: true,
+};
 
 const OTHER_USER: PlatformUser = {
   id: "u-2",

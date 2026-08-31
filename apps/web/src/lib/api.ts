@@ -65,10 +65,22 @@ async function _fetchWithRetry(path: string, init?: RequestInit): Promise<Respon
 }
 
 async function _errorDetail(res: Response): Promise<string> {
-  let detail = res.statusText;
+  let detail: string = res.statusText;
   try {
     const body = await res.json();
-    detail = body.detail ?? detail;
+    // FastAPI/Pydantic devolve `detail` como array de erros de validação em
+    // 422 (não uma string) — sem esse tratamento, `detail` virava o próprio
+    // array e qualquer lugar que renderizasse `error.message` mostrava
+    // literalmente "[object Object],[object Object],...".
+    if (typeof body.detail === "string") {
+      detail = body.detail;
+    } else if (Array.isArray(body.detail)) {
+      detail = body.detail
+        .map((item: unknown) =>
+          item && typeof item === "object" && "msg" in item ? String((item as { msg: unknown }).msg) : String(item)
+        )
+        .join("; ");
+    }
   } catch {
     // resposta sem corpo JSON, mantem o statusText
   }

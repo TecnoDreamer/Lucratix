@@ -114,8 +114,12 @@ def decode_token(token: str, expected_type: TokenType) -> TokenPayload:
     return TokenPayload(user_id=user_id, session_id=session_id)
 
 
-def generate_password_reset_token() -> tuple[str, str]:
-    """RF-004. Retorna (raw_token, token_hash).
+def generate_opaque_token() -> tuple[str, str]:
+    """RF-004, RF-001. Retorna (raw_token, token_hash) — usado tanto por
+    reset de senha quanto por verificacao de e-mail (tokens de uso unico e
+    curta duracao, cada um com sua propria tabela — ver
+    app/models/password_reset_token.py e app/models/email_verification_token.py;
+    a funcao de geracao e generica, o que muda e so onde o hash e guardado).
 
     `raw_token` e o valor entregue ao usuario (nunca persistido); `token_hash`
     (SHA-256) e o que fica no banco — um hash rapido e suficiente aqui
@@ -125,8 +129,8 @@ def generate_password_reset_token() -> tuple[str, str]:
     offline do mesmo jeito que uma senha escolhida por humano.
     """
     raw_token = secrets.token_urlsafe(32)
-    return raw_token, hash_password_reset_token(raw_token)
+    return raw_token, hash_opaque_token(raw_token)
 
 
-def hash_password_reset_token(raw_token: str) -> str:
+def hash_opaque_token(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
