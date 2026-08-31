@@ -1,0 +1,46 @@
+[
+  {
+    "period": "2025-06-01",
+    "impressions": 179482,
+    "visits": 11248,
+    "leads": 1342,
+    "mqls": 725,
+    "sqls": 367,
+    "opportunities": 252,
+    "customers": 120,
+    "repeat_purchases": 33
+  },
+  {
+    "period": "2025-07-01",
+    "impressions": 131187,
+    "visits": 8429,
+    "leads": 1035,
+    "mqls": 583,
+    "sqls": 304,
+    "opportunities": 228,
+    "customers": 116,
+    "repeat_purchases": 31
+  },
+  {
+    "period": "2025-08-01",
+    "impressions": 119939,
+    "visits": 8075,
+    "leads": 994,
+    "mqls": 554,
+    "sqls": 266,
+    "opportunities": 191,
+    "customers": 97,
+    "repeat_purchases": 26
+  },
+  {
+    "period": "2025-09-01",
+    "impressions": 79294,
+    "visits": 4981,
+    "leads": 607,
+    "mqls": 323,
+    "sqls": 159,
+    "opportunities": 119,
+    "customers": 58,
+    "repeat_purchases": 15
+  }
+]
