@@ -22,7 +22,12 @@ def test_perfect_correlation_between_revenue_and_profit(client):
 
     resp = client.get(
         f"/api/v1/organizations/{org_id}/analytics/executive/correlation",
-        params={"date_from": "2026-06-01", "date_to": "2026-08-31", "metric_x": "revenue", "metric_y": "profit"},
+        params={
+            "date_from": "2026-06-01",
+            "date_to": "2026-08-31",
+            "metric_x": "revenue",
+            "metric_y": "profit",
+        },
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -42,7 +47,12 @@ def test_month_missing_one_metric_appears_as_gap_but_excluded_from_calculation(c
 
     resp = client.get(
         f"/api/v1/organizations/{org_id}/analytics/executive/correlation",
-        params={"date_from": "2026-06-01", "date_to": "2026-08-31", "metric_x": "revenue", "metric_y": "profit"},
+        params={
+            "date_from": "2026-06-01",
+            "date_to": "2026-08-31",
+            "metric_x": "revenue",
+            "metric_y": "profit",
+        },
     )
     body = resp.json()
 
@@ -57,7 +67,12 @@ def test_same_metric_twice_is_rejected(client):
 
     resp = client.get(
         f"/api/v1/organizations/{org_id}/analytics/executive/correlation",
-        params={"date_from": "2026-06-01", "date_to": "2026-08-31", "metric_x": "revenue", "metric_y": "revenue"},
+        params={
+            "date_from": "2026-06-01",
+            "date_to": "2026-08-31",
+            "metric_x": "revenue",
+            "metric_y": "revenue",
+        },
     )
     assert resp.status_code == 400
 
@@ -77,7 +92,12 @@ def test_invalid_metric_is_rejected(client):
 
     resp = client.get(
         f"/api/v1/organizations/{org_id}/analytics/executive/correlation",
-        params={"date_from": "2026-06-01", "date_to": "2026-08-31", "metric_x": "receita_falsa", "metric_y": "cac"},
+        params={
+            "date_from": "2026-06-01",
+            "date_to": "2026-08-31",
+            "metric_x": "receita_falsa",
+            "metric_y": "cac",
+        },
     )
     assert resp.status_code == 422
 
