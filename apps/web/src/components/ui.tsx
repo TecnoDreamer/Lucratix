@@ -49,16 +49,17 @@ export function Badge({
   tone = "blue",
   children,
 }: {
-  tone?: "blue" | "slate";
+  tone?: "blue" | "slate" | "emerald";
   children: ReactNode;
 }) {
+  const toneClass = {
+    blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+    emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  }[tone];
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        tone === "blue"
-          ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-      }`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${toneClass}`}
     >
       {children}
     </span>

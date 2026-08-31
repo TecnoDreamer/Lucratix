@@ -142,6 +142,7 @@ export default function ExperimentsPage() {
                         <VariantEditor
                           key={v.id}
                           variant={v}
+                          significance={result?.variants.find((r) => r.name === v.name)}
                           onSave={(sampleSize, conversions) =>
                             updateVariant(exp.id, v.id, sampleSize, conversions)
                           }
@@ -206,9 +207,11 @@ export default function ExperimentsPage() {
 
 function VariantEditor({
   variant,
+  significance,
   onSave,
 }: {
   variant: { id: string; name: string; sample_size: number | null; conversions: number | null };
+  significance?: { p_value: number | null; is_significant: boolean | null };
   onSave: (sampleSize: string, conversions: string) => void;
 }) {
   const [sampleSize, setSampleSize] = useState(variant.sample_size?.toString() ?? "");
@@ -216,9 +219,15 @@ function VariantEditor({
 
   return (
     <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-      <p className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-50">
+      <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-50">
         {variant.name}
         <Badge tone="slate">{variant.name === "Controle" ? "baseline" : "teste"}</Badge>
+        {significance?.p_value !== null && significance?.p_value !== undefined && (
+          <Badge tone={significance.is_significant ? "emerald" : "slate"}>
+            {significance.is_significant ? "significativo" : "não significativo"} (p=
+            {significance.p_value.toFixed(3)})
+          </Badge>
+        )}
       </p>
       <div className="mt-2 flex gap-2">
         <input

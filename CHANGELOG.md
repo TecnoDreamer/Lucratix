@@ -4,6 +4,9 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-08-31
 
+### Added (experimentos)
+- Significância estatística real em Experimentos (CRO/A-B testing) — RN-013 previa isso desde o início ("...e, quando implementado, significância estatística...") e nunca tinha acontecido; item recomendado e escolhido entre as opções levantadas para "o que fazer sem envolver nada pago". Teste-z de duas proporções (`apps/api/app/modules/experiments/analysis.py::two_proportion_z_test`), `statistics.NormalDist` da biblioteca padrão do Python — nenhuma dependência nova (mesmo espírito de `engine.py::correlation`, que já usa `statistics.correlation`). Cada variante é comparada contra a Controle (a primeira da lista), só depois que a amostra mínima de 30 é atingida em todas (piso que já existia, inalterado); `p_value`/`is_significant` (nível de confiança 95%, `significance_alpha` exposto na resposta) somam-se ao `leading_variant_name`/`note` já existentes, nunca os substituem — o sistema continua nunca usando a palavra "vencedor". Variância combinada zero (ex.: 0% contra 0%) devolve `p_value=None`, nunca um valor fabricado. Limitação documentada (`docs/product/out-of-scope.md`): com 3+ variantes são comparações par-a-par contra a Controle, sem correção para múltiplas comparações; sem teste omnibus (qui-quadrado), que exigiria reimplementar a função gama incompleta regularizada. Frontend: badge por variante ("significativo (p=0.010)" / "não significativo (p=0.606)", `Badge` ganhou o tom `emerald`) na página de Experimentos.
+
 ### Added (importação)
 - Seleção de aba em arquivo `.xlsx` com múltiplas abas — antes só a primeira aba não vazia era lida
   (limitação documentada desde 2026-08-29), qualquer outra ficava inacessível. `POST /imports` aceita

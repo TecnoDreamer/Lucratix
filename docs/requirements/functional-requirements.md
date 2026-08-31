@@ -181,7 +181,7 @@ Convenção: cada requisito tem ID único `RF-XXX`, prioridade (`P0` crítico ao
 
 ### RF-025 — Registrar resultado de experimento
 - **Ator:** `ANALYST` ou superior.
-- **Fluxo:** usuário registra conversões por variante e data final → sistema calcula resultado, mas não declara "vencedor" automaticamente sem critério estatístico documentado.
+- **Fluxo:** usuário registra conversões por variante e data final → sistema calcula resultado (taxa de conversão por variante, teste-z de duas proporções de cada variante contra a Controle a partir da amostra mínima), mas não declara "vencedor" automaticamente — devolve `is_significant`/`p_value` como dado, não como veredito (RN-013).
 - **Regras:** [RN-013](business-rules.md#rn-013).
 - **Prioridade:** P1.
 
