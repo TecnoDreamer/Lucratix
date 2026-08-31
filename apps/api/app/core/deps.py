@@ -111,3 +111,18 @@ def require_role(
         return ctx
 
     return _dependency
+
+
+def require_platform_admin(current_user: User = Depends(get_current_user)) -> User:
+    """RN-009: PLATFORM_ADMIN e um papel global (`User.is_platform_admin`), fora
+    do escopo de qualquer organizacao — por isso e uma dependency separada de
+    `require_role`/`get_organization_context` (que sempre giram em torno de uma
+    membership numa organizacao especifica), nunca um bypass silencioso deles.
+    Ver app/modules/platform_admin/router.py.
+    """
+    if not current_user.is_platform_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso restrito a administradores da plataforma",
+        )
+    return current_user

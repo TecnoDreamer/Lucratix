@@ -16,6 +16,7 @@ from app.modules.imports.router import router as imports_router
 from app.modules.marketing.router import campaigns_router, channels_router
 from app.modules.memberships.router import router as memberships_router
 from app.modules.organizations.router import router as organizations_router
+from app.modules.platform_admin.router import router as platform_admin_router
 from app.modules.products.router import router as products_router
 from app.modules.reports.router import router as reports_router
 from app.modules.targets.router import router as targets_router
@@ -65,6 +66,7 @@ app.include_router(reports_router)
 app.include_router(imports_router)
 app.include_router(exports_router)
 app.include_router(targets_router)
+app.include_router(platform_admin_router)
 
 
 @app.get("/health")

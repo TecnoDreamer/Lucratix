@@ -15,6 +15,22 @@ def list_memberships(db: Session, organization_id: uuid.UUID) -> list[Membership
     )
 
 
+def list_memberships_with_user(
+    db: Session, organization_id: uuid.UUID
+) -> list[tuple[Membership, User]]:
+    """Mesma lista de `list_memberships`, com o `User` já carregado — para
+    telas que precisam mostrar nome/e-mail de cada membro sem N+1 (painel de
+    Super Admin e futura tela de equipe por organização)."""
+    rows = (
+        db.query(Membership, User)
+        .join(User, User.id == Membership.user_id)
+        .filter(Membership.organization_id == organization_id)
+        .order_by(Membership.created_at)
+        .all()
+    )
+    return [(m, u) for m, u in rows]
+
+
 def get_membership(db: Session, organization_id: uuid.UUID, membership_id: uuid.UUID) -> Membership | None:
     return (
         db.query(Membership)

@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonGhost, buttonPrimary, card, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { CompanyCard } from "@/components/company-card";
-import { IconAlertCircle, IconLogOut, IconPlus, IconSearch, IconSparkles } from "@/components/icons";
+import { IconAlertCircle, IconLogOut, IconPlus, IconSearch, IconShieldCheck, IconSparkles } from "@/components/icons";
 import { currentMonthPeriod, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization, User } from "@/lib/types";
 
@@ -158,9 +159,19 @@ export default function OrganizationsPage() {
             </p>
           )}
         </div>
-        <button onClick={handleLogout} className={buttonGhost}>
-          <IconLogOut className="h-4 w-4" /> Sair
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {user?.is_platform_admin && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-b from-violet-500 to-violet-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm shadow-violet-600/20 transition-all hover:from-violet-500 hover:to-violet-700"
+            >
+              <IconShieldCheck className="h-4 w-4" /> Painel Admin
+            </Link>
+          )}
+          <button onClick={handleLogout} className={buttonGhost}>
+            <IconLogOut className="h-4 w-4" /> Sair
+          </button>
+        </div>
       </div>
 
       {!loading && organizations.length > SEARCH_THRESHOLD && (

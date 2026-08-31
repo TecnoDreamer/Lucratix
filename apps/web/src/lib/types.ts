@@ -7,6 +7,21 @@ export interface User {
   is_platform_admin: boolean;
 }
 
+export interface Membership {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  role: MembershipRole;
+  status: "active" | "pending";
+  created_at: string;
+  user_name: string;
+  user_email: string;
+  // Só preenchido na resposta de criação (POST), quando a conta acabou de
+  // ser criada e fora de produção — mesmo padrão de dev_token do restante
+  // da plataforma (ver lib/api.ts e as telas de esqueci-senha/redefinir-senha).
+  dev_token?: string | null;
+}
+
 export interface Organization {
   id: string;
   name: string;
