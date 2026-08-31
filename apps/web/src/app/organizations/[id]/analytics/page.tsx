@@ -121,6 +121,7 @@ function SeriesGrid({ series }: { series: ExecutiveSeries }) {
             <SeriesChart
               points={series.points.map((p) => ({ period: p.period, metric: p[key as DashboardMetricKey] }))}
               percent={percent}
+              label={label}
             />
           </div>
         </Card>
