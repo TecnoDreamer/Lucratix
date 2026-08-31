@@ -7,6 +7,13 @@ export type MetricCategory =
 
 export type MetricUnit = "currency" | "percent" | "ratio" | "count" | "currency_per_1000";
 
+/** Direção desejável da métrica — "subir é bom" (receita, ROAS, conversão)
+ * vs. "descer é bom" (CAC, CPL, CPM — todo "custo por X"). Fonte única de
+ * verdade para qualquer UI que precise colorir/interpretar uma variação
+ * (ex.: `ComparisonBadge` em analytics/page.tsx) — nunca assumir que
+ * "aumentou" = "positivo" sem checar isto (queda de CAC é uma boa notícia). */
+export type MetricDirection = "higher_is_better" | "lower_is_better";
+
 export interface MetricDefinition {
   id: string;
   name: string;
@@ -17,6 +24,7 @@ export interface MetricDefinition {
   formula?: string;
   example?: string;
   unit: MetricUnit;
+  direction: MetricDirection;
   aliases: string[];
   /** Preenchido quando a metrica e educacional mas ainda nao aparece em
    * nenhum card calculado pelo backend hoje (ver auditoria, secao 4). */

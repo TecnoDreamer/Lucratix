@@ -22,6 +22,16 @@ describe("catalogo de metricas — integridade dos dados", () => {
       expect(metric.shortDescription.length).toBeGreaterThan(0);
       expect(metric.description.length).toBeGreaterThan(0);
       expect(metric.aliases.length).toBeGreaterThanOrEqual(1);
+      expect(["higher_is_better", "lower_is_better"]).toContain(metric.direction);
+    }
+  });
+
+  it("todo 'custo por X' (CAC, CPL, CPA, CPC, CPM) e lower_is_better", () => {
+    // Nenhuma metrica de custo deveria ser "higher_is_better" por engano —
+    // e a categoria mais fácil de inverter sem querer (todas em "currency"
+    // como receita/lucro, só a direção muda).
+    for (const id of ["cac", "cpl", "cpa", "cpc", "cpm"]) {
+      expect(getMetricById(id)?.direction).toBe("lower_is_better");
     }
   });
 

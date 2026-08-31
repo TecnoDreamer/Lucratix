@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ApiError, downloadFile } from "@/lib/api";
+import { triggerBrowserDownload } from "@/lib/browser-download";
 import { DATA_DOMAINS } from "@/lib/data-domains";
 import { buttonPrimary, input as inputClass, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, Card } from "@/components/ui";
@@ -14,17 +15,6 @@ const FORMATS: { id: ExportFormat; label: string }[] = [
   { id: "xlsx", label: "Excel (.xlsx)" },
   { id: "json", label: "JSON" },
 ];
-
-function triggerBrowserDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
 
 /** Seção sempre visível (inclusive para VIEWER) — exportar é leitura, mesmo
  * nível de permissão de GET /financials (ver ARCHITECTURE.md). */

@@ -13,13 +13,20 @@ import {
   type MetricWithComparison,
   type MonthlyMetrics,
 } from "@/lib/metrics";
-import { sectionTitle } from "@/lib/ui";
+import { getMetricById } from "@/domain/metrics/metric-utils";
+import { sectionTitle, buttonSecondary } from "@/lib/ui";
+import { useOrganization } from "@/contexts/organization-context";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { MetricHelp } from "@/components/metric-help";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { SeriesChart } from "@/components/series-chart";
+import { InsightsPanel } from "@/components/insights-panel";
+import { computeExecutiveInsights } from "@/lib/insights";
+import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
+import { triggerBrowserDownload } from "@/lib/browser-download";
 import {
   IconDollar,
+  IconDownload,
   IconGrid,
   IconMegaphone,
   IconPackage,
@@ -54,12 +61,25 @@ const MARKETING_CARDS: CardConfig<MarketingAnalytics>[] = [
   { key: "cpa", label: "CPA", icon: IconDollar },
 ];
 
-function ComparisonBadge({ comparison }: { comparison: MetricWithComparison["comparison"] }) {
+function ComparisonBadge({
+  comparison,
+  metricId,
+}: {
+  comparison: MetricWithComparison["comparison"];
+  metricId: string;
+}) {
   if (comparison.percent_change === null) {
     return <p className="mt-1 text-xs text-slate-400 dark:text-slate-600">vs. período anterior: n/d</p>;
   }
-  const positive = comparison.percent_change >= 0;
-  const Icon = positive ? IconTrendingUp : IconTrendingDown;
+  // Direção desejável importa: para CAC/CPC/CPM/CPL/CPA (lower_is_better),
+  // uma queda é a notícia boa — nunca pintar todo aumento de verde sem
+  // checar a métrica (ver domain/metrics/metric-types.ts::MetricDirection).
+  // O ícone segue o sentido literal do número (subiu/desceu); a cor segue
+  // o que é bom ou ruim para essa métrica especificamente.
+  const wentUp = comparison.percent_change >= 0;
+  const lowerIsBetter = getMetricById(metricId)?.direction === "lower_is_better";
+  const positive = lowerIsBetter ? !wentUp : wentUp;
+  const Icon = wentUp ? IconTrendingUp : IconTrendingDown;
   return (
     <p
       className={`mt-1 flex items-center gap-1 text-xs font-medium ${
@@ -95,7 +115,7 @@ function MetricGrid<T extends object>({ data, cards }: { data: T; cards: CardCon
             {!metric.current.is_applicable && metric.current.reason && (
               <p className="mt-1 text-xs text-slate-400">{metric.current.reason}</p>
             )}
-            {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} />}
+            {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
           </Card>
         );
       })}
@@ -133,6 +153,7 @@ function SeriesGrid({ series }: { series: ExecutiveSeries }) {
 export default function AnalyticsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { organization } = useOrganization();
 
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [data, setData] = useState<ExecutiveDashboard | null>(null);
@@ -198,6 +219,24 @@ export default function AnalyticsPage() {
   const incomplete =
     data && (data.months_with_financial_data < data.months_in_range || data.months_with_funnel_data < data.months_in_range);
 
+  const insights = data ? computeExecutiveInsights(data) : [];
+
+  function handleExportSeries() {
+    if (!series) return;
+    const { filename, content } = buildExecutiveSeriesCsv({
+      organizationName: organization?.name ?? "",
+      dateFrom: range.dateFrom,
+      dateTo: range.dateTo,
+      generatedAt: new Date(),
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      series,
+    });
+    // BOM (utf-8-sig): mesma convenção do export de dado bruto no backend
+    // (serializers.py) — sem isso o Excel no Windows le acento errado.
+    const BOM = String.fromCharCode(0xfeff);
+    triggerBrowserDownload(new Blob([BOM + content], { type: "text/csv;charset=utf-8" }), filename);
+  }
+
   return (
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
@@ -235,9 +274,19 @@ export default function AnalyticsPage() {
         data && <MetricGrid data={data} cards={CARDS} />
       )}
 
-      <div className="mt-10 flex items-center gap-2">
-        <IconTrendingUp className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Evolução mensal</h2>
+      {!loading && <InsightsPanel insights={insights} />}
+
+      <div className="mt-10 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <IconTrendingUp className="h-4 w-4 text-slate-400" />
+          <h2 className={sectionTitle}>Evolução mensal</h2>
+        </div>
+        {series && (
+          <button type="button" onClick={handleExportSeries} className={`${buttonSecondary} px-3 py-1.5 text-xs`}>
+            <IconDownload className="h-3.5 w-3.5" />
+            Exportar CSV
+          </button>
+        )}
       </div>
 
       {loading ? (

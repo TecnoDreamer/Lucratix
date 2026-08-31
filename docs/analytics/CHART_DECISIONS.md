@@ -22,12 +22,21 @@ Todos os gráficos do produto (o único existente hoje: linha de evolução mens
 
 O projeto já tinha, antes desta rodada, um plano pesquisado especificamente para **Power BI** (`docs/analytics/POWER_BI.md`): arquitetura (Power Query direto vs. Gateway), o gap real de autenticação (API não tem mecanismo de API key, só cookie de sessão — pensado pra SPA, não pra ferramenta externa) e o que seria exposto hoje. Decisão confirmada com o usuário: manter esse plano em vez de pesquisar Looker Studio do zero (ferramenta diferente, nunca avaliada neste projeto). Ver `docs/analytics/POWER_BI.md` para o estado completo — nenhuma integração de BI externo está implementada hoje, de nenhuma das duas ferramentas.
 
-## Fora de escopo nesta rodada: drill-down, metas/annotations, cohorts, correlação, insights automáticos
+## Fora de escopo: drill-down, metas/annotations, cohorts, correlação
 
-Todos dependem de coisas que os dados atuais não sustentam sem inventar:
+Dependem de coisas que os dados atuais não sustentam sem inventar:
 
 - **Drill-down KPI → canal/campanha → período**: precisaria de filtro por dimensão (canal, produto) nos endpoints agregados, que `docs/analytics/FILTERS.md` já documenta como não implementado por falta de vínculo real entre essas dimensões e `financial_periods`/`funnel_snapshots`.
 - **Metas/annotations**: não existe conceito de meta no schema hoje (nenhuma tabela `targets`/`goals`).
 - **Cohorts/retenção (heatmap)**: exigiria dado longitudinal por cliente (data de aquisição × atividade por período), que não existe — hoje só há contagens agregadas por mês.
 - **Correlação (scatter)**: mesma limitação — sem granularidade por cliente/venda individual para calcular uma correlação estatisticamente válida sem inventar.
-- **Insights determinísticos automáticos** ("receita subiu e CAC caiu"): viável em princípio com os dados que já existem (comparação período-contra-período já calculada por KPI), mas não implementado nesta rodada — fica como evolução natural, não bloqueado por dado ausente como os itens acima.
+
+## Entregue (2026-08-31): direção semântica, insights automáticos, exportação
+
+Terceira rodada desta evolução — os itens que dependiam só de dado que já existe, sem precisar de dimensão nova nem tabela nova:
+
+- **Direção desejável por métrica** (`MetricDefinition.direction`, `higher_is_better`/`lower_is_better`, `domain/metrics/metric-types.ts`): corrige um bug real — `ComparisonBadge` (Analytics) pintava toda variação positiva de verde, mesmo para CAC/CPC/CPM/CPL/CPA, onde **subir é a notícia ruim**. Fonte única de verdade também usada pelo painel de insights e exibida no próprio `MetricHelp` ("↓ Menor é melhor"/"↑ Maior é melhor").
+- **Insights determinísticos** (`lib/insights.ts`): até 3 observações por período — maior variação absoluta (o que merece investigação), receita↑+CAC↓ (crescimento eficiente), receita↑+margem↓ (alerta, sem afirmar causa). Só lê `percent_change` já calculado pelo backend; nunca gera nada sem comparação aplicável.
+- **Exportação do gráfico de evolução** (`lib/analytics-export.ts`): CSV client-side dos KPIs mensais já buscados (`GET /analytics/executive/series`), com empresa/período/geração/fuso horário no cabeçalho — sem chamada nova ao backend. Complementa (não substitui) a exportação de dado bruto já existente na Central de Dados.
+
+Ainda fora de escopo: Recharts/ApexCharts, Looker Studio, drill-down, metas/annotations, cohorts, correlação — cada um pela razão já registrada acima.
