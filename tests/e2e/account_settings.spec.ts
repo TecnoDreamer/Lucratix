@@ -61,9 +61,12 @@ test("deep link direto em /conta/configuracoes (sem ?from) resolve pela última 
 
   // Acessa /conta/configuracoes direto pela URL, sem vir da sidebar — sem
   // ?from, mas o id da empresa foi lembrado em localStorage ao carregar a
-  // Home dela acima.
+  // Home dela acima. Timeout maior: page.goto e uma navegacao completa,
+  // refaz o fetch de GET /organizations do zero antes de resolver o link.
   await page.goto("/conta/configuracoes");
-  await expect(page.getByRole("link", { name: new RegExp(`Voltar para ${orgName}`) })).toBeVisible();
+  await expect(page.getByRole("link", { name: new RegExp(`Voltar para ${orgName}`) })).toBeVisible({
+    timeout: 15000,
+  });
 });
 
 test("sem sessão, 'Voltar' cai para 'Suas empresas' (que por sua vez redireciona pro login)", async ({

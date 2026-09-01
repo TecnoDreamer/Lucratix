@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
 import { formatCompactNumber } from "@/lib/formatters";
@@ -255,8 +255,20 @@ function renderPage(ctxOverrides: Partial<OrganizationContextValue> = {}) {
   );
 }
 
+// Todos os mocks de API deste arquivo usam agosto/2026 como período fixo
+// (date_from/date_to, dados mensais) — o preset padrão da página (sem
+// período explícito na URL) usa currentMonthPeriod() com a data real do
+// relógio, então sem fixar o relógio aqui o teste do nome do arquivo
+// exportado quebra sozinho a cada virada de mês (já aconteceu: a suíte foi
+// escrita quando "hoje" caía em agosto).
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(new Date("2026-08-15T12:00:00Z"));
+});
+
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   mockPush.mockReset();
   mockTriggerBrowserDownload.mockReset();
   vi.mocked(api.get).mockReset();
