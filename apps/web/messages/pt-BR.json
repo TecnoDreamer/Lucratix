@@ -1,0 +1,19 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "loading": "Carregando...",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar",
+    "notApplicable": "não aplicável",
+    "genericConnectionError": "Não foi possível conectar à API."
+  },
+  "account": {
+    "language": {
+      "title": "Idioma",
+      "description": "Escolha o idioma da interface. Números, datas e valores continuam no formato padrão do Brasil, independente do idioma escolhido."
+    }
+  }
+}

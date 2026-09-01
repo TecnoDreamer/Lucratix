@@ -51,6 +51,7 @@ from app.schemas.user import (
     PasswordResetConfirm,
     PasswordResetRequest,
     ResendVerificationRequest,
+    UserLocaleUpdate,
     UserLogin,
     UserRead,
     UserRegister,
@@ -213,6 +214,21 @@ def logout(
 
 @router.get("/me")
 def me(current_user: User = Depends(get_current_user)) -> UserRead:
+    return UserRead.model_validate(current_user)
+
+
+@router.patch("/locale")
+def update_locale_route(
+    data: UserLocaleUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserRead:
+    """Idioma da interface (i18n) — preferencia pessoal de UI, sem escopo de
+    organizacao nem papel envolvido, mesma categoria de
+    workspace_preferences (PR de acessos rapidos): sem `record_audit`,
+    qualquer usuario autenticado altera a propria preferencia."""
+    current_user.locale = data.locale
+    db.commit()
     return UserRead.model_validate(current_user)
 
 

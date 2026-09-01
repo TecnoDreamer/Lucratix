@@ -26,6 +26,7 @@ const ME: User = {
   email: "admin@example.com",
   is_platform_admin: true,
   email_verified: true,
+  locale: null,
 };
 
 const OTHER_USER: PlatformUser = {

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   images: {
@@ -23,4 +24,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// i18n (2026-09-01, ver docs/adr/0009-estrategia-i18n.md): sem app/[locale]/,
+// sem proxy/middleware — o plugin só conecta `src/i18n/request.ts` ao
+// bundler, nada de roteamento.
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

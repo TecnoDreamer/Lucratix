@@ -30,6 +30,6 @@ Estes itens são reconhecidos como valiosos, mas **não fazem parte do MVP**. Fi
 
 - Emissão de documentos fiscais/contábeis.
 - App mobile nativo.
-- Múltiplos idiomas (i18n) — o MVP é em português, salvo indicação contrária.
+- ~~Múltiplos idiomas (i18n) — o MVP é em português, salvo indicação contrária.~~ Implementado em 2026-09-01 (pt-BR/en/es, ver `docs/i18n/`) — essa indicação contrária. Continuam só em português, deliberadamente (ver `docs/i18n/README.md`): mensagens de erro vindas do backend, e-mails transacionais, e formatação de número/data/moeda (nunca segue o idioma da UI).
 - Deploy pago/produção gerenciada — fora da autonomia autorizada nesta fase (seção 27 do prompt mestre).
 - Escolha de licença jurídica do repositório — depende de indicação explícita do usuário.

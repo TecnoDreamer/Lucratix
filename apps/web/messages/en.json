@@ -1,0 +1,19 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "notApplicable": "not applicable",
+    "genericConnectionError": "Could not connect to the API."
+  },
+  "account": {
+    "language": {
+      "title": "Language",
+      "description": "Choose the interface language. Numbers, dates, and values remain in Brazil's standard format regardless of the chosen language."
+    }
+  }
+}
