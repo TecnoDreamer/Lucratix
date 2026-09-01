@@ -181,9 +181,7 @@ export default function ReportPage() {
                 <p className="mt-2 text-sm text-slate-900 dark:text-slate-50">
                   Receita: {report.revenue_vs_baseline.baseline_value ?? "n/a"} &rarr;{" "}
                   {report.revenue_vs_baseline.current_value ?? "n/a"} (
-                  {report.revenue_vs_baseline.percent_change === null
-                    ? "variação não aplicável"
-                    : `${(report.revenue_vs_baseline.percent_change * 100).toFixed(1)}%`}
+                  {formatPercentChange(report.revenue_vs_baseline)}
                   )
                 </p>
               ) : (
