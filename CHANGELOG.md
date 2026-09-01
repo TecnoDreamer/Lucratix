@@ -25,6 +25,21 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - `.env.example`/`docker-compose.yml` ganharam `CLOUDINARY_CLOUD_NAME`/`_API_KEY`/`_API_SECRET` (vazio =
   upload desabilitado, mesmo padrão do `RESEND_API_KEY`).
 
+### Added (internacionalização pt-BR/en/es)
+- Toda a UI estática do frontend passa a ser traduzível — seletor de idioma em Configurações → Idioma
+  (`conta/configuracoes`), sem prefixo de idioma na URL (`next-intl` no modo "sem roteamento i18n").
+  Persistência em duas camadas: cookie `NEXT_LOCALE` (leitura imediata no servidor) + nova coluna
+  `users.locale` (migration `0015_user_locale_preference`, nullable — sincronia entre dispositivos via
+  `PATCH /api/v1/auth/locale` e `<LocaleSync />`). Cobre as ~24 rotas do App Router e os componentes
+  compartilhados, incluindo o painel de Super Admin (`/admin`). Deliberadamente fora do escopo (continuam
+  só em português): mensagens de erro vindas do backend, e-mails transacionais, formatação de
+  número/data/moeda, e o catálogo de definições de métricas do Glossário. Ver `docs/i18n/README.md` e
+  `docs/adr/0009-estrategia-i18n.md`.
+- Nenhum dos ~50 arquivos de teste de frontend pré-existentes precisou de mudança por causa da extração:
+  mock global de `next-intl` em `vitest.setup.ts` via `createTranslator`, usando `messages/pt-BR.json`
+  como fonte (cada string extraída é idêntica, caractere por caractere, ao texto que substituiu). Novo
+  `npm run check:i18n` valida paridade de chaves entre `messages/{pt-BR,en,es}.json`.
+
 ## 2026-08-31
 
 ### Added (workspace: navegação e acessos rápidos)
