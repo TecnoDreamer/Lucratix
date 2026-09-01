@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { currentMonthPeriod, formatMetric, type Dashboard } from "@/lib/metrics";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -15,27 +16,29 @@ import {
   IconTrendingUp,
 } from "@/components/icons";
 
-const CARDS: { key: keyof Dashboard; label: string; percent?: boolean; icon: typeof IconDollar }[] = [
-  { key: "revenue", label: "Receita", icon: IconDollar },
-  { key: "profit", label: "Lucro", icon: IconTrendingUp },
-  { key: "margin", label: "Margem", percent: true, icon: IconGrid },
-  { key: "cac", label: "CAC", icon: IconPackage },
-  { key: "conversion_rate", label: "Conversao", percent: true, icon: IconFunnel },
-  { key: "average_ticket", label: "Ticket medio", icon: IconDollar },
-  { key: "recurrence_rate", label: "Recorrencia", percent: true, icon: IconTrendingUp },
+const CARDS: { key: keyof Dashboard; labelKey: string; percent?: boolean; icon: typeof IconDollar }[] = [
+  { key: "revenue", labelKey: "revenue", icon: IconDollar },
+  { key: "profit", labelKey: "profit", icon: IconTrendingUp },
+  { key: "margin", labelKey: "margin", percent: true, icon: IconGrid },
+  { key: "cac", labelKey: "cac", icon: IconPackage },
+  { key: "conversion_rate", labelKey: "conversionRate", percent: true, icon: IconFunnel },
+  { key: "average_ticket", labelKey: "averageTicket", icon: IconDollar },
+  { key: "recurrence_rate", labelKey: "recurrenceRate", percent: true, icon: IconTrendingUp },
 ];
 
 export default function DashboardPage() {
   const { id } = useParams<{ id: string }>();
   const [period, setPeriod] = useState(currentMonthPeriod());
   const { dashboard, revenueComparison, loading, error } = useDashboard(id, period);
+  const t = useTranslations("dashboard");
+  const tMetricLabels = useTranslations("dashboard.metricLabels");
 
   return (
     <div className="animate-fade-in-up py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <IconGrid className="h-4 w-4 text-slate-400" />
-          <h2 className={sectionTitle}>Dashboard</h2>
+          <h2 className={sectionTitle}>{t("title")}</h2>
         </div>
         <input
           type="month"
@@ -61,7 +64,7 @@ export default function DashboardPage() {
         dashboard && (
           <>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {CARDS.map(({ key, label, percent, icon: Icon }, i) => {
+              {CARDS.map(({ key, labelKey, percent, icon: Icon }, i) => {
                 const metric = dashboard[key];
                 return (
                   <Card
@@ -72,7 +75,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center justify-between">
                       <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {label}
+                        {tMetricLabels(labelKey)}
                         <MetricHelp metric={key} />
                       </p>
                       <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
@@ -80,7 +83,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-                      {formatMetric(metric, { percent })}
+                      {formatMetric(metric, { percent, notApplicableLabel: t("notApplicable") })}
                     </p>
                     {!metric.is_applicable && metric.reason && (
                       <p className="mt-1 text-xs text-slate-400">{metric.reason}</p>
@@ -91,23 +94,23 @@ export default function DashboardPage() {
             </div>
 
             <Card className="mt-6 p-5">
-              <h2 className={sectionTitle}>Receita: baseline vs. periodo selecionado</h2>
+              <h2 className={sectionTitle}>{t("baselineComparisonTitle")}</h2>
               {revenueComparison ? (
                 <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2 text-sm">
                   <span className="text-slate-500 dark:text-slate-400">
-                    Baseline:{" "}
+                    {t("baseline")}:{" "}
                     <span className="font-medium text-slate-900 dark:text-slate-50">
-                      {revenueComparison.baseline_value ?? "não aplicável"}
+                      {revenueComparison.baseline_value ?? t("notApplicable")}
                     </span>
                   </span>
                   <span className="text-slate-500 dark:text-slate-400">
-                    Atual:{" "}
+                    {t("current")}:{" "}
                     <span className="font-medium text-slate-900 dark:text-slate-50">
-                      {revenueComparison.current_value ?? "não aplicável"}
+                      {revenueComparison.current_value ?? t("notApplicable")}
                     </span>
                   </span>
                   <span className="text-slate-500 dark:text-slate-400">
-                    Variacao:{" "}
+                    {t("variation")}:{" "}
                     <span
                       className={`font-medium ${
                         (revenueComparison.percent_change ?? 0) >= 0
@@ -116,20 +119,15 @@ export default function DashboardPage() {
                       }`}
                     >
                       {revenueComparison.percent_change === null
-                        ? "não aplicável"
+                        ? t("notApplicable")
                         : `${(revenueComparison.percent_change * 100).toFixed(1)}%`}
                     </span>
                   </span>
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Nenhum baseline registrado ainda para comparar.
-                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("noBaselineToCompare")}</p>
               )}
-              <p className="mt-3 text-xs text-slate-400">
-                Esta variacao e apenas observada — nao afirma que foi causada pelas acoes de
-                marketing realizadas (ver docs/product/user-journey.md).
-              </p>
+              <p className="mt-3 text-xs text-slate-400">{t("variationDisclaimer")}</p>
             </Card>
           </>
         )

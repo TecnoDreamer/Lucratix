@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { hasMinimumRole } from "@/lib/roles";
 import type { MembershipRole } from "@/lib/types";
 import type { QuickAccessPreferenceItem } from "@/lib/workspace-preferences";
@@ -14,8 +15,6 @@ import {
 export interface QuickAccessCardDef {
   id: string;
   segment: string;
-  title: string;
-  description: string;
   icon: typeof IconTrendingUp;
   minRole?: MembershipRole;
 }
@@ -25,63 +24,46 @@ export interface QuickAccessCardDef {
 // é o mesmo valor que `segment` (estável, já visível na URL) — mantido como
 // campo separado porque é ele que trafega para o backend/preferência salva,
 // enquanto `segment` é usado para montar o href; nunca renomeie um `id` já
-// em uso sem migrar as preferências salvas.
+// em uso sem migrar as preferências salvas. `title`/`description` NÃO
+// ficam aqui (i18n, 2026-09-01) — vêm de `useQuickAccessLabels()` abaixo,
+// por chave `id` em messages/*.json (namespace `workspace.quickAccessCards`).
 // `minRole`: mesmo critério da sidebar. Ao adicionar um card aqui, atualize
 // também `QUICK_ACCESS_CARD_IDS` em
 // apps/api/app/modules/workspace_preferences/registry.py (allow-list do
 // backend) — as duas listas precisam ficar em sincronia.
 export const QUICK_ACCESS_CARDS: readonly QuickAccessCardDef[] = [
-  {
-    id: "analytics",
-    segment: "analytics",
-    icon: IconTrendingUp,
-    title: "Analytics",
-    description: "Acompanhe métricas, tendências e desempenho.",
-    minRole: "ANALYST",
-  },
-  {
-    id: "financials",
-    segment: "financials",
-    icon: IconDollar,
-    title: "Financeiro",
-    description: "Visualize receitas, custos e indicadores financeiros.",
-  },
-  {
-    id: "marketing",
-    segment: "marketing",
-    icon: IconMegaphone,
-    title: "Marketing",
-    description: "Acompanhe campanhas, canais e performance.",
-  },
-  {
-    id: "funnel",
-    segment: "funnel",
-    icon: IconFunnel,
-    title: "Funil",
-    description: "Analise conversões e etapas do funil.",
-  },
-  {
-    id: "products",
-    segment: "products",
-    icon: IconPackage,
-    title: "Produtos",
-    description: "Consulte produtos, serviços e desempenho.",
-  },
-  {
-    id: "experiments",
-    segment: "experiments",
-    icon: IconFlask,
-    title: "Experimentos",
-    description: "Acompanhe testes, hipóteses e resultados.",
-  },
-  {
-    id: "central-de-dados",
-    segment: "central-de-dados",
-    icon: IconDatabase,
-    title: "Central de Dados",
-    description: "Importe e exporte dados em massa (CSV, Excel, JSON).",
-  },
+  { id: "analytics", segment: "analytics", icon: IconTrendingUp, minRole: "ANALYST" },
+  { id: "financials", segment: "financials", icon: IconDollar },
+  { id: "marketing", segment: "marketing", icon: IconMegaphone },
+  { id: "funnel", segment: "funnel", icon: IconFunnel },
+  { id: "products", segment: "products", icon: IconPackage },
+  { id: "experiments", segment: "experiments", icon: IconFlask },
+  { id: "central-de-dados", segment: "central-de-dados", icon: IconDatabase },
 ];
+
+export interface QuickAccessLabel {
+  title: string;
+  description: string;
+}
+
+/** Traduz título/descrição de cada card por `id` — só pode ser chamado
+ * dentro de um componente (usa `useTranslations`). A lista de QUAIS cards
+ * existem/são permitidos continua vindo só de `QUICK_ACCESS_CARDS`/
+ * `resolveQuickAccess`; isto aqui é só a camada de apresentação. */
+export function useQuickAccessLabels(): Record<string, QuickAccessLabel> {
+  const t = useTranslations("workspace.quickAccessCards");
+  // `id` é dinâmico (vem do registro acima) — next-intl tipa `t()` com um
+  // literal union inferido das chaves estáticas do namespace, incompatível
+  // com uma chave montada em runtime; o catálogo (messages/*.json) é a
+  // fonte de verdade de verdade aqui, não o tipo estático.
+  const tDynamic = t as unknown as (key: string) => string;
+  return Object.fromEntries(
+    QUICK_ACCESS_CARDS.map((c) => [
+      c.id,
+      { title: tDynamic(`${c.id}.title`), description: tDynamic(`${c.id}.description`) },
+    ])
+  );
+}
 
 export const DEFAULT_QUICK_ACCESS_IDS: readonly string[] = QUICK_ACCESS_CARDS.map((c) => c.id);
 

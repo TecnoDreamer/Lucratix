@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ApiError } from "@/lib/api";
 import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
 import { buttonPrimary, buttonSecondary, card, label as labelClass, sectionTitle, select as selectClass } from "@/lib/ui";
@@ -17,18 +18,16 @@ import {
 import { useAccount } from "@/contexts/account-context";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { useWorkspacePreferences } from "@/hooks/use-workspace-preferences";
-import { QUICK_ACCESS_CARDS, resolveQuickAccess } from "@/lib/quick-access";
+import { QUICK_ACCESS_CARDS, resolveQuickAccess, useQuickAccessLabels } from "@/lib/quick-access";
 import { saveQuickAccess, restoreQuickAccessDefaults, type QuickAccessPreferenceItem } from "@/lib/workspace-preferences";
 
-const THEME_OPTIONS: { value: Theme; label: string; icon: typeof IconSun }[] = [
-  { value: "system", label: "Sistema", icon: IconMonitor },
-  { value: "light", label: "Claro", icon: IconSun },
-  { value: "dark", label: "Escuro", icon: IconMoon },
-];
+const THEME_VALUES: Theme[] = ["system", "light", "dark"];
+const THEME_ICONS: Record<Theme, typeof IconSun> = { system: IconMonitor, light: IconSun, dark: IconMoon };
 
 const CARDS_BY_ID = new Map(QUICK_ACCESS_CARDS.map((c) => [c.id, c]));
 
 export default function AccountSettingsPage() {
+  const t = useTranslations("account");
   // Comeca em "system" (mesmo valor que o servidor assume) e so le o real
   // valor salvo apos montar no cliente, para nao gerar erro de hidratacao —
   // localStorage nao existe durante o SSR.
@@ -53,20 +52,18 @@ export default function AccountSettingsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconSettings className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Configurações</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Preferências da sua conta, aplicadas em todas as empresas que você acessa.
-      </p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
       <div className={`${card} mt-6 p-5`}>
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Aparência</h3>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Escolha como o tema claro/escuro se comporta neste dispositivo.
-        </p>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("appearance.title")}</h3>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("appearance.description")}</p>
 
-        <div role="radiogroup" aria-label="Tema" className="mt-4 grid grid-cols-3 gap-3">
-          {THEME_OPTIONS.map(({ value, label: optionLabel, icon: Icon }) => {
+        <div role="radiogroup" aria-label={t("appearance.radiogroupLabel")} className="mt-4 grid grid-cols-3 gap-3">
+          {THEME_VALUES.map((value) => {
+            const optionLabel = t(`appearance.options.${value}`);
+            const Icon = THEME_ICONS[value];
             const selected = theme === value;
             return (
               <button
@@ -97,6 +94,8 @@ export default function AccountSettingsPage() {
 }
 
 function QuickAccessSettingsCard() {
+  const t = useTranslations("account.quickAccess");
+  const quickAccessLabels = useQuickAccessLabels();
   const { organizations, activeOrganization, loading: accountLoading } = useAccount();
   const [selectedOrgId, setSelectedOrgId] = useState<string | undefined>(undefined);
 
@@ -162,8 +161,8 @@ function QuickAccessSettingsCard() {
     next[target] = tmp;
     setItems(next);
     setDirty(true);
-    const moved = CARDS_BY_ID.get(id);
-    setAnnouncement(`${moved?.title ?? id} movido para a posição ${target + 1} de ${next.length}.`);
+    const movedTitle = quickAccessLabels[id]?.title ?? id;
+    setAnnouncement(t("movedAnnouncement", { title: movedTitle, position: target + 1, total: next.length }));
   }
 
   async function handleSave() {
@@ -173,11 +172,9 @@ function QuickAccessSettingsCard() {
     try {
       await saveQuickAccess(selectedOrgId, items);
       setDirty(false);
-      setAnnouncement("Preferências salvas.");
+      setAnnouncement(t("savedAnnouncement"));
     } catch (err) {
-      setActionError(
-        err instanceof ApiError ? err.message : "Não foi possível salvar suas preferências."
-      );
+      setActionError(err instanceof ApiError ? err.message : t("saveGenericError"));
     } finally {
       setSaving(false);
     }
@@ -195,12 +192,10 @@ function QuickAccessSettingsCard() {
       }));
       setItems(defaults);
       setDirty(false);
-      setAnnouncement("Padrão restaurado.");
+      setAnnouncement(t("restoredAnnouncement"));
       reload();
     } catch (err) {
-      setActionError(
-        err instanceof ApiError ? err.message : "Não foi possível restaurar o padrão."
-      );
+      setActionError(err instanceof ApiError ? err.message : t("restoreGenericError"));
     } finally {
       setRestoring(false);
     }
@@ -208,20 +203,18 @@ function QuickAccessSettingsCard() {
 
   return (
     <div className={`${card} mt-6 p-5`}>
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Acessos rápidos</h3>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Escolha quais atalhos aparecem na Home de cada empresa e em qual ordem.
-      </p>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("title")}</h3>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 
       {!accountLoading && organizations.length === 0 ? (
         <div className="mt-4">
-          <EmptyState title="Você ainda não faz parte de nenhuma empresa." />
+          <EmptyState title={t("noOrganizations")} />
         </div>
       ) : (
         <>
           {organizations.length > 1 && (
             <label className={`${labelClass} mt-4`}>
-              Empresa
+              {t("organizationLabel")}
               <select
                 className={selectClass}
                 value={selectedOrgId ?? ""}
@@ -237,7 +230,7 @@ function QuickAccessSettingsCard() {
           )}
           {organizations.length === 1 && (
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Aplicado a {organizations[0].name}.
+              {t("appliedTo", { name: organizations[0].name })}
             </p>
           )}
 
@@ -257,6 +250,7 @@ function QuickAccessSettingsCard() {
                 const cardDef = CARDS_BY_ID.get(item.id);
                 if (!cardDef) return null;
                 const Icon = cardDef.icon;
+                const title = quickAccessLabels[item.id]?.title ?? item.id;
                 return (
                   <li
                     key={item.id}
@@ -270,12 +264,12 @@ function QuickAccessSettingsCard() {
                         onChange={() => toggle(item.id)}
                         className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
                       />
-                      Mostrar {cardDef.title}
+                      {t("showCard", { title })}
                     </label>
                     <div className="flex shrink-0 items-center gap-1">
                       <button
                         type="button"
-                        aria-label={`Mover ${cardDef.title} para cima`}
+                        aria-label={t("moveUp", { title })}
                         disabled={index === 0}
                         onClick={() => move(item.id, -1)}
                         className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
@@ -284,7 +278,7 @@ function QuickAccessSettingsCard() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`Mover ${cardDef.title} para baixo`}
+                        aria-label={t("moveDown", { title })}
                         disabled={index === items.length - 1}
                         onClick={() => move(item.id, 1)}
                         className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
@@ -311,7 +305,7 @@ function QuickAccessSettingsCard() {
               onClick={() => void handleSave()}
               className={buttonPrimary}
             >
-              {saving ? "Salvando..." : "Salvar"}
+              {saving ? t("saving") : t("save")}
             </button>
             <button
               type="button"
@@ -320,7 +314,7 @@ function QuickAccessSettingsCard() {
               className={`${buttonSecondary} inline-flex items-center gap-1.5`}
             >
               <IconRotateCcw className="h-3.5 w-3.5" />
-              {restoring ? "Restaurando..." : "Restaurar padrão"}
+              {restoring ? t("restoring") : t("restoreDefault")}
             </button>
           </div>
         </>

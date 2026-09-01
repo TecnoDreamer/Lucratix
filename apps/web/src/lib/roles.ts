@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type { MembershipRole } from "@/lib/types";
 
 // Rótulo amigável para exibição — nunca usado como valor enviado à API nem
@@ -5,16 +6,28 @@ import type { MembershipRole } from "@/lib/types";
 // MembershipRole). Ver seção "Correspondência com o mundo real" do prompt
 // de redesign de UX (2026-08-27): trocar nomes internos por labels amigáveis
 // apenas na camada de apresentação.
-export const ROLE_LABELS: Record<MembershipRole, string> = {
-  ORGANIZATION_OWNER: "Proprietário",
-  ORGANIZATION_ADMIN: "Administrador",
-  ANALYST: "Analista",
-  VIEWER: "Visualizador",
-};
-
-export function roleLabel(role: MembershipRole | null | undefined): string | null {
-  if (!role) return null;
-  return ROLE_LABELS[role] ?? role;
+//
+// Hook (não função pura) desde a i18n (2026-09-01): o rótulo depende do
+// idioma da UI, que só é lido via contexto do next-intl dentro de um
+// componente. `canPerformActions`/`hasMinimumRole` abaixo continuam funções
+// puras — RBAC não tem string nenhuma, não precisa de hook.
+export function useRoleLabel(): (role: MembershipRole | null | undefined) => string | null {
+  const t = useTranslations("roles");
+  return (role) => {
+    if (!role) return null;
+    switch (role) {
+      case "ORGANIZATION_OWNER":
+        return t("owner");
+      case "ORGANIZATION_ADMIN":
+        return t("admin");
+      case "ANALYST":
+        return t("analyst");
+      case "VIEWER":
+        return t("viewer");
+      default:
+        return role;
+    }
+  };
 }
 
 // RN-010 (ver docs/requirements/business-rules.md): VIEWER é somente

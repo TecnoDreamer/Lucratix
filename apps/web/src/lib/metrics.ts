@@ -216,16 +216,22 @@ export interface MarketingAnalytics {
   cpa: MetricWithComparison;
 }
 
-/** Formata a variação percentual de uma comparação de período — "não
- * aplicável" quando não há dado suficiente em um dos dois lados (RN-003). */
-export function formatPercentChange(comparison: PeriodComparison): string {
-  if (comparison.percent_change === null) return "não aplicável";
+/** Formata a variação percentual de uma comparação de período — devolve
+ * `notApplicableLabel` quando não há dado suficiente em um dos dois lados
+ * (RN-003). O rótulo vem de fora (i18n, 2026-09-01) — esta função nunca lê
+ * `useTranslations` sozinha, pra continuar utilizável fora de componente
+ * React; o número em si nunca muda de formato por idioma (ver lib/formatters.ts). */
+export function formatPercentChange(comparison: PeriodComparison, notApplicableLabel: string): string {
+  if (comparison.percent_change === null) return notApplicableLabel;
   return formatPercentage(comparison.percent_change, { signed: true });
 }
 
-export function formatMetric(metric: MetricResult, options?: { percent?: boolean }): string {
+export function formatMetric(
+  metric: MetricResult,
+  options: { percent?: boolean; notApplicableLabel: string }
+): string {
   if (!metric.is_applicable || metric.value === null) {
-    return "não aplicável";
+    return options.notApplicableLabel;
   }
-  return options?.percent ? formatPercentage(metric.value) : formatDecimal(metric.value);
+  return options.percent ? formatPercentage(metric.value) : formatDecimal(metric.value);
 }

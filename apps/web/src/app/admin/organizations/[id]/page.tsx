@@ -7,13 +7,14 @@ import { api, ApiError } from "@/lib/api";
 import { buttonPrimary, buttonDanger, card, input, label, link as linkClass, select as selectClass, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { IconArrowLeft, IconTrash, IconUser } from "@/components/icons";
-import { roleLabel } from "@/lib/roles";
+import { useRoleLabel } from "@/lib/roles";
 import type { Membership, MembershipRole } from "@/lib/types";
 
 const ROLE_OPTIONS: MembershipRole[] = ["ORGANIZATION_OWNER", "ORGANIZATION_ADMIN", "ANALYST", "VIEWER"];
 
 export default function AdminOrganizationMembersPage() {
   const { id } = useParams<{ id: string }>();
+  const roleLabel = useRoleLabel();
 
   const [members, setMembers] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);

@@ -9,16 +9,57 @@
     "close": "Close",
     "notApplicable": "not applicable",
     "genericConnectionError": "Could not connect to the API.",
+    "channel": "Channel",
+    "campaigns": "Campaigns",
+    "pleaseWait": "Please wait...",
     "passwordInput": {
       "show": "Show password",
       "hide": "Hide password",
       "capsLockOn": "Caps Lock is on."
     }
   },
+  "workspace": {
+    "quickAccessCards": {
+      "analytics": { "title": "Analytics", "description": "Track metrics, trends, and performance." },
+      "financials": { "title": "Financials", "description": "View revenue, costs, and financial indicators." },
+      "marketing": { "title": "Marketing", "description": "Track campaigns, channels, and performance." },
+      "funnel": { "title": "Funnel", "description": "Analyze conversions and funnel stages." },
+      "products": { "title": "Products", "description": "Browse products, services, and performance." },
+      "experiments": { "title": "Experiments", "description": "Track tests, hypotheses, and results." },
+      "central-de-dados": { "title": "Data Hub", "description": "Import and export bulk data (CSV, Excel, JSON)." }
+    }
+  },
   "account": {
+    "title": "Settings",
+    "subtitle": "Your account preferences, applied to every company you access.",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose how the light/dark theme behaves on this device.",
+      "radiogroupLabel": "Theme",
+      "options": { "system": "System", "light": "Light", "dark": "Dark" }
+    },
     "language": {
       "title": "Language",
       "description": "Choose the interface language. Numbers, dates, and values remain in Brazil's standard format regardless of the chosen language."
+    },
+    "quickAccess": {
+      "title": "Quick access",
+      "description": "Choose which shortcuts appear on each company's Home, and in what order.",
+      "noOrganizations": "You aren't part of any company yet.",
+      "organizationLabel": "Company",
+      "appliedTo": "Applied to {name}.",
+      "showCard": "Show {title}",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "movedAnnouncement": "{title} moved to position {position} of {total}.",
+      "save": "Save",
+      "saving": "Saving...",
+      "savedAnnouncement": "Preferences saved.",
+      "saveGenericError": "Could not save your preferences.",
+      "restoreDefault": "Restore default",
+      "restoring": "Restoring...",
+      "restoredAnnouncement": "Default restored.",
+      "restoreGenericError": "Could not restore the default."
     }
   },
   "home": {
@@ -186,6 +227,278 @@
       "ctaSubtitle": "Sign-up is open and takes less than a minute — no invitation required.",
       "ctaCreateAccount": "Create my account",
       "ctaAlreadyHaveAccount": "Already have an account — sign in"
+    }
+  },
+  "organizations": {
+    "list": {
+      "title": "Your companies",
+      "loggedInAsPrefix": "Signed in as",
+      "adminPanel": "Admin panel",
+      "signOut": "Sign out",
+      "confirmEmailBanner": "Confirm your email ({email}) to keep access to your account.",
+      "resending": "Sending...",
+      "resendVerification": "Resend confirmation email",
+      "resendDevModeLink": "Confirm now (development mode) →",
+      "resendGenericError": "Could not resend the email.",
+      "statusTabs": {
+        "groupLabel": "Filter by status",
+        "active": "Active",
+        "frozen": "Closed",
+        "all": "All"
+      },
+      "searchLabel": "Search company",
+      "searchPlaceholder": "Search company...",
+      "emptyNoOrganizations": {
+        "title": "No companies yet. Register the first one below.",
+        "description": "Each company/client has its own data, metrics, and history, fully isolated from the others."
+      },
+      "emptySearch": {
+        "title": "No company found for \"{query}\".",
+        "description": "Try a different search term."
+      },
+      "emptyFilter": {
+        "title": "No companies in this filter.",
+        "description": "Switch tabs to see companies in another state."
+      },
+      "showingCount": "Showing {shown} of {total}",
+      "loadMore": "Load more",
+      "addNewTitle": "Add new company",
+      "addNewDescription": "Each company/client registered here gets its own space, isolated from the others.",
+      "newOrganizationLabel": "New company",
+      "newOrganizationPlaceholder": "Company/client name",
+      "creating": "Creating...",
+      "create": "Create",
+      "createGenericError": "Could not create the company.",
+      "loadErrorTitle": "Could not load your companies",
+      "retry": "Try again"
+    },
+    "companyCard": {
+      "closedBadge": "Closed",
+      "summary": {
+        "revenue": "Revenue",
+        "leads": "Leads",
+        "conversion": "Conversion",
+        "cac": "CAC"
+      },
+      "createdAt": "Created on {date}",
+      "openCompany": "Open company →"
+    }
+  },
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "analyst": "Analyst",
+    "viewer": "Viewer"
+  },
+  "organizationHome": {
+    "youAreIn": "You're in",
+    "dataSince": "Data since {date}",
+    "switchOrganization": "Switch company",
+    "quickAccess": "Quick access",
+    "quickActions": "Quick actions",
+    "quickActionItems": {
+      "registerRevenue": "Record revenue/expense",
+      "createCampaign": "Create campaign",
+      "addProduct": "Add product",
+      "createExperiment": "Create experiment",
+      "generateReport": "Generate report"
+    },
+    "baselineHistoryTitle": "Baseline history",
+    "noBaselineTitle": "No baseline recorded yet.",
+    "noBaselineDescription": "Record the first one below to track the business's progress over time.",
+    "summary": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC"
+    },
+    "registerNewBaselineTitle": "Record new baseline",
+    "blankFieldsHint": "Fields left blank are recorded as \"not available\", never as zero.",
+    "saving": "Saving...",
+    "registerBaseline": "Record baseline",
+    "monthSummaryTitle": "Month summary",
+    "seeFullIndicators": "See full indicators, with period filter",
+    "attention": "Attention",
+    "revenueDropAlert": "Revenue dropped {percent}% versus the baseline this month.",
+    "baselineGenericError": "Could not record the baseline."
+  },
+  "organizationLayout": {
+    "notFound": "Company not found or you don't have access to it.",
+    "yourCompanies": "Your companies",
+    "yourRole": "Your role: {role}",
+    "nav": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "products": "Products",
+      "financials": "Financials",
+      "marketing": "Marketing",
+      "funnel": "Funnel",
+      "experiments": "Experiments",
+      "reports": "Report",
+      "audit": "Audit log",
+      "centralDeDados": "Data Hub",
+      "glossary": "Glossary",
+      "companySettings": "Company settings"
+    },
+    "accountSectionTitle": "Account",
+    "accountSettings": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "navMenuLabel": "Navigation menu"
+  },
+  "analytics": {
+    "executiveViewTitle": "Executive View",
+    "notApplicable": "not applicable",
+    "vsPreviousPeriod": "vs. previous period",
+    "vsPreviousPeriodNa": "vs. previous period: n/a",
+    "ofTarget": "of target",
+    "incompleteDataWarning": "Financial data available for {available} of {total} months in the selected period — totals reflect only the recorded months.",
+    "monthlyEvolutionTitle": "Monthly evolution",
+    "exportCsv": "Export CSV",
+    "marketingTitle": "Marketing",
+    "noCampaignsWarning": "No campaign with a registered date in the selected period — marketing metrics could not be calculated.",
+    "byChannel": "By channel",
+    "metricLabels": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC",
+      "conversionRate": "Conversion",
+      "averageTicket": "Average ticket",
+      "recurrenceRate": "Recurrence",
+      "roas": "ROAS",
+      "roi": "ROI",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "cpl": "CPL",
+      "cpa": "CPA"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notApplicable": "not applicable",
+    "baselineComparisonTitle": "Revenue: baseline vs. selected period",
+    "baseline": "Baseline",
+    "current": "Current",
+    "variation": "Variation",
+    "noBaselineToCompare": "No baseline recorded yet to compare against.",
+    "variationDisclaimer": "This variation is only observed — it does not claim to have been caused by the marketing actions taken (see docs/product/user-journey.md).",
+    "metricLabels": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC",
+      "conversionRate": "Conversion",
+      "averageTicket": "Average ticket",
+      "recurrenceRate": "Recurrence"
+    }
+  },
+  "financials": {
+    "title": "Financials",
+    "saveGenericError": "Could not save the period.",
+    "emptyTitle": "No financial period recorded yet.",
+    "emptyDescription": "Record the first period below.",
+    "period": "Period",
+    "revenue": "Revenue",
+    "profit": "Profit",
+    "margin": "Margin",
+    "costs": "Costs",
+    "expenses": "Expenses",
+    "marketingInvestment": "Marketing investment",
+    "saving": "Saving...",
+    "savePeriod": "Save period"
+  },
+  "funnel": {
+    "title": "Funnel",
+    "saveGenericError": "Could not save the funnel.",
+    "emptyTitle": "No funnel snapshot recorded yet.",
+    "period": "Period",
+    "saving": "Saving...",
+    "savePeriod": "Save period",
+    "fields": {
+      "impressions": "Impressions",
+      "visits": "Visits",
+      "leads": "Leads",
+      "mqls": "MQLs",
+      "sqls": "SQLs",
+      "opportunities": "Opportunities",
+      "customers": "Customers",
+      "repeat_purchases": "Repeat purchases"
+    }
+  },
+  "products": {
+    "title": "Products and services",
+    "createGenericError": "Could not create the product.",
+    "updateGenericError": "Could not update the product.",
+    "emptyTitle": "No product registered yet.",
+    "emptyDescription": "Add the first product or service below.",
+    "name": "Name",
+    "price": "Price",
+    "cost": "Cost",
+    "margin": "Margin",
+    "status": "Status",
+    "active": "active",
+    "inactive": "inactive",
+    "creating": "Creating...",
+    "add": "Add"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "createChannelGenericError": "Could not create the channel.",
+    "createCampaignGenericError": "Could not create the campaign.",
+    "channelsTitle": "Channels",
+    "noChannels": "No channel registered yet.",
+    "newChannel": "New channel",
+    "newChannelPlaceholder": "E.g.: Google Ads",
+    "add": "Add",
+    "campaignsTitle": "Campaigns",
+    "noCampaigns": "No campaign recorded yet.",
+    "name": "Name",
+    "period": "Period",
+    "investment": "Investment",
+    "attributedRevenue": "Attributed revenue",
+    "channel": "Channel",
+    "selectPlaceholder": "Select",
+    "campaignName": "Campaign name",
+    "startDate": "Start",
+    "endDate": "End",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "leads": "Leads",
+    "customers": "Customers",
+    "creating": "Creating...",
+    "addCampaign": "Add campaign"
+  },
+  "reports": {
+    "title": "Executive report",
+    "printOrSavePdf": "Print / Save as PDF",
+    "generatedFor": "{name} — generated on {date}",
+    "vsBaseline": "Vs. baseline",
+    "revenueLabel": "Revenue",
+    "na": "n/a",
+    "variationNotApplicable": "variation not applicable",
+    "noBaselineYet": "No baseline recorded yet.",
+    "periodMarketing": "Marketing for the period",
+    "noCampaignsThisPeriod": "No campaign with a registered date in this period.",
+    "vsPreviousMonth": "vs. previous month"
+  },
+  "orgSettings": {
+    "frozenBanner": {
+      "title": "This company is closed.",
+      "description": "Data remains available to view, but new records are blocked.",
+      "reasonPrefix": "Reason"
+    },
+    "logo": {
+      "uploadGenericError": "Could not upload the image.",
+      "removeGenericError": "Could not remove the logo.",
+      "previewAlt": "Logo preview",
+      "formatHint": "PNG, JPEG, or WEBP, up to 2 MB.",
+      "uploading": "Uploading...",
+      "save": "Save logo",
+      "removing": "Removing...",
+      "remove": "Remove logo"
     }
   },
   "authHero": {

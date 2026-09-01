@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonGhost, buttonPrimary, buttonSecondary, card, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
@@ -33,11 +34,7 @@ const PAGE_SIZE = 24;
 
 type StatusFilter = OrganizationStatus | "all";
 
-const STATUS_TABS: { value: StatusFilter; label: string }[] = [
-  { value: "active", label: "Ativas" },
-  { value: "frozen", label: "Encerradas" },
-  { value: "all", label: "Todas" },
-];
+const STATUS_TAB_VALUES: StatusFilter[] = ["active", "frozen", "all"];
 
 function fetchOrganizationsPage(params: {
   search: string;
@@ -62,6 +59,13 @@ function fetchSummariesFor(organizationIds: string[]): Promise<OrganizationSumma
 
 export default function OrganizationsPage() {
   const router = useRouter();
+  const t = useTranslations("organizations.list");
+  const tCommon = useTranslations("common");
+  const statusTabLabels: Record<StatusFilter, string> = {
+    active: t("statusTabs.active"),
+    frozen: t("statusTabs.frozen"),
+    all: t("statusTabs.all"),
+  };
   const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<Organization[]>([]);
   const [total, setTotal] = useState(0);
@@ -113,9 +117,7 @@ export default function OrganizationsPage() {
         page = await fetchOrganizationsPage({ search, status, offset: 0 });
       } catch (err) {
         if (handleAuthError(err)) return;
-        setLoadError(
-          err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor."
-        );
+        setLoadError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
         setLoading(false);
         return;
       }
@@ -136,6 +138,11 @@ export default function OrganizationsPage() {
         // Silencioso de propósito — ver comentário do estado `summaries` acima.
       }
     },
+    // tCommon (useTranslations) não é referencialmente estável entre renders —
+    // incluí-la aqui recriaria loadFirstPage a cada render, o que por sua vez
+    // reexecutaria o useEffect abaixo (que depende de loadFirstPage) em loop
+    // infinito, já que ele mesmo dispara um novo render via setLoading/setItems.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [handleAuthError]
   );
 
@@ -181,7 +188,7 @@ export default function OrganizationsPage() {
       }));
     } catch (err) {
       if (!handleAuthError(err)) {
-        setLoadError(err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor.");
+        setLoadError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       }
     } finally {
       setLoadingMore(false);
@@ -199,7 +206,7 @@ export default function OrganizationsPage() {
       // sempre reflete a ordenação/paginação de verdade do servidor.
       await loadFirstPage(debouncedQuery, statusFilter);
     } catch (err) {
-      setCreateError(err instanceof ApiError ? err.message : "Nao foi possivel criar a empresa.");
+      setCreateError(err instanceof ApiError ? err.message : t("createGenericError"));
     } finally {
       setCreating(false);
     }
@@ -218,7 +225,7 @@ export default function OrganizationsPage() {
       setResendMessage(res.message);
       setResendDevToken(res.dev_token ?? null);
     } catch (err) {
-      setResendMessage(err instanceof ApiError ? err.message : "Não foi possível reenviar o e-mail.");
+      setResendMessage(err instanceof ApiError ? err.message : t("resendGenericError"));
     } finally {
       setResending(false);
     }
@@ -239,13 +246,11 @@ export default function OrganizationsPage() {
           <IconAlertCircle className="h-7 w-7" />
         </div>
         <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-            Não foi possível carregar suas empresas
-          </h1>
+          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{t("loadErrorTitle")}</h1>
           <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{loadError}</p>
         </div>
         <button onClick={() => void loadFirstPage(debouncedQuery, statusFilter)} className={`${buttonPrimary} mt-1`}>
-          Tentar novamente
+          {t("retry")}
         </button>
       </div>
     );
@@ -256,12 +261,12 @@ export default function OrganizationsPage() {
       <div className="flex items-start justify-between gap-4">
         <div className="animate-fade-in-up">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-            Suas empresas
+            {t("title")}
           </h1>
           {user && (
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Logado como <span className="font-medium text-slate-700 dark:text-slate-300">{user.name}</span>{" "}
-              ({user.email})
+              {t("loggedInAsPrefix")}{" "}
+              <span className="font-medium text-slate-700 dark:text-slate-300">{user.name}</span> ({user.email})
             </p>
           )}
         </div>
@@ -271,11 +276,11 @@ export default function OrganizationsPage() {
               href="/admin"
               className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-b from-violet-500 to-violet-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm shadow-violet-600/20 transition-all hover:from-violet-500 hover:to-violet-700"
             >
-              <IconShieldCheck className="h-4 w-4" /> Painel Admin
+              <IconShieldCheck className="h-4 w-4" /> {t("adminPanel")}
             </Link>
           )}
           <button onClick={handleLogout} className={buttonGhost}>
-            <IconLogOut className="h-4 w-4" /> Sair
+            <IconLogOut className="h-4 w-4" /> {t("signOut")}
           </button>
         </div>
       </div>
@@ -284,7 +289,7 @@ export default function OrganizationsPage() {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
           <span className="inline-flex items-center gap-2">
             <IconMail className="h-4 w-4 shrink-0" />
-            Confirme seu e-mail ({user.email}) para garantir o acesso à sua conta.
+            {t("confirmEmailBanner", { email: user.email })}
           </span>
           <button
             type="button"
@@ -292,7 +297,7 @@ export default function OrganizationsPage() {
             disabled={resending}
             className="shrink-0 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
           >
-            {resending ? "Enviando..." : "Reenviar e-mail de confirmação"}
+            {resending ? t("resending") : t("resendVerification")}
           </button>
           {resendMessage && (
             <p className="w-full break-all text-xs text-amber-700 dark:text-amber-400">
@@ -304,7 +309,7 @@ export default function OrganizationsPage() {
                     href={`/confirmar-email?token=${encodeURIComponent(resendDevToken)}`}
                     className="underline"
                   >
-                    Confirmar agora (modo desenvolvimento) →
+                    {t("resendDevModeLink")}
                   </Link>
                 </>
               )}
@@ -314,34 +319,34 @@ export default function OrganizationsPage() {
       )}
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Filtrar por status" className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-900">
-          {STATUS_TABS.map((tab) => (
+        <div role="tablist" aria-label={t("statusTabs.groupLabel")} className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-900">
+          {STATUS_TAB_VALUES.map((value) => (
             <button
-              key={tab.value}
+              key={value}
               type="button"
               role="tab"
-              aria-selected={statusFilter === tab.value}
-              onClick={() => setStatusFilter(tab.value)}
+              aria-selected={statusFilter === value}
+              onClick={() => setStatusFilter(value)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                statusFilter === tab.value
+                statusFilter === value
                   ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-50"
                   : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              {tab.label}
+              {statusTabLabels[value]}
             </button>
           ))}
         </div>
 
         {showSearch && (
           <label className="relative block w-full max-w-sm sm:w-auto">
-            <span className="sr-only">Buscar empresa</span>
+            <span className="sr-only">{t("searchLabel")}</span>
             <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar empresa..."
+              placeholder={t("searchPlaceholder")}
               className={`${input} pl-9`}
             />
           </label>
@@ -358,20 +363,20 @@ export default function OrganizationsPage() {
         ) : items.length === 0 && !debouncedQuery.trim() && statusFilter === "active" ? (
           <EmptyState
             icon={<IconSparkles className="h-5 w-5" />}
-            title="Nenhuma empresa ainda. Cadastre a primeira abaixo."
-            description="Cada empresa/cliente tem seus próprios dados, métricas e histórico, totalmente isolados dos demais."
+            title={t("emptyNoOrganizations.title")}
+            description={t("emptyNoOrganizations.description")}
           />
         ) : items.length === 0 && debouncedQuery.trim() ? (
           <EmptyState
             icon={<IconSearch className="h-5 w-5" />}
-            title={`Nenhuma empresa encontrada para "${debouncedQuery.trim()}".`}
-            description="Tente outro termo de busca."
+            title={t("emptySearch.title", { query: debouncedQuery.trim() })}
+            description={t("emptySearch.description")}
           />
         ) : items.length === 0 ? (
           <EmptyState
             icon={<IconSparkles className="h-5 w-5" />}
-            title="Nenhuma empresa neste filtro."
-            description="Troque de aba para ver empresas em outro estado."
+            title={t("emptyFilter.title")}
+            description={t("emptyFilter.description")}
           />
         ) : (
           <>
@@ -384,16 +389,14 @@ export default function OrganizationsPage() {
             </ul>
             {hasMore && (
               <div className="mt-4 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-                <span>
-                  Mostrando {items.length} de {total}
-                </span>
+                <span>{t("showingCount", { shown: items.length, total })}</span>
                 <button
                   type="button"
                   onClick={() => void handleLoadMore()}
                   disabled={loadingMore}
                   className={buttonSecondary}
                 >
-                  {loadingMore ? "Carregando..." : "Carregar mais"}
+                  {loadingMore ? tCommon("loading") : t("loadMore")}
                 </button>
               </div>
             )}
@@ -408,24 +411,22 @@ export default function OrganizationsPage() {
       )}
 
       <div className={`${card} mt-8 p-5`}>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Adicionar nova empresa</h2>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Cada empresa/cliente cadastrada aqui recebe seu próprio espaço, isolado dos demais.
-        </p>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("addNewTitle")}</h2>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("addNewDescription")}</p>
         <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className={`flex-1 ${label}`}>
-            Nova empresa
+            {t("newOrganizationLabel")}
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nome da empresa/cliente"
+              placeholder={t("newOrganizationPlaceholder")}
               className={input}
             />
           </label>
           <button type="submit" disabled={creating} className={buttonPrimary}>
             <IconPlus className="h-4 w-4" />
-            {creating ? "Criando..." : "Criar"}
+            {creating ? t("creating") : t("create")}
           </button>
         </form>
       </div>
