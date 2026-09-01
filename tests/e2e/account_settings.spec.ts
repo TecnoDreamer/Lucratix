@@ -58,11 +58,17 @@ test("deep link direto em /conta/configuracoes (sem ?from) resolve pela última 
   await createOrganization(page, orgName);
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
+  // waitForURL só confirma a URL — não espera o fetch de
+  // GET /organizations/{id} da página terminar, que é quando
+  // rememberActiveOrganizationId grava o id em localStorage (ver
+  // organizations/[id]/layout.tsx). Sem esperar o nome da empresa aparecer
+  // de verdade aqui, o page.goto abaixo pode navegar embora ANTES desse
+  // fetch resolver, abortando-o antes do localStorage ser escrito.
+  await expect(page.getByRole("heading", { name: orgName })).toBeVisible();
 
   // Acessa /conta/configuracoes direto pela URL, sem vir da sidebar — sem
   // ?from, mas o id da empresa foi lembrado em localStorage ao carregar a
-  // Home dela acima. Timeout maior: page.goto e uma navegacao completa,
-  // refaz o fetch de GET /organizations do zero antes de resolver o link.
+  // Home dela acima.
   await page.goto("/conta/configuracoes");
   await expect(page.getByRole("link", { name: new RegExp(`Voltar para ${orgName}`) })).toBeVisible({
     timeout: 15000,
