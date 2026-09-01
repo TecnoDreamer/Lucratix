@@ -31,6 +31,14 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-["http://localhost:3000"]}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # E-mail transacional (RF-001, ver app/core/email.py e
+      # docs/security/AUTHENTICATION.md). RESEND_API_KEY sem valor no .env
+      # da raiz mantem o comportamento de hoje (dev_token, nenhuma chamada
+      # de rede) — so precisa existir aqui pra docker compose repassar pro
+      # container quando o usuario preencher o .env.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Lucratix <onboarding@resend.dev>}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
