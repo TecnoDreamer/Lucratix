@@ -44,14 +44,14 @@ test("congelar uma empresa mostra o banner e bloqueia escrita; reativar destrava
   // Banner de empresa congelada aparece em qualquer sub-página, sem
   // precisar de reload — a resposta do freeze é propagada de volta pro
   // layout via contexto (ver contexts/organization-context.tsx).
-  await expect(page.getByText(/Esta empresa está encerrada/)).toBeVisible();
+  await expect(page.getByText("Esta empresa está encerrada.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Início", exact: true }).click();
-  await expect(page.getByText(/Esta empresa está encerrada/)).toBeVisible();
+  await expect(page.getByText("Esta empresa está encerrada.", { exact: true })).toBeVisible();
 
   // Reativar, de volta em Configurações.
   await page.getByRole("link", { name: "Configurações da empresa" }).click();
   await page.getByRole("button", { name: "Reativar empresa" }).click();
-  await expect(page.getByText(/Esta empresa está encerrada/)).not.toBeVisible();
+  await expect(page.getByText("Esta empresa está encerrada.", { exact: true })).not.toBeVisible();
 
   // Volta a aparecer na aba "Ativas" (default) de "Suas empresas".
   await page.getByRole("link", { name: "Suas empresas" }).click();

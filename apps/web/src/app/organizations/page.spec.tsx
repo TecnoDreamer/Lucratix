@@ -215,6 +215,40 @@ describe("OrganizationsPage", () => {
     expect(screen.queryByText("Empresa 1")).not.toBeInTheDocument();
   });
 
+  it("busca aparece depois de cadastrar empresas na mesma sessão, mesmo tendo começado com 0", async () => {
+    // Regressão: `initialTotal` era capturado uma única vez, na primeíssima
+    // carga — para um usuário novo (0 empresas), isso travava em 0 pra
+    // sempre nessa sessão, e a busca nunca aparecia mesmo depois de
+    // cadastrar dezenas de empresas (só um reload recalcularia do zero).
+    const orgs: Organization[] = [];
+    mockApi({ organizationsByUrl: () => orgs.slice() });
+    vi.mocked(api.post).mockImplementation(async (_path: string, body: unknown) => {
+      const newOrg = fakeOrg({ name: (body as { name: string }).name });
+      orgs.push(newOrg);
+      return newOrg;
+    });
+
+    render(<OrganizationsPage />);
+    await waitFor(() => {
+      expect(screen.getByText("Nenhuma empresa ainda. Cadastre a primeira abaixo.")).toBeInTheDocument();
+    });
+    expect(screen.queryByPlaceholderText("Buscar empresa...")).not.toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText("Nova empresa");
+    const createForm = screen.getByRole("button", { name: "Criar" }).closest("form")!;
+    for (let i = 1; i <= 7; i++) {
+      fireEvent.change(nameInput, { target: { value: `Empresa ${i}` } });
+      fireEvent.submit(createForm);
+      // Sequencial de propósito: cada criação precisa terminar (e o form
+      // resetar) antes da próxima, já que reaproveitam o mesmo input/mock.
+      await waitFor(() => {
+        expect(screen.getByText(`Empresa ${i}`)).toBeInTheDocument();
+      });
+    }
+
+    expect(screen.getByPlaceholderText("Buscar empresa...")).toBeInTheDocument();
+  });
+
   it("permite trocar de aba entre Ativas/Encerradas/Todas", async () => {
     mockApi({
       organizations: [fakeOrg({ name: "Empresa Ativa" })],

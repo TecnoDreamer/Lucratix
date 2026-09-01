@@ -23,9 +23,11 @@ import type { Organization, OrganizationPage, OrganizationStatus, User } from "@
 // Abaixo desse número de empresas, a busca só adiciona ruído visual sem
 // ajudar em nada (Parte "Busca e organização" do prompt de redesign:
 // "não adicionar complexidade desnecessária caso haja poucas empresas").
-// Capturado uma única vez, na primeira carga (sem busca ainda), e nunca
-// recalculado — senão a caixa de busca sumiria assim que uma busca
-// reduzisse o resultado a poucos itens.
+// `initialTotal` só cresce (nunca diminui) depois de capturado: sem isso,
+// (a) uma busca que reduz o resultado a poucos itens faria a própria caixa
+// de busca sumir, e (b) um usuário novo (0 empresas na primeiríssima carga)
+// nunca veria a busca aparecer nesta mesma sessão, mesmo depois de cadastrar
+// dezenas de empresas — só um reload recalcularia do zero.
 const SEARCH_THRESHOLD = 6;
 const PAGE_SIZE = 24;
 
@@ -119,7 +121,7 @@ export default function OrganizationsPage() {
       }
       setItems(page.items);
       setTotal(page.total);
-      setInitialTotal((prev) => prev ?? page.total);
+      setInitialTotal((prev) => (prev === null ? page.total : Math.max(prev, page.total)));
       setLoading(false);
 
       // Resumo (dado complementar) buscado à parte — uma falha aqui não
