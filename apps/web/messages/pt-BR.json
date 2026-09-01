@@ -142,6 +142,11 @@
       "restoring": "Restaurando...",
       "restoredAnnouncement": "Padrão restaurado.",
       "restoreGenericError": "Não foi possível restaurar o padrão."
+    },
+    "layout": {
+      "title": "Conta",
+      "backTo": "Voltar para {name}",
+      "yourCompanies": "Suas empresas"
     }
   },
   "home": {
@@ -1004,5 +1009,29 @@
       "devModeTitle": "Modo desenvolvimento — sem envio de e-mail configurado",
       "devModeCopyLink": "Copie o link abaixo e envie manualmente — ele define a senha no primeiro acesso."
     }
+  },
+  "experiments": {
+    "title": "Experimentos (CRO)",
+    "createError": "Não foi possível criar o experimento.",
+    "variantUpdateError": "Não foi possível atualizar a variante.",
+    "emptyTitle": "Nenhum experimento criado ainda.",
+    "emptyDescription": "Crie o primeiro teste A/B abaixo — controle e variante são criados automaticamente.",
+    "leadingVariant": "Variante em vantagem (indicativo): {name}",
+    "noLeadingVariant": "Nenhuma variante em vantagem indicada.",
+    "newExperiment": "Novo experimento",
+    "hypothesisLabel": "Hipótese",
+    "pageOrProcessLabel": "Página/processo",
+    "primaryMetricLabel": "Métrica principal",
+    "metricConversionRate": "Taxa de conversão",
+    "metricAverageTicket": "Ticket médio",
+    "metricCac": "CAC",
+    "creating": "Criando...",
+    "createButton": "Criar experimento (Controle + Variante)",
+    "baseline": "baseline",
+    "test": "teste",
+    "significant": "significativo",
+    "notSignificant": "não significativo",
+    "sampleSizePlaceholder": "Amostra",
+    "conversionsPlaceholder": "Conversões"
   }
 }

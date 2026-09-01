@@ -142,6 +142,11 @@
       "restoring": "Restoring...",
       "restoredAnnouncement": "Default restored.",
       "restoreGenericError": "Could not restore the default."
+    },
+    "layout": {
+      "title": "Account",
+      "backTo": "Back to {name}",
+      "yourCompanies": "Your companies"
     }
   },
   "home": {
@@ -1004,5 +1009,29 @@
       "devModeTitle": "Development mode — no email sending configured",
       "devModeCopyLink": "Copy the link below and send it manually — it sets the password on first access."
     }
+  },
+  "experiments": {
+    "title": "Experiments (CRO)",
+    "createError": "Could not create the experiment.",
+    "variantUpdateError": "Could not update the variant.",
+    "emptyTitle": "No experiments created yet.",
+    "emptyDescription": "Create the first A/B test below — control and variant are created automatically.",
+    "leadingVariant": "Leading variant (indicative): {name}",
+    "noLeadingVariant": "No leading variant indicated.",
+    "newExperiment": "New experiment",
+    "hypothesisLabel": "Hypothesis",
+    "pageOrProcessLabel": "Page/process",
+    "primaryMetricLabel": "Primary metric",
+    "metricConversionRate": "Conversion rate",
+    "metricAverageTicket": "Average ticket",
+    "metricCac": "CAC",
+    "creating": "Creating...",
+    "createButton": "Create experiment (Control + Variant)",
+    "baseline": "baseline",
+    "test": "test",
+    "significant": "significant",
+    "notSignificant": "not significant",
+    "sampleSizePlaceholder": "Sample",
+    "conversionsPlaceholder": "Conversions"
   }
 }
