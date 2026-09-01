@@ -117,7 +117,7 @@ export default function OrganizationsPage() {
         page = await fetchOrganizationsPage({ search, status, offset: 0 });
       } catch (err) {
         if (handleAuthError(err)) return;
-        setLoadError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
+        setLoadError(err instanceof ApiError ? err.message : t("connectionError"));
         setLoading(false);
         return;
       }
@@ -188,7 +188,7 @@ export default function OrganizationsPage() {
       }));
     } catch (err) {
       if (!handleAuthError(err)) {
-        setLoadError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
+        setLoadError(err instanceof ApiError ? err.message : t("connectionError"));
       }
     } finally {
       setLoadingMore(false);

@@ -438,7 +438,8 @@
       "create": "Criar",
       "createGenericError": "Nao foi possivel criar a empresa.",
       "loadErrorTitle": "Não foi possível carregar suas empresas",
-      "retry": "Tentar novamente"
+      "retry": "Tentar novamente",
+      "connectionError": "Não foi possível conectar ao servidor."
     },
     "companyCard": {
       "closedBadge": "Encerrada",
