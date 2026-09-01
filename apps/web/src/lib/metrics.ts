@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { formatDecimal, formatPercentage } from "@/lib/formatters";
 
 /** Primeiro dia do mês corrente, no formato usado pelos endpoints de
@@ -96,19 +97,42 @@ export type TargetMetricKey =
   | "average_ticket"
   | "recurrence_rate";
 
-/** Rótulo/unidade dos 7 KPIs da Visão Executiva — mesma lista usada pelos
+/** Unidade dos 7 KPIs da Visão Executiva — mesma lista usada pelos
  * seletores de meta (`TargetsPanel`) e de correlação (`CorrelationPanel`).
  * Fonte única: antes duplicada em cada componente, extraída aqui pra não
- * triplicar "Receita"/"Margem"/percent:true pela terceira vez. */
-export const EXECUTIVE_METRIC_OPTIONS: { key: TargetMetricKey; label: string; percent?: boolean }[] = [
-  { key: "revenue", label: "Receita" },
-  { key: "profit", label: "Lucro" },
-  { key: "margin", label: "Margem", percent: true },
-  { key: "cac", label: "CAC" },
-  { key: "conversion_rate", label: "Conversão", percent: true },
-  { key: "average_ticket", label: "Ticket médio" },
-  { key: "recurrence_rate", label: "Recorrência", percent: true },
+ * triplicar "percent:true" pela terceira vez. Rótulo não fica aqui (função
+ * pura, sem hook) — ver `useExecutiveMetricOptions` abaixo. */
+export const EXECUTIVE_METRIC_KEYS: { key: TargetMetricKey; percent?: boolean }[] = [
+  { key: "revenue" },
+  { key: "profit" },
+  { key: "margin", percent: true },
+  { key: "cac" },
+  { key: "conversion_rate", percent: true },
+  { key: "average_ticket" },
+  { key: "recurrence_rate", percent: true },
 ];
+
+// Chave de messages/*.json (camelCase) para cada TargetMetricKey (snake_case)
+// — mesmo mapa usado em reports/page.tsx para reaproveitar analytics.metricLabels.
+const METRIC_LABEL_KEY: Record<TargetMetricKey, string> = {
+  revenue: "revenue",
+  profit: "profit",
+  margin: "margin",
+  cac: "cac",
+  conversion_rate: "conversionRate",
+  average_ticket: "averageTicket",
+  recurrence_rate: "recurrenceRate",
+};
+
+/** Rótulo traduzido dos 7 KPIs da Visão Executiva, reaproveitando o mesmo
+ * namespace `analytics.metricLabels` já usado pelos cards de Analytics —
+ * evita duplicar "Receita"/"Margem"/etc. pela terceira vez em messages/*.json. */
+export function useExecutiveMetricOptions(): { key: TargetMetricKey; label: string; percent?: boolean }[] {
+  const t = useTranslations("analytics.metricLabels");
+  // Chave dinâmica por métrica — mesmo padrão de cast usado em lib/quick-access.ts.
+  const tDynamic = t as unknown as (key: string) => string;
+  return EXECUTIVE_METRIC_KEYS.map((m) => ({ ...m, label: tDynamic(METRIC_LABEL_KEY[m.key]) }));
+}
 
 export interface Target {
   id: string;

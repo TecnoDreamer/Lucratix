@@ -49,12 +49,14 @@ export function resolvePreset(preset: DateRangePresetId, today: Date = new Date(
   }
 }
 
-export const DATE_RANGE_PRESETS: { id: DateRangePresetId; label: string }[] = [
-  { id: "current_month", label: "Este mês" },
-  { id: "previous_month", label: "Mês anterior" },
-  { id: "last_3_months", label: "Últimos 3 meses" },
-  { id: "last_6_months", label: "Últimos 6 meses" },
-  { id: "current_quarter", label: "Este trimestre" },
-  { id: "current_year", label: "Este ano" },
-  { id: "custom", label: "Personalizado" },
+// Rótulo não fica aqui (função pura, sem hook) — `date-range-filter.tsx`
+// monta o rótulo traduzido de cada preset via useTranslations.
+export const DATE_RANGE_PRESET_IDS: DateRangePresetId[] = [
+  "current_month",
+  "previous_month",
+  "last_3_months",
+  "last_6_months",
+  "current_quarter",
+  "current_year",
+  "custom",
 ];

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 export interface DataDomain {
   key: string;
   label: string;
@@ -12,10 +14,25 @@ export interface DataDomain {
 // demais (4 domínios) para valer a pena buscar de GET /imports/domains —
 // que além disso exige ANALYST+, e o painel de exportação (lib/data-domains.ts
 // é usado por ele também) é visível para VIEWER. Atualizar esta lista junto
-// de domains.py sempre que um domínio novo for adicionado.
-export const DATA_DOMAINS: DataDomain[] = [
-  { key: "financial_periods", label: "Financeiro", supportsDateRange: true },
-  { key: "funnel_snapshots", label: "Funil", supportsDateRange: true },
-  { key: "products", label: "Produtos", supportsDateRange: false },
-  { key: "campaigns", label: "Marketing", supportsDateRange: true },
+// de domains.py sempre que um domínio novo for adicionado. Rótulo não fica
+// aqui (função pura, sem hook) — ver `useDataDomains` abaixo.
+export const DATA_DOMAIN_KEYS: { key: string; supportsDateRange: boolean }[] = [
+  { key: "financial_periods", supportsDateRange: true },
+  { key: "funnel_snapshots", supportsDateRange: true },
+  { key: "products", supportsDateRange: false },
+  { key: "campaigns", supportsDateRange: true },
 ];
+
+const DOMAIN_LABEL_KEY: Record<string, string> = {
+  financial_periods: "financial",
+  funnel_snapshots: "funnel",
+  products: "products",
+  campaigns: "marketing",
+};
+
+/** Domínios de dado traduzidos — usado tanto pelo painel de exportação
+ * quanto pelo assistente de importação (`import-wizard.tsx`). */
+export function useDataDomains(): DataDomain[] {
+  const t = useTranslations("common.dataDomains");
+  return DATA_DOMAIN_KEYS.map((d) => ({ ...d, label: t(DOMAIN_LABEL_KEY[d.key]) }));
+}

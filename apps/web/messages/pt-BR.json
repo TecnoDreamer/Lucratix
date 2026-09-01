@@ -16,17 +16,93 @@
       "show": "Mostrar senha",
       "hide": "Ocultar senha",
       "capsLockOn": "Caps Lock está ativado."
+    },
+    "seriesChart": {
+      "defaultLabel": "Evolução mensal",
+      "labelWithMetric": "{label} — evolução mensal",
+      "labelNoData": "{chartLabel}: sem dados suficientes no período",
+      "noData": "Sem dados suficientes no período.",
+      "target": "Meta",
+      "targetValue": "meta: {value}",
+      "tableCaption": "{chartLabel}, por mês",
+      "month": "Mês",
+      "value": "Valor",
+      "noDataCell": "sem dado",
+      "noTarget": "sem meta"
+    },
+    "dateRangeFilter": {
+      "period": "Período",
+      "invalidRange": "A data inicial não pode ser depois da data final.",
+      "presets": {
+        "currentMonth": "Este mês",
+        "previousMonth": "Mês anterior",
+        "last3Months": "Últimos 3 meses",
+        "last6Months": "Últimos 6 meses",
+        "currentQuarter": "Este trimestre",
+        "currentYear": "Este ano",
+        "custom": "Personalizado"
+      },
+      "from": "De",
+      "to": "Até"
+    },
+    "dataDomains": {
+      "financial": "Financeiro",
+      "funnel": "Funil",
+      "products": "Produtos",
+      "marketing": "Marketing"
+    },
+    "exportPanel": {
+      "title": "Exportar dados",
+      "description": "Baixe os dados desta empresa em CSV, Excel ou JSON.",
+      "data": "Dados",
+      "dataAriaLabel": "Dados a exportar",
+      "format": "Formato",
+      "formatAriaLabel": "Formato de exportação",
+      "filterByDate": "Filtrar por período (padrão: todos os períodos)",
+      "from": "De",
+      "to": "Até",
+      "invalidRange": "A data inicial não pode ser depois da data final.",
+      "exportError": "Não foi possível exportar os dados.",
+      "exporting": "Exportando...",
+      "export": "Exportar"
+    },
+    "metricHelp": {
+      "lowerIsBetter": "Menor é melhor",
+      "higherIsBetter": "Maior é melhor",
+      "seeFullExplanation": "Ver explicação completa →",
+      "learnMoreAbout": "Saiba mais sobre {name}"
     }
   },
   "workspace": {
     "quickAccessCards": {
-      "analytics": { "title": "Analytics", "description": "Acompanhe métricas, tendências e desempenho." },
-      "financials": { "title": "Financeiro", "description": "Visualize receitas, custos e indicadores financeiros." },
-      "marketing": { "title": "Marketing", "description": "Acompanhe campanhas, canais e performance." },
-      "funnel": { "title": "Funil", "description": "Analise conversões e etapas do funil." },
-      "products": { "title": "Produtos", "description": "Consulte produtos, serviços e desempenho." },
-      "experiments": { "title": "Experimentos", "description": "Acompanhe testes, hipóteses e resultados." },
-      "central-de-dados": { "title": "Central de Dados", "description": "Importe e exporte dados em massa (CSV, Excel, JSON)." }
+      "analytics": {
+        "title": "Analytics",
+        "description": "Acompanhe métricas, tendências e desempenho."
+      },
+      "financials": {
+        "title": "Financeiro",
+        "description": "Visualize receitas, custos e indicadores financeiros."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Acompanhe campanhas, canais e performance."
+      },
+      "funnel": {
+        "title": "Funil",
+        "description": "Analise conversões e etapas do funil."
+      },
+      "products": {
+        "title": "Produtos",
+        "description": "Consulte produtos, serviços e desempenho."
+      },
+      "experiments": {
+        "title": "Experimentos",
+        "description": "Acompanhe testes, hipóteses e resultados."
+      },
+      "central-de-dados": {
+        "title": "Central de Dados",
+        "description": "Importe e exporte dados em massa (CSV, Excel, JSON)."
+      }
     }
   },
   "account": {
@@ -36,7 +112,11 @@
       "title": "Aparência",
       "description": "Escolha como o tema claro/escuro se comporta neste dispositivo.",
       "radiogroupLabel": "Tema",
-      "options": { "system": "Sistema", "light": "Claro", "dark": "Escuro" }
+      "options": {
+        "system": "Sistema",
+        "light": "Claro",
+        "dark": "Escuro"
+      }
     },
     "language": {
       "title": "Idioma",
@@ -99,16 +179,46 @@
       ],
       "featuresTitle": "Principais funcionalidades",
       "features": [
-        { "title": "Dashboard", "text": "Panorama do cliente em um só lugar: KPIs principais e comparação automática com o período anterior." },
-        { "title": "Analytics", "text": "Visão executiva e de marketing por intervalo de datas livre, com ROAS, ROI, CTR, CPC, CPM, CPL e CPA." },
-        { "title": "Produtos", "text": "Catálogo de produtos por cliente, com margem calculada a partir da lista de preços cadastrada." },
-        { "title": "Financeiro", "text": "Receita, custo e lucro por período — a base de tudo o que aparece no dashboard e nos relatórios." },
-        { "title": "Marketing", "text": "Campanhas por canal, com investimento e retorno rastreados campanha a campanha." },
-        { "title": "Funil", "text": "Da impressão à recompra: cada etapa do funil do cliente, com a taxa de conversão entre elas." },
-        { "title": "Experimentos", "text": "Testes de CRO com significância estatística real, não uma impressão sobre qual variante \"parece\" melhor." },
-        { "title": "Relatório", "text": "Relatório executivo pronto para apresentar ao cliente, com exportação em PDF pela função de impressão do navegador." },
-        { "title": "Auditoria", "text": "Histórico de quem alterou o quê e quando, por organização." },
-        { "title": "Glossário", "text": "Todas as métricas do sistema explicadas em detalhe, com fórmula e exemplo — sem sigla misteriosa." }
+        {
+          "title": "Dashboard",
+          "text": "Panorama do cliente em um só lugar: KPIs principais e comparação automática com o período anterior."
+        },
+        {
+          "title": "Analytics",
+          "text": "Visão executiva e de marketing por intervalo de datas livre, com ROAS, ROI, CTR, CPC, CPM, CPL e CPA."
+        },
+        {
+          "title": "Produtos",
+          "text": "Catálogo de produtos por cliente, com margem calculada a partir da lista de preços cadastrada."
+        },
+        {
+          "title": "Financeiro",
+          "text": "Receita, custo e lucro por período — a base de tudo o que aparece no dashboard e nos relatórios."
+        },
+        {
+          "title": "Marketing",
+          "text": "Campanhas por canal, com investimento e retorno rastreados campanha a campanha."
+        },
+        {
+          "title": "Funil",
+          "text": "Da impressão à recompra: cada etapa do funil do cliente, com a taxa de conversão entre elas."
+        },
+        {
+          "title": "Experimentos",
+          "text": "Testes de CRO com significância estatística real, não uma impressão sobre qual variante \"parece\" melhor."
+        },
+        {
+          "title": "Relatório",
+          "text": "Relatório executivo pronto para apresentar ao cliente, com exportação em PDF pela função de impressão do navegador."
+        },
+        {
+          "title": "Auditoria",
+          "text": "Histórico de quem alterou o quê e quando, por organização."
+        },
+        {
+          "title": "Glossário",
+          "text": "Todas as métricas do sistema explicadas em detalhe, com fórmula e exemplo — sem sigla misteriosa."
+        }
       ],
       "strengthsTitle": "Pontos fortes",
       "strengths": [
@@ -121,20 +231,71 @@
       ],
       "howItWorksTitle": "Como funciona",
       "steps": [
-        { "title": "Crie sua conta", "text": "Nome, e-mail e senha — o cadastro é livre, sem necessidade de convite." },
-        { "title": "Cadastre sua primeira empresa", "text": "Cada cliente que você atende vira uma organização isolada dentro da Lucratix." },
-        { "title": "Registre os dados do cliente", "text": "Financeiro, campanhas de marketing, funil e produtos — a base de tudo o que vem depois." },
-        { "title": "Acompanhe dashboard e Analytics", "text": "Com comparação automática contra o período anterior daquele mesmo cliente." },
-        { "title": "Gere o relatório executivo", "text": "Leve o resultado pronto, em PDF, para a próxima conversa com o cliente." }
+        {
+          "title": "Crie sua conta",
+          "text": "Nome, e-mail e senha — o cadastro é livre, sem necessidade de convite."
+        },
+        {
+          "title": "Cadastre sua primeira empresa",
+          "text": "Cada cliente que você atende vira uma organização isolada dentro da Lucratix."
+        },
+        {
+          "title": "Registre os dados do cliente",
+          "text": "Financeiro, campanhas de marketing, funil e produtos — a base de tudo o que vem depois."
+        },
+        {
+          "title": "Acompanhe dashboard e Analytics",
+          "text": "Com comparação automática contra o período anterior daquele mesmo cliente."
+        },
+        {
+          "title": "Gere o relatório executivo",
+          "text": "Leve o resultado pronto, em PDF, para a próxima conversa com o cliente."
+        }
       ],
       "techTitle": "Tecnologias e ferramentas",
       "techSubtitle": "Para quem quer saber o que está por baixo do capô.",
       "techGroups": [
-        { "title": "Frontend", "items": ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"] },
-        { "title": "Backend", "items": ["FastAPI", "SQLAlchemy 2.0", "Alembic"] },
-        { "title": "Banco de dados", "items": ["PostgreSQL"] },
-        { "title": "Segurança", "items": ["JWT", "Hash de senha com Argon2", "Sessão única por conta"] },
-        { "title": "Qualidade e testes", "items": ["pytest", "Vitest", "Playwright", "ruff", "mypy"] }
+        {
+          "title": "Frontend",
+          "items": [
+            "Next.js 16",
+            "React 19",
+            "TypeScript",
+            "Tailwind CSS v4"
+          ]
+        },
+        {
+          "title": "Backend",
+          "items": [
+            "FastAPI",
+            "SQLAlchemy 2.0",
+            "Alembic"
+          ]
+        },
+        {
+          "title": "Banco de dados",
+          "items": [
+            "PostgreSQL"
+          ]
+        },
+        {
+          "title": "Segurança",
+          "items": [
+            "JWT",
+            "Hash de senha com Argon2",
+            "Sessão única por conta"
+          ]
+        },
+        {
+          "title": "Qualidade e testes",
+          "items": [
+            "pytest",
+            "Vitest",
+            "Playwright",
+            "ruff",
+            "mypy"
+          ]
+        }
       ],
       "glossaryTitle": "Glossário",
       "glossarySubtitle": "Os termos usados nesta página, explicados em uma frase. O glossário completo de métricas (ROAS, CAC, LTV e as demais) fica disponível dentro da conta, na seção Glossário de cada organização.",
@@ -374,6 +535,50 @@
       "cpm": "CPM",
       "cpl": "CPL",
       "cpa": "CPA"
+    },
+    "correlationPanel": {
+      "title": "Correlação entre métricas",
+      "description": "Compara duas métricas mês a mês no período selecionado acima. Correlação mostra que duas métricas se movem juntas — nunca que uma causa a outra.",
+      "metricX": "Métrica X",
+      "metricY": "Métrica Y",
+      "genericError": "Não foi possível calcular a correlação.",
+      "strength": {
+        "strong": "forte",
+        "moderate": "moderada",
+        "weak": "fraca",
+        "veryWeak": "muito fraca"
+      },
+      "direction": {
+        "positive": "positiva",
+        "negative": "negativa"
+      },
+      "correlationLabel": "Correlação {strength} {direction}",
+      "noCorrelation": "Sem correlação",
+      "monthsUsed": "{count, plural, one {# mês} other {# meses}} com as duas métricas no período."
+    },
+    "correlationChart": {
+      "scatterLabel": "Dispersão entre {xLabel} e {yLabel}",
+      "scatterLabelNoData": "{chartLabel}: sem meses com as duas métricas no período",
+      "noMonths": "Sem meses com as duas métricas no período.",
+      "tableCaption": "{chartLabel}, por mês",
+      "month": "Mês",
+      "noData": "sem dado"
+    },
+    "targetsPanel": {
+      "title": "Metas",
+      "description": "Defina uma meta mensal por KPI. Receita e Lucro mostram o progresso somado no período selecionado acima; as demais métricas (razões, não somas) comparam mês a mês no gráfico de evolução.",
+      "metric": "Métrica",
+      "month": "Mês",
+      "target": "Meta",
+      "save": "Salvar meta",
+      "saving": "Salvando...",
+      "loading": "Carregando metas...",
+      "empty": "Nenhuma meta definida ainda.",
+      "removeAriaLabel": "Remover meta de {metric} de {period}",
+      "loadError": "Não foi possível carregar as metas.",
+      "invalidValue": "Informe um valor numérico para a meta.",
+      "saveError": "Não foi possível salvar a meta.",
+      "deleteError": "Não foi possível remover a meta."
     }
   },
   "dashboard": {
@@ -507,7 +712,11 @@
       "Funil completo: impressão até recompra",
       "Experimentos de CRO com significância estatística real"
     ],
-    "kpiLabels": ["Receita", "Margem", "Lucro"],
+    "kpiLabels": [
+      "Receita",
+      "Margem",
+      "Lucro"
+    ],
     "demoDataDisclaimer": "Dados ilustrativos — não refletem uma empresa real."
   },
   "auth": {
@@ -598,6 +807,60 @@
       "errorHintSuffix": "depois de entrar.",
       "learnMorePrefix": "Ainda não conhece a Lucratix?",
       "learnMoreLink": "Conheça a aplicação"
+    }
+  },
+  "centralDeDados": {
+    "importWizard": {
+      "title": "Importar dados",
+      "domainLabel": "Domínio",
+      "acceptedFormats": "Formatos aceitos: CSV, Excel (.xlsx) ou JSON, até 5 MB.",
+      "sending": "Enviando...",
+      "continueButton": "Continuar",
+      "sheetIntro": "{fileName} tem mais de uma aba. Qual aba corresponde a {domainLabel}?",
+      "sheetLabel": "Aba",
+      "cancel": "Cancelar",
+      "uploadError": "Não foi possível enviar o arquivo.",
+      "previewLoadError": "Não foi possível carregar o preview.",
+      "doNotMap": "— não mapear —",
+      "requiredSuffix": " (obrigatório)",
+      "confidenceHigh": "confiança alta",
+      "confidenceMedium": "confiança média",
+      "confidenceLow": "confiança baixa",
+      "confidenceNone": "sem sugestão",
+      "dateFormatLabel": "Formato de data (campo Período)",
+      "dateFormatDMY": "Dia/Mês/Ano (31/12/2026)",
+      "dateFormatMDY": "Mês/Dia/Ano (12/31/2026)",
+      "dateFormatISO": "Ano-Mês-Dia (2026-12-31)",
+      "validating": "Validando...",
+      "missingRequiredField": "Campo obrigatório não mapeado: {fields}.",
+      "incompleteMapping": "Mapeamento incompleto — revise os campos abaixo.",
+      "mappingSaveError": "Não foi possível salvar o mapeamento.",
+      "confirmError": "Não foi possível confirmar a importação.",
+      "errorsLoadError": "Não foi possível carregar os erros.",
+      "rowsSuffix": "{count} linha(s)",
+      "validSuffix": "{count} válida(s)",
+      "duplicateSuffix": "{count} duplicada(s)",
+      "invalidSuffix": "{count} inválida(s)",
+      "statusValid": "válida",
+      "statusInvalid": "inválida",
+      "statusDuplicate": "duplicada",
+      "rowColumn": "Linha",
+      "statusColumn": "Status",
+      "dataColumn": "Dados",
+      "loadMore": "Carregar mais",
+      "loadingEllipsis": "Carregando...",
+      "duplicateRowsLabel": "Linhas duplicadas",
+      "duplicateSkip": "Ignorar (manter o registro já existente)",
+      "duplicateUpdate": "Atualizar o registro já existente",
+      "confirming": "Confirmando...",
+      "confirmImport": "Confirmar importação",
+      "importCompleted": "Importação concluída: {created} criado(s), {updated} atualizado(s), {skipped} ignorado(s)",
+      "invalidPart": ", {count} inválido(s)",
+      "viewErrors": "Ver erros",
+      "fieldColumn": "Campo",
+      "errorColumn": "Erro",
+      "newImport": "Nova importação",
+      "mappingIntroRest": "{hasSheet, select, true { (aba \"{sheetName}\")} other {}} — {rowCount} linha(s). Confirme para qual campo cada coluna do arquivo corresponde."
     }
   }
 }

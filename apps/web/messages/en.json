@@ -16,17 +16,93 @@
       "show": "Show password",
       "hide": "Hide password",
       "capsLockOn": "Caps Lock is on."
+    },
+    "seriesChart": {
+      "defaultLabel": "Monthly evolution",
+      "labelWithMetric": "{label} — monthly evolution",
+      "labelNoData": "{chartLabel}: not enough data in the period",
+      "noData": "Not enough data in the period.",
+      "target": "Target",
+      "targetValue": "target: {value}",
+      "tableCaption": "{chartLabel}, by month",
+      "month": "Month",
+      "value": "Value",
+      "noDataCell": "no data",
+      "noTarget": "no target"
+    },
+    "dateRangeFilter": {
+      "period": "Period",
+      "invalidRange": "The start date cannot be after the end date.",
+      "presets": {
+        "currentMonth": "This month",
+        "previousMonth": "Previous month",
+        "last3Months": "Last 3 months",
+        "last6Months": "Last 6 months",
+        "currentQuarter": "This quarter",
+        "currentYear": "This year",
+        "custom": "Custom"
+      },
+      "from": "From",
+      "to": "To"
+    },
+    "dataDomains": {
+      "financial": "Financial",
+      "funnel": "Funnel",
+      "products": "Products",
+      "marketing": "Marketing"
+    },
+    "exportPanel": {
+      "title": "Export data",
+      "description": "Download this company's data in CSV, Excel, or JSON.",
+      "data": "Data",
+      "dataAriaLabel": "Data to export",
+      "format": "Format",
+      "formatAriaLabel": "Export format",
+      "filterByDate": "Filter by period (default: all periods)",
+      "from": "From",
+      "to": "To",
+      "invalidRange": "The start date cannot be after the end date.",
+      "exportError": "Could not export the data.",
+      "exporting": "Exporting...",
+      "export": "Export"
+    },
+    "metricHelp": {
+      "lowerIsBetter": "Lower is better",
+      "higherIsBetter": "Higher is better",
+      "seeFullExplanation": "See full explanation →",
+      "learnMoreAbout": "Learn more about {name}"
     }
   },
   "workspace": {
     "quickAccessCards": {
-      "analytics": { "title": "Analytics", "description": "Track metrics, trends, and performance." },
-      "financials": { "title": "Financials", "description": "View revenue, costs, and financial indicators." },
-      "marketing": { "title": "Marketing", "description": "Track campaigns, channels, and performance." },
-      "funnel": { "title": "Funnel", "description": "Analyze conversions and funnel stages." },
-      "products": { "title": "Products", "description": "Browse products, services, and performance." },
-      "experiments": { "title": "Experiments", "description": "Track tests, hypotheses, and results." },
-      "central-de-dados": { "title": "Data Hub", "description": "Import and export bulk data (CSV, Excel, JSON)." }
+      "analytics": {
+        "title": "Analytics",
+        "description": "Track metrics, trends, and performance."
+      },
+      "financials": {
+        "title": "Financials",
+        "description": "View revenue, costs, and financial indicators."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Track campaigns, channels, and performance."
+      },
+      "funnel": {
+        "title": "Funnel",
+        "description": "Analyze conversions and funnel stages."
+      },
+      "products": {
+        "title": "Products",
+        "description": "Browse products, services, and performance."
+      },
+      "experiments": {
+        "title": "Experiments",
+        "description": "Track tests, hypotheses, and results."
+      },
+      "central-de-dados": {
+        "title": "Data Hub",
+        "description": "Import and export bulk data (CSV, Excel, JSON)."
+      }
     }
   },
   "account": {
@@ -36,7 +112,11 @@
       "title": "Appearance",
       "description": "Choose how the light/dark theme behaves on this device.",
       "radiogroupLabel": "Theme",
-      "options": { "system": "System", "light": "Light", "dark": "Dark" }
+      "options": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      }
     },
     "language": {
       "title": "Language",
@@ -99,16 +179,46 @@
       ],
       "featuresTitle": "Main features",
       "features": [
-        { "title": "Dashboard", "text": "A client's whole picture in one place: main KPIs and automatic comparison against the previous period." },
-        { "title": "Analytics", "text": "Executive and marketing view over any date range, with ROAS, ROI, CTR, CPC, CPM, CPL, and CPA." },
-        { "title": "Products", "text": "Per-client product catalog, with margin calculated from the registered price list." },
-        { "title": "Financials", "text": "Revenue, cost, and profit by period — the foundation for everything shown on the dashboard and in reports." },
-        { "title": "Marketing", "text": "Campaigns by channel, with investment and return tracked campaign by campaign." },
-        { "title": "Funnel", "text": "From impression to repeat purchase: every stage of the client's funnel, with the conversion rate between them." },
-        { "title": "Experiments", "text": "CRO tests with real statistical significance, not a gut feeling about which variant \"seems\" better." },
-        { "title": "Report", "text": "An executive report ready to present to the client, with PDF export via the browser's print function." },
-        { "title": "Audit log", "text": "History of who changed what and when, per organization." },
-        { "title": "Glossary", "text": "Every metric in the system explained in detail, with formula and example — no mysterious acronyms." }
+        {
+          "title": "Dashboard",
+          "text": "A client's whole picture in one place: main KPIs and automatic comparison against the previous period."
+        },
+        {
+          "title": "Analytics",
+          "text": "Executive and marketing view over any date range, with ROAS, ROI, CTR, CPC, CPM, CPL, and CPA."
+        },
+        {
+          "title": "Products",
+          "text": "Per-client product catalog, with margin calculated from the registered price list."
+        },
+        {
+          "title": "Financials",
+          "text": "Revenue, cost, and profit by period — the foundation for everything shown on the dashboard and in reports."
+        },
+        {
+          "title": "Marketing",
+          "text": "Campaigns by channel, with investment and return tracked campaign by campaign."
+        },
+        {
+          "title": "Funnel",
+          "text": "From impression to repeat purchase: every stage of the client's funnel, with the conversion rate between them."
+        },
+        {
+          "title": "Experiments",
+          "text": "CRO tests with real statistical significance, not a gut feeling about which variant \"seems\" better."
+        },
+        {
+          "title": "Report",
+          "text": "An executive report ready to present to the client, with PDF export via the browser's print function."
+        },
+        {
+          "title": "Audit log",
+          "text": "History of who changed what and when, per organization."
+        },
+        {
+          "title": "Glossary",
+          "text": "Every metric in the system explained in detail, with formula and example — no mysterious acronyms."
+        }
       ],
       "strengthsTitle": "Strengths",
       "strengths": [
@@ -121,20 +231,71 @@
       ],
       "howItWorksTitle": "How it works",
       "steps": [
-        { "title": "Create your account", "text": "Name, email, and password — sign-up is open, no invitation required." },
-        { "title": "Register your first company", "text": "Every client you manage becomes an isolated organization inside Lucratix." },
-        { "title": "Record the client's data", "text": "Financials, marketing campaigns, funnel, and products — the foundation for everything that comes next." },
-        { "title": "Track dashboard and Analytics", "text": "With automatic comparison against that same client's previous period." },
-        { "title": "Generate the executive report", "text": "Bring the finished result, as a PDF, to your next conversation with the client." }
+        {
+          "title": "Create your account",
+          "text": "Name, email, and password — sign-up is open, no invitation required."
+        },
+        {
+          "title": "Register your first company",
+          "text": "Every client you manage becomes an isolated organization inside Lucratix."
+        },
+        {
+          "title": "Record the client's data",
+          "text": "Financials, marketing campaigns, funnel, and products — the foundation for everything that comes next."
+        },
+        {
+          "title": "Track dashboard and Analytics",
+          "text": "With automatic comparison against that same client's previous period."
+        },
+        {
+          "title": "Generate the executive report",
+          "text": "Bring the finished result, as a PDF, to your next conversation with the client."
+        }
       ],
       "techTitle": "Technologies and tools",
       "techSubtitle": "For anyone who wants to know what's under the hood.",
       "techGroups": [
-        { "title": "Frontend", "items": ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"] },
-        { "title": "Backend", "items": ["FastAPI", "SQLAlchemy 2.0", "Alembic"] },
-        { "title": "Database", "items": ["PostgreSQL"] },
-        { "title": "Security", "items": ["JWT", "Password hashing with Argon2", "Single session per account"] },
-        { "title": "Quality and testing", "items": ["pytest", "Vitest", "Playwright", "ruff", "mypy"] }
+        {
+          "title": "Frontend",
+          "items": [
+            "Next.js 16",
+            "React 19",
+            "TypeScript",
+            "Tailwind CSS v4"
+          ]
+        },
+        {
+          "title": "Backend",
+          "items": [
+            "FastAPI",
+            "SQLAlchemy 2.0",
+            "Alembic"
+          ]
+        },
+        {
+          "title": "Database",
+          "items": [
+            "PostgreSQL"
+          ]
+        },
+        {
+          "title": "Security",
+          "items": [
+            "JWT",
+            "Password hashing with Argon2",
+            "Single session per account"
+          ]
+        },
+        {
+          "title": "Quality and testing",
+          "items": [
+            "pytest",
+            "Vitest",
+            "Playwright",
+            "ruff",
+            "mypy"
+          ]
+        }
       ],
       "glossaryTitle": "Glossary",
       "glossarySubtitle": "The terms used on this page, explained in one sentence. The full metrics glossary (ROAS, CAC, LTV, and the rest) is available inside the account, in each organization's Glossary section.",
@@ -374,6 +535,50 @@
       "cpm": "CPM",
       "cpl": "CPL",
       "cpa": "CPA"
+    },
+    "correlationPanel": {
+      "title": "Correlation between metrics",
+      "description": "Compares two metrics month by month in the period selected above. Correlation shows that two metrics move together — never that one causes the other.",
+      "metricX": "Metric X",
+      "metricY": "Metric Y",
+      "genericError": "Could not calculate the correlation.",
+      "strength": {
+        "strong": "strong",
+        "moderate": "moderate",
+        "weak": "weak",
+        "veryWeak": "very weak"
+      },
+      "direction": {
+        "positive": "positive",
+        "negative": "negative"
+      },
+      "correlationLabel": "{strength} {direction} correlation",
+      "noCorrelation": "No correlation",
+      "monthsUsed": "{count, plural, one {# month} other {# months}} with both metrics in the period."
+    },
+    "correlationChart": {
+      "scatterLabel": "Scatter plot between {xLabel} and {yLabel}",
+      "scatterLabelNoData": "{chartLabel}: no months with both metrics in the period",
+      "noMonths": "No months with both metrics in the period.",
+      "tableCaption": "{chartLabel}, by month",
+      "month": "Month",
+      "noData": "no data"
+    },
+    "targetsPanel": {
+      "title": "Targets",
+      "description": "Set a monthly target per KPI. Revenue and Profit show the progress summed over the period selected above; the other metrics (ratios, not sums) compare month by month in the evolution chart.",
+      "metric": "Metric",
+      "month": "Month",
+      "target": "Target",
+      "save": "Save target",
+      "saving": "Saving...",
+      "loading": "Loading targets...",
+      "empty": "No targets set yet.",
+      "removeAriaLabel": "Remove {metric} target for {period}",
+      "loadError": "Could not load the targets.",
+      "invalidValue": "Enter a numeric value for the target.",
+      "saveError": "Could not save the target.",
+      "deleteError": "Could not remove the target."
     }
   },
   "dashboard": {
@@ -507,7 +712,11 @@
       "Full funnel: impression to repeat purchase",
       "CRO experiments with real statistical significance"
     ],
-    "kpiLabels": ["Revenue", "Margin", "Profit"],
+    "kpiLabels": [
+      "Revenue",
+      "Margin",
+      "Profit"
+    ],
     "demoDataDisclaimer": "Illustrative data — does not reflect a real company."
   },
   "auth": {
@@ -598,6 +807,60 @@
       "errorHintSuffix": "after signing in.",
       "learnMorePrefix": "Don't know Lucratix yet?",
       "learnMoreLink": "Learn about the app"
+    }
+  },
+  "centralDeDados": {
+    "importWizard": {
+      "title": "Import data",
+      "domainLabel": "Domain",
+      "acceptedFormats": "Accepted formats: CSV, Excel (.xlsx), or JSON, up to 5 MB.",
+      "sending": "Sending...",
+      "continueButton": "Continue",
+      "sheetIntro": "{fileName} has more than one sheet. Which sheet corresponds to {domainLabel}?",
+      "sheetLabel": "Sheet",
+      "cancel": "Cancel",
+      "uploadError": "Could not send the file.",
+      "previewLoadError": "Could not load the preview.",
+      "doNotMap": "— do not map —",
+      "requiredSuffix": " (required)",
+      "confidenceHigh": "high confidence",
+      "confidenceMedium": "medium confidence",
+      "confidenceLow": "low confidence",
+      "confidenceNone": "no suggestion",
+      "dateFormatLabel": "Date format (Period field)",
+      "dateFormatDMY": "Day/Month/Year (31/12/2026)",
+      "dateFormatMDY": "Month/Day/Year (12/31/2026)",
+      "dateFormatISO": "Year-Month-Day (2026-12-31)",
+      "validating": "Validating...",
+      "missingRequiredField": "Required field not mapped: {fields}.",
+      "incompleteMapping": "Incomplete mapping — review the fields below.",
+      "mappingSaveError": "Could not save the mapping.",
+      "confirmError": "Could not confirm the import.",
+      "errorsLoadError": "Could not load the errors.",
+      "rowsSuffix": "{count} row(s)",
+      "validSuffix": "{count} valid",
+      "duplicateSuffix": "{count} duplicate",
+      "invalidSuffix": "{count} invalid",
+      "statusValid": "valid",
+      "statusInvalid": "invalid",
+      "statusDuplicate": "duplicate",
+      "rowColumn": "Row",
+      "statusColumn": "Status",
+      "dataColumn": "Data",
+      "loadMore": "Load more",
+      "loadingEllipsis": "Loading...",
+      "duplicateRowsLabel": "Duplicate rows",
+      "duplicateSkip": "Skip (keep the existing record)",
+      "duplicateUpdate": "Update the existing record",
+      "confirming": "Confirming...",
+      "confirmImport": "Confirm import",
+      "importCompleted": "Import completed: {created} created, {updated} updated, {skipped} skipped",
+      "invalidPart": ", {count} invalid",
+      "viewErrors": "View errors",
+      "fieldColumn": "Field",
+      "errorColumn": "Error",
+      "newImport": "New import",
+      "mappingIntroRest": "{hasSheet, select, true { (sheet \"{sheetName}\")} other {}} — {rowCount} row(s). Confirm which field each column of the file corresponds to."
     }
   }
 }

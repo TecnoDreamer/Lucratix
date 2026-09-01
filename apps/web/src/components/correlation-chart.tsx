@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { formatCompactNumber, formatMonthYear, formatPercentage } from "@/lib/formatters";
 import type { CorrelationPoint } from "@/lib/metrics";
 
@@ -28,20 +29,21 @@ function formatAxisValue(value: number, percent?: boolean): string {
  * `sr-only`, marcados "sem dado" — nunca silenciosamente descartados.
  */
 export function CorrelationChart({ points, xLabel, yLabel, xPercent, yPercent }: CorrelationChartProps) {
+  const t = useTranslations("analytics.correlationChart");
   const present = points.filter(
     (p): p is { period: string; x: number; y: number } => p.x !== null && p.y !== null
   );
-  const chartLabel = `Dispersão entre ${xLabel} e ${yLabel}`;
+  const chartLabel = t("scatterLabel", { xLabel, yLabel });
 
   if (present.length === 0) {
     return (
       <div
         role="img"
-        aria-label={`${chartLabel}: sem meses com as duas métricas no período`}
+        aria-label={t("scatterLabelNoData", { chartLabel })}
         className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
         style={{ height: HEIGHT }}
       >
-        Sem meses com as duas métricas no período.
+        {t("noMonths")}
       </div>
     );
   }
@@ -118,10 +120,10 @@ export function CorrelationChart({ points, xLabel, yLabel, xPercent, yPercent }:
       </svg>
 
       <table className="sr-only">
-        <caption>{chartLabel}, por mês</caption>
+        <caption>{t("tableCaption", { chartLabel })}</caption>
         <thead>
           <tr>
-            <th scope="col">Mês</th>
+            <th scope="col">{t("month")}</th>
             <th scope="col">{xLabel}</th>
             <th scope="col">{yLabel}</th>
           </tr>
@@ -130,8 +132,8 @@ export function CorrelationChart({ points, xLabel, yLabel, xPercent, yPercent }:
           {points.map((p) => (
             <tr key={p.period}>
               <td>{formatMonthYear(p.period)}</td>
-              <td>{p.x === null ? "sem dado" : formatAxisValue(p.x, xPercent)}</td>
-              <td>{p.y === null ? "sem dado" : formatAxisValue(p.y, yPercent)}</td>
+              <td>{p.x === null ? t("noData") : formatAxisValue(p.x, xPercent)}</td>
+              <td>{p.y === null ? t("noData") : formatAxisValue(p.y, yPercent)}</td>
             </tr>
           ))}
         </tbody>

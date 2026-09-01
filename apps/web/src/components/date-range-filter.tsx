@@ -1,13 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
-  DATE_RANGE_PRESETS,
+  DATE_RANGE_PRESET_IDS,
   resolvePreset,
   type DateRange,
   type DateRangePresetId,
 } from "@/lib/date-ranges";
 import { input as inputClass, label as labelClass } from "@/lib/ui";
+
+const PRESET_LABEL_KEY: Record<DateRangePresetId, string> = {
+  current_month: "currentMonth",
+  previous_month: "previousMonth",
+  last_3_months: "last3Months",
+  last_6_months: "last6Months",
+  current_quarter: "currentQuarter",
+  current_year: "currentYear",
+  custom: "custom",
+};
 
 /**
  * Filtro de intervalo de datas com presets — seção 7 do prompt de BI.
@@ -21,6 +32,7 @@ export function DateRangeFilter({
   value: DateRange;
   onChange: (range: DateRange) => void;
 }) {
+  const t = useTranslations("common.dateRangeFilter");
   const [preset, setPreset] = useState<DateRangePresetId>("current_month");
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +46,7 @@ export function DateRangeFilter({
   function handleCustomChange(field: "dateFrom" | "dateTo", raw: string) {
     const next = { ...value, [field]: raw };
     if (next.dateFrom && next.dateTo && next.dateFrom > next.dateTo) {
-      setError("A data inicial não pode ser depois da data final.");
+      setError(t("invalidRange"));
       return;
     }
     setError(null);
@@ -43,8 +55,8 @@ export function DateRangeFilter({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Período">
-        {DATE_RANGE_PRESETS.map(({ id, label }) => (
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("period")}>
+        {DATE_RANGE_PRESET_IDS.map((id) => (
           <button
             key={id}
             type="button"
@@ -56,7 +68,7 @@ export function DateRangeFilter({
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             }`}
           >
-            {label}
+            {t(`presets.${PRESET_LABEL_KEY[id]}`)}
           </button>
         ))}
       </div>
@@ -64,7 +76,7 @@ export function DateRangeFilter({
       {preset === "custom" && (
         <div className="flex flex-wrap items-end gap-3">
           <label className={labelClass}>
-            De
+            {t("from")}
             <input
               type="date"
               value={value.dateFrom}
@@ -73,7 +85,7 @@ export function DateRangeFilter({
             />
           </label>
           <label className={labelClass}>
-            Até
+            {t("to")}
             <input
               type="date"
               value={value.dateTo}
