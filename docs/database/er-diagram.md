@@ -18,6 +18,7 @@ erDiagram
     USERS ||--o{ SESSIONS : has
     USERS ||--o{ USER_WORKSPACE_PREFERENCES : has
     ORGANIZATIONS ||--o{ USER_WORKSPACE_PREFERENCES : has
+    USERS ||--o{ ORGANIZATIONS : closes
 
     USERS {
         uuid id PK
@@ -36,6 +37,11 @@ erDiagram
         string currency
         string timezone
         date tracking_start_date
+        string status
+        timestamptz closed_at
+        uuid closed_by FK
+        string closure_reason
+        string logo_url
         timestamptz created_at
     }
     MEMBERSHIPS {
@@ -162,5 +168,7 @@ erDiagram
 ```
 
 > **Nota (2026-08-27, auditoria de banco):** `METRIC_DEFINITIONS`/`METRIC_SNAPSHOTS` apareciam neste diagrama em versões anteriores, mas nunca foram implementadas como tabela — `app/modules/metrics/engine.py` calcula cada métrica (CAC, ROAS, conversão etc.) sob demanda a partir de `financial_periods`/`funnel_snapshots`/`campaigns`, sem persistir um snapshot por métrica/período. Removidas daqui para o diagrama refletir o schema real; se a persistência de métricas calculadas vier a ser implementada, ela volta para este diagrama nesse momento, não antes. `SESSIONS` e `PASSWORD_RESET_TOKENS` (existentes desde as migrations 0006/0007) foram adicionadas por estarem ausentes.
+
+> **Nota (2026-08-31, ciclo de vida de organização):** `ORGANIZATIONS` ganhou `status` (`active`/`frozen`), `closed_at`, `closed_by` (FK para `USERS`, `SET NULL` se o usuário for removido — não invalida o registro de quando/por quem), `closure_reason` e `logo_url` (migration `0014_organization_lifecycle_logo`). Nenhuma linha de `ORGANIZATIONS` é apagada por este fluxo — "encerrar um cliente" é sempre uma mudança de `status`, nunca um `DELETE`. Ver [ADR-0008](../adr/0008-organizacoes-nunca-deletar.md) e [organizations/CICLO_DE_VIDA.md](../organizations/CICLO_DE_VIDA.md).
 
 Ver decisões de constraint/índice em [schema-notes.md](schema-notes.md) e estratégia de isolamento em [ADR-0003](../adr/0003-estrategia-multi-tenancy.md).

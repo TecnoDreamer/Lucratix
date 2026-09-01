@@ -2,6 +2,29 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-09-01
+
+### Added (organizações: busca/paginação, ciclo de vida, logotipo)
+- "Suas empresas" agora busca e pagina no servidor (`GET /api/v1/organizations?search=&status=&limit=&offset=`,
+  formato `{items, total, limit, offset}` — antes devolvia sempre a lista inteira do usuário, sem filtro,
+  o que não escala para centenas de empresas). Abas Ativas/Encerradas/Todas, busca com debounce,
+  "Carregar mais". Ver `docs/organizations/BUSCA_PAGINACAO.md`.
+- Ciclo de vida de organização: `status` (`active`/`frozen`) + congelar/reativar
+  (`POST /organizations/{id}/freeze`, `/reactivate`) — encerrar um cliente **nunca apaga histórico**
+  (financeiro, marketing, funil, produtos, experimentos, metas, importações, auditoria continuam
+  intactos e legíveis). Bloqueio de escrita numa empresa congelada aplicado num único ponto
+  (`core/deps.py::get_organization_context`), cobrindo automaticamente todo módulo de domínio existente
+  sem alteração neles. Leitura nunca é bloqueada — deep link para empresa encerrada nunca vira 404. Ver
+  `docs/adr/0008-organizacoes-nunca-deletar.md` e `docs/organizations/CICLO_DE_VIDA.md`.
+- Logotipo por empresa via Cloudinary (`POST`/`DELETE /organizations/{id}/logo`), sem dependência nova
+  (upload assinado via `data:` URI base64 + `urlencode`, stdlib). Validação de conteúdo real (assinatura
+  de bytes, nunca extensão declarada), SVG rejeitado, 2 MB máximo, redimensionamento no próprio upload.
+  Autorização: dono/admin da empresa **ou** Super Admin da plataforma (nova exceção documentada em
+  `docs/security/ACCESS_CONTROL.md`). Nova tela `organizations/[id]/configuracoes` — não existia nenhuma
+  tela de edição de empresa antes desta rodada. Ver `docs/organizations/LOGOTIPO.md`.
+- `.env.example`/`docker-compose.yml` ganharam `CLOUDINARY_CLOUD_NAME`/`_API_KEY`/`_API_SECRET` (vazio =
+  upload desabilitado, mesmo padrão do `RESEND_API_KEY`).
+
 ## 2026-08-31
 
 ### Added (workspace: navegação e acessos rápidos)
