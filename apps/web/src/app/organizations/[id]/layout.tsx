@@ -7,6 +7,7 @@ import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
 import { hasMinimumRole, roleLabel } from "@/lib/roles";
+import { rememberActiveOrganizationId } from "@/lib/active-organization";
 import { OrganizationProvider } from "@/contexts/organization-context";
 import {
   IconArrowLeft,
@@ -82,7 +83,13 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
     api
       .get<Organization>(`/api/v1/organizations/${id}`)
       .then((org) => {
-        if (!cancelled) setOrganization(org);
+        if (!cancelled) {
+          setOrganization(org);
+          // So grava depois de confirmar com o backend que o usuario tem
+          // membership ativa nessa organizacao (nunca nas branches de
+          // erro/404 abaixo) — ver lib/active-organization.ts.
+          rememberActiveOrganizationId(id);
+        }
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -216,7 +223,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         </p>
         <nav className="mt-2 flex flex-col gap-0.5">
           <Link
-            href="/conta/configuracoes"
+            href={`/conta/configuracoes?from=${encodeURIComponent(id)}`}
             className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <IconSettings className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300" />

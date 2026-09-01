@@ -1,15 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ApiError } from "@/lib/api";
 import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
-import { card, sectionTitle } from "@/lib/ui";
-import { IconMonitor, IconMoon, IconSettings, IconSun } from "@/components/icons";
+import { buttonPrimary, buttonSecondary, card, label as labelClass, sectionTitle, select as selectClass } from "@/lib/ui";
+import { Alert, EmptyState, Skeleton } from "@/components/ui";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconMonitor,
+  IconMoon,
+  IconRotateCcw,
+  IconSettings,
+  IconSun,
+} from "@/components/icons";
+import { useAccount } from "@/contexts/account-context";
+import { useWorkspacePreferences } from "@/hooks/use-workspace-preferences";
+import { QUICK_ACCESS_CARDS, resolveQuickAccess } from "@/lib/quick-access";
+import { saveQuickAccess, restoreQuickAccessDefaults, type QuickAccessPreferenceItem } from "@/lib/workspace-preferences";
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof IconSun }[] = [
   { value: "system", label: "Sistema", icon: IconMonitor },
   { value: "light", label: "Claro", icon: IconSun },
   { value: "dark", label: "Escuro", icon: IconMoon },
 ];
+
+const CARDS_BY_ID = new Map(QUICK_ACCESS_CARDS.map((c) => [c.id, c]));
 
 export default function AccountSettingsPage() {
   // Comeca em "system" (mesmo valor que o servidor assume) e so le o real
@@ -49,7 +65,7 @@ export default function AccountSettingsPage() {
         </p>
 
         <div role="radiogroup" aria-label="Tema" className="mt-4 grid grid-cols-3 gap-3">
-          {THEME_OPTIONS.map(({ value, label, icon: Icon }) => {
+          {THEME_OPTIONS.map(({ value, label: optionLabel, icon: Icon }) => {
             const selected = theme === value;
             return (
               <button
@@ -65,12 +81,247 @@ export default function AccountSettingsPage() {
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                {label}
+                {optionLabel}
               </button>
             );
           })}
         </div>
       </div>
+
+      <QuickAccessSettingsCard />
+    </div>
+  );
+}
+
+function QuickAccessSettingsCard() {
+  const { organizations, activeOrganization, loading: accountLoading } = useAccount();
+  const [selectedOrgId, setSelectedOrgId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (selectedOrgId) return;
+    const initial = activeOrganization?.id ?? organizations[0]?.id;
+    if (!initial) return;
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) setSelectedOrgId(initial);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeOrganization, organizations, selectedOrgId]);
+
+  const selectedOrg = organizations.find((o) => o.id === selectedOrgId);
+  const { quickAccess, loading: prefLoading, reload } = useWorkspacePreferences(selectedOrgId);
+
+  const resolved = useMemo(
+    () => resolveQuickAccess(selectedOrg?.my_role, quickAccess),
+    [selectedOrg?.my_role, quickAccess]
+  );
+
+  const [items, setItems] = useState<QuickAccessPreferenceItem[] | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    if (prefLoading) return;
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setItems(resolved.map((entry) => ({ id: entry.card.id, enabled: entry.enabled })));
+      setDirty(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // resolved é recomputado a cada render (nova identidade de array); o
+    // gatilho real de re-seed é o par (organização selecionada, preferência
+    // recém-carregada), não a referência do array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefLoading, selectedOrgId]);
+
+  function toggle(id: string) {
+    if (!items) return;
+    setItems(items.map((it) => (it.id === id ? { ...it, enabled: !it.enabled } : it)));
+    setDirty(true);
+  }
+
+  function move(id: string, direction: -1 | 1) {
+    if (!items) return;
+    const index = items.findIndex((it) => it.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= items.length) return;
+    const next = [...items];
+    const tmp = next[index];
+    next[index] = next[target];
+    next[target] = tmp;
+    setItems(next);
+    setDirty(true);
+    const moved = CARDS_BY_ID.get(id);
+    setAnnouncement(`${moved?.title ?? id} movido para a posição ${target + 1} de ${next.length}.`);
+  }
+
+  async function handleSave() {
+    if (!items || !selectedOrgId) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      await saveQuickAccess(selectedOrgId, items);
+      setDirty(false);
+      setAnnouncement("Preferências salvas.");
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError ? err.message : "Não foi possível salvar suas preferências."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRestore() {
+    if (!selectedOrgId || !selectedOrg) return;
+    setRestoring(true);
+    setActionError(null);
+    try {
+      await restoreQuickAccessDefaults(selectedOrgId);
+      const defaults = resolveQuickAccess(selectedOrg.my_role, null).map((entry) => ({
+        id: entry.card.id,
+        enabled: entry.enabled,
+      }));
+      setItems(defaults);
+      setDirty(false);
+      setAnnouncement("Padrão restaurado.");
+      reload();
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError ? err.message : "Não foi possível restaurar o padrão."
+      );
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  return (
+    <div className={`${card} mt-6 p-5`}>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Acessos rápidos</h3>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Escolha quais atalhos aparecem na Home de cada empresa e em qual ordem.
+      </p>
+
+      {!accountLoading && organizations.length === 0 ? (
+        <div className="mt-4">
+          <EmptyState title="Você ainda não faz parte de nenhuma empresa." />
+        </div>
+      ) : (
+        <>
+          {organizations.length > 1 && (
+            <label className={`${labelClass} mt-4`}>
+              Empresa
+              <select
+                className={selectClass}
+                value={selectedOrgId ?? ""}
+                onChange={(e) => setSelectedOrgId(e.target.value)}
+              >
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {organizations.length === 1 && (
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+              Aplicado a {organizations[0].name}.
+            </p>
+          )}
+
+          <div aria-live="polite" className="sr-only">
+            {announcement}
+          </div>
+
+          {prefLoading || !items ? (
+            <div className="mt-4 flex flex-col gap-2">
+              <Skeleton className="h-11 w-full" />
+              <Skeleton className="h-11 w-full" />
+              <Skeleton className="h-11 w-full" />
+            </div>
+          ) : (
+            <ul className="mt-4 flex flex-col gap-2">
+              {items.map((item, index) => {
+                const cardDef = CARDS_BY_ID.get(item.id);
+                if (!cardDef) return null;
+                const Icon = cardDef.icon;
+                return (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 dark:border-slate-800"
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                    <label className="flex flex-1 items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={item.enabled}
+                        onChange={() => toggle(item.id)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
+                      />
+                      Mostrar {cardDef.title}
+                    </label>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        aria-label={`Mover ${cardDef.title} para cima`}
+                        disabled={index === 0}
+                        onClick={() => move(item.id, -1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
+                      >
+                        <IconChevronUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Mover ${cardDef.title} para baixo`}
+                        disabled={index === items.length - 1}
+                        onClick={() => move(item.id, 1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
+                      >
+                        <IconChevronDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {actionError && (
+            <div className="mt-3">
+              <Alert>{actionError}</Alert>
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={!dirty || saving || !items}
+              onClick={() => void handleSave()}
+              className={buttonPrimary}
+            >
+              {saving ? "Salvando..." : "Salvar"}
+            </button>
+            <button
+              type="button"
+              disabled={restoring || !selectedOrg}
+              onClick={() => void handleRestore()}
+              className={`${buttonSecondary} inline-flex items-center gap-1.5`}
+            >
+              <IconRotateCcw className="h-3.5 w-3.5" />
+              {restoring ? "Restaurando..." : "Restaurar padrão"}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
