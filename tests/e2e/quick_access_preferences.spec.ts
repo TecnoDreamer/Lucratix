@@ -20,7 +20,7 @@ test("desmarcar e reordenar acessos rápidos em Configurações reflete na Home,
   await expect(quickAccessSection.getByRole("link", { name: /Financeiro/ })).toBeVisible();
   await expect(quickAccessSection.getByRole("link", { name: /Marketing/ })).toBeVisible();
 
-  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await expect(page.getByLabel("Mostrar Financeiro")).toBeVisible();
 
   // Desmarca Financeiro e move Marketing para cima duas vezes: a lista
@@ -54,7 +54,7 @@ test("desmarcar e reordenar acessos rápidos em Configurações reflete na Home,
   expect(marketingIndex).toBeLessThan(analyticsIndex);
 
   // "Restaurar padrão" devolve os 7 cards na ordem original.
-  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await page.getByRole("button", { name: "Restaurar padrão" }).click();
   await expect(page.getByLabel("Mostrar Financeiro")).toBeChecked();
 

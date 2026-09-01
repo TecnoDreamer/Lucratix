@@ -10,15 +10,19 @@ import { createOrganization, registerAndLogin } from "./helpers";
 test("busca filtra 'Suas empresas' pelo nome", async ({ page }) => {
   await registerAndLogin(page, "org-search-e2e");
 
+  // O campo de busca só aparece a partir de SEARCH_THRESHOLD (6) empresas
+  // (progressive disclosure — ver apps/web/src/app/organizations/page.tsx)
+  // — precisa passar desse número pra exercitar a busca de verdade.
   const uniqueSuffix = Date.now();
+  for (let i = 0; i < 6; i++) {
+    await createOrganization(page, `Empresa Enchimento ${uniqueSuffix} ${i}`);
+  }
   const target = `Empresa Alvo ${uniqueSuffix}`;
-  const other = `Outra Empresa ${uniqueSuffix}`;
   await createOrganization(page, target);
-  await createOrganization(page, other);
 
   await page.getByPlaceholder("Buscar empresa...").fill("Alvo");
   await expect(page.getByRole("link", { name: target })).toBeVisible();
-  await expect(page.getByRole("link", { name: other })).not.toBeVisible();
+  await expect(page.getByRole("link", { name: `Empresa Enchimento ${uniqueSuffix} 0` })).not.toBeVisible();
 });
 
 test("congelar uma empresa mostra o banner e bloqueia escrita; reativar destrava", async ({ page }) => {
@@ -37,12 +41,10 @@ test("congelar uma empresa mostra o banner e bloqueia escrita; reativar destrava
   await dialog.getByRole("button", { name: "Encerrar" }).click();
   await expect(dialog).not.toBeVisible();
 
-  // Banner de empresa congelada aparece em qualquer sub-página.
+  // Banner de empresa congelada aparece em qualquer sub-página, sem
+  // precisar de reload — a resposta do freeze é propagada de volta pro
+  // layout via contexto (ver contexts/organization-context.tsx).
   await expect(page.getByText(/Esta empresa está encerrada/)).toBeVisible();
-
-  // Escrita bloqueada (409) em qualquer módulo — testamos via baseline, que
-  // é acessível pela própria Home. O formulário deve reportar o erro do
-  // backend em vez de aparentar sucesso.
   await page.getByRole("link", { name: "Início", exact: true }).click();
   await expect(page.getByText(/Esta empresa está encerrada/)).toBeVisible();
 

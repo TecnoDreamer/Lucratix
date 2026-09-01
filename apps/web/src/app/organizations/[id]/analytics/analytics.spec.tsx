@@ -251,7 +251,13 @@ function fakeOrg(overrides: Partial<Organization> = {}): Organization {
 }
 
 function renderPage(ctxOverrides: Partial<OrganizationContextValue> = {}) {
-  const value: OrganizationContextValue = { organization: fakeOrg(), loading: false, error: null, ...ctxOverrides };
+  const value: OrganizationContextValue = {
+    organization: fakeOrg(),
+    loading: false,
+    error: null,
+    onOrganizationUpdate: vi.fn(),
+    ...ctxOverrides,
+  };
   return render(
     <OrganizationProvider value={value}>
       <AnalyticsPage />

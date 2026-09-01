@@ -295,7 +295,9 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
               <FrozenOrganizationBanner closureReason={organization.closure_reason} />
             </div>
           )}
-          <OrganizationProvider value={{ organization, loading, error: loadError }}>
+          <OrganizationProvider
+            value={{ organization, loading, error: loadError, onOrganizationUpdate: setOrganization }}
+          >
             {children}
           </OrganizationProvider>
         </div>

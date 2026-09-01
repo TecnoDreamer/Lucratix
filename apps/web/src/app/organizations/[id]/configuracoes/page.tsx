@@ -20,12 +20,7 @@ import type { Organization } from "@/lib/types";
 export default function OrganizationSettingsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { organization: contextOrganization, loading: contextLoading } = useOrganization();
-  const [organization, setOrganization] = useState<Organization | null>(null);
-
-  // A cópia local existe pra refletir na hora uma resposta de PATCH/logo/
-  // freeze sem esperar o layout pai rebuscar a organização.
-  const current = organization ?? contextOrganization;
+  const { organization: current, loading: contextLoading, onOrganizationUpdate } = useOrganization();
 
   if (!contextLoading && !current) {
     return (
@@ -47,8 +42,12 @@ export default function OrganizationSettingsPage() {
     );
   }
 
+  // Empurra a resposta de PATCH/logo/freeze/reactivate de volta pro layout
+  // (via contexto) — o banner de "empresa encerrada" e a sidebar (nome/
+  // logo) refletem na hora, sem esperar um refetch completo (troca de
+  // rota/reload). Ver contexts/organization-context.tsx.
   function handleUpdated(updated: Organization) {
-    setOrganization(updated);
+    onOrganizationUpdate(updated);
   }
 
   return (

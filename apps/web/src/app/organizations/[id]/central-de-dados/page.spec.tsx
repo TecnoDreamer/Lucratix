@@ -44,6 +44,7 @@ function renderWithOrg(ctxOverrides: Partial<OrganizationContextValue> = {}) {
     organization: fakeOrg(),
     loading: false,
     error: null,
+    onOrganizationUpdate: vi.fn(),
     ...ctxOverrides,
   };
   return render(

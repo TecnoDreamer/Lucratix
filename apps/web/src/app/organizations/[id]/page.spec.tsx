@@ -62,6 +62,7 @@ function renderWithOrg(
     organization: fakeOrg(orgOverrides),
     loading: false,
     error: null,
+    onOrganizationUpdate: vi.fn(),
     ...ctxOverrides,
   };
   return render(

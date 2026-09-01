@@ -12,7 +12,7 @@ test("sidebar leva a Configurações com ?from=, e 'Voltar para <empresa>' retor
   const orgUrl = page.url();
 
   // Sidebar inclui ?from=<orgId> na URL.
-  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await expect(page).toHaveURL(/\/conta\/configuracoes\?from=/);
 
   // "Voltar para <nome>" leva de volta para a Home da MESMA empresa, nunca
@@ -23,7 +23,7 @@ test("sidebar leva a Configurações com ?from=, e 'Voltar para <empresa>' retor
   await expect(page).toHaveURL(orgUrl);
 
   // Back nativo do navegador funciona normalmente (next/link ja empilha historico).
-  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await expect(page).toHaveURL(/\/conta\/configuracoes\?from=/);
   await page.goBack();
   await expect(page).toHaveURL(orgUrl);
@@ -38,7 +38,7 @@ test("refresh na tela de Configurações preserva o alvo do 'Voltar' (querystrin
   await page.getByRole("link", { name: orgName }).click();
   await page.waitForURL("**/organizations/**");
 
-  await page.getByRole("link", { name: "Configurações" }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await expect(page).toHaveURL(/\/conta\/configuracoes\?from=/);
 
   // Reload refaz o fetch de GET /organizations do zero (sem cache da
