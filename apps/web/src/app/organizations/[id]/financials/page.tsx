@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type FinancialPeriod } from "@/lib/business";
+import { formatPercentage } from "@/lib/formatters";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconDollar } from "@/components/icons";
@@ -123,7 +124,7 @@ export default function FinancialsPage() {
                     <td className="px-4 py-2.5">{formatValue(p.revenue, tCommon("notApplicable"))}</td>
                     <td className="px-4 py-2.5">{formatValue(p.profit, tCommon("notApplicable"))}</td>
                     <td className="px-4 py-2.5">
-                      {p.margin === null ? tCommon("notApplicable") : `${(p.margin * 100).toFixed(1)}%`}
+                      {p.margin === null ? tCommon("notApplicable") : formatPercentage(p.margin)}
                     </td>
                   </tr>
                 ))}

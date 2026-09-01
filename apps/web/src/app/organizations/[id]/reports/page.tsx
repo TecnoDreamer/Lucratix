@@ -199,9 +199,7 @@ export default function ReportPage() {
                 <p className="mt-2 text-sm text-slate-900 dark:text-slate-50">
                   {t("revenueLabel")}: {report.revenue_vs_baseline.baseline_value ?? t("na")} &rarr;{" "}
                   {report.revenue_vs_baseline.current_value ?? t("na")} (
-                  {report.revenue_vs_baseline.percent_change === null
-                    ? t("variationNotApplicable")
-                    : `${(report.revenue_vs_baseline.percent_change * 100).toFixed(1)}%`}
+                  {formatPercentChange(report.revenue_vs_baseline, t("variationNotApplicable"))}
                   )
                 </p>
               ) : (

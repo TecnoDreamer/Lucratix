@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { currentMonthPeriod, formatMetric, type Dashboard } from "@/lib/metrics";
+import { currentMonthPeriod, formatMetric, formatPercentChange, type Dashboard } from "@/lib/metrics";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { MetricHelp } from "@/components/metric-help";
@@ -118,9 +118,7 @@ export default function DashboardPage() {
                           : "text-rose-600 dark:text-rose-400"
                       }`}
                     >
-                      {revenueComparison.percent_change === null
-                        ? t("notApplicable")
-                        : `${(revenueComparison.percent_change * 100).toFixed(1)}%`}
+                      {formatPercentChange(revenueComparison, t("notApplicable"))}
                     </span>
                   </span>
                 </div>
