@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { METRIC_DEFINITIONS } from "./metric-definitions";
 import type { MetricCategory, MetricDefinition } from "./metric-types";
 
@@ -74,3 +75,18 @@ export function groupMetricsByLetter(metrics: MetricDefinition[]): Map<string, M
 }
 
 export const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+// Rótulo traduzido das categorias do glossário — diferente do nome/descrição/
+// fórmula de cada métrica (METRIC_DEFINITIONS), que permanece em português
+// sempre (ver ADR-0009): categoria é chrome de navegação (aba de filtro),
+// não terminologia financeira que exige tradução especializada.
+export function useMetricCategoryLabels(): Record<MetricCategory, string> {
+  const t = useTranslations("glossario.categories");
+  return {
+    financeiro: t("financeiro"),
+    marketing: t("marketing"),
+    vendas: t("vendas"),
+    clientes: t("clientes"),
+    crescimento: t("crescimento"),
+  };
+}

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonDanger, buttonPrimary, card, input, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, EmptyState } from "@/components/ui";
@@ -18,6 +19,7 @@ import type { Organization } from "@/lib/types";
  * Gate de UI só (`hasMinimumRole`) — a autorização de verdade é sempre
  * decidida pelo backend (require_role/require_org_admin_or_platform_admin). */
 export default function OrganizationSettingsPage() {
+  const t = useTranslations("orgSettings");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { organization: current, loading: contextLoading, onOrganizationUpdate } = useOrganization();
@@ -25,7 +27,7 @@ export default function OrganizationSettingsPage() {
   if (!contextLoading && !current) {
     return (
       <div className="animate-fade-in-up py-8">
-        <EmptyState title="Não foi possível carregar os dados desta empresa." />
+        <EmptyState title={t("loadError")} />
       </div>
     );
   }
@@ -37,7 +39,7 @@ export default function OrganizationSettingsPage() {
   if (!hasMinimumRole(current.my_role, "ORGANIZATION_ADMIN")) {
     return (
       <div className="animate-fade-in-up py-8">
-        <EmptyState title="Você não tem permissão para editar esta empresa." />
+        <EmptyState title={t("forbidden")} />
       </div>
     );
   }
@@ -54,11 +56,11 @@ export default function OrganizationSettingsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconSettings className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Configurações da empresa</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       <div className={`${card} mt-6 p-5`}>
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Logotipo</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("logoHeading")}</h3>
         <div className="mt-4">
           <LogoUploader organization={current} onUpdated={handleUpdated} />
         </div>
@@ -78,6 +80,7 @@ function OrganizationDataForm({
   organization: Organization;
   onUpdated: (organization: Organization) => void;
 }) {
+  const t = useTranslations("orgSettings");
   const router = useRouter();
   const [name, setName] = useState(organization.name);
   const [tradeName, setTradeName] = useState(organization.trade_name ?? "");
@@ -108,7 +111,7 @@ function OrganizationDataForm({
         router.push(loginRedirectPath(err));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível salvar as alterações.");
+      setError(err instanceof ApiError ? err.message : t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -116,27 +119,27 @@ function OrganizationDataForm({
 
   return (
     <form onSubmit={handleSubmit} className={`${card} mt-6 p-5`}>
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Dados da empresa</h3>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("companyData")}</h3>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className={labelClass}>
-          Nome
+          {t("name")}
           <input required value={name} onChange={(e) => setName(e.target.value)} className={input} />
         </label>
         <label className={labelClass}>
-          Nome fantasia
+          {t("tradeName")}
           <input value={tradeName} onChange={(e) => setTradeName(e.target.value)} className={input} />
         </label>
         <label className={labelClass}>
-          Segmento
+          {t("segment")}
           <input value={segment} onChange={(e) => setSegment(e.target.value)} className={input} />
         </label>
         <label className={labelClass}>
-          CNPJ
+          {t("cnpj")}
           <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} className={input} />
         </label>
       </div>
       <label className={`${labelClass} mt-4`}>
-        Observações
+        {t("notes")}
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -151,11 +154,11 @@ function OrganizationDataForm({
       )}
       {saved && !error && (
         <div className="mt-4">
-          <Alert tone="success">Dados salvos.</Alert>
+          <Alert tone="success">{t("dataSaved")}</Alert>
         </div>
       )}
       <button type="submit" disabled={saving} className={`${buttonPrimary} mt-4`}>
-        {saving ? "Salvando..." : "Salvar dados"}
+        {saving ? t("saving") : t("saveData")}
       </button>
     </form>
   );
@@ -172,6 +175,7 @@ function LifecycleSection({
   router: ReturnType<typeof useRouter>;
   orgId: string;
 }) {
+  const t = useTranslations("orgSettings");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -192,7 +196,7 @@ function LifecycleSection({
         router.push(loginRedirectPath(err));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível encerrar a empresa.");
+      setError(err instanceof ApiError ? err.message : t("freezeError"));
     } finally {
       setBusy(false);
     }
@@ -209,7 +213,7 @@ function LifecycleSection({
         router.push(loginRedirectPath(err));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível reativar a empresa.");
+      setError(err instanceof ApiError ? err.message : t("reactivateError"));
     } finally {
       setBusy(false);
     }
@@ -217,11 +221,9 @@ function LifecycleSection({
 
   return (
     <div className={`${card} mt-6 p-5`}>
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Ciclo de vida</h3>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("lifecycle")}</h3>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        {organization.status === "frozen"
-          ? "Esta empresa está encerrada. Reative para voltar a registrar dados."
-          : "Encerrar não apaga nenhum dado — a empresa fica congelada (somente leitura) e pode ser reativada a qualquer momento."}
+        {organization.status === "frozen" ? t("frozenDescription") : t("activeDescription")}
       </p>
       {error && !dialogOpen && (
         <div className="mt-4">
@@ -231,20 +233,20 @@ function LifecycleSection({
       <div className="mt-4">
         {organization.status === "frozen" ? (
           <button type="button" onClick={() => void handleReactivate()} disabled={busy} className={buttonPrimary}>
-            {busy ? "Reativando..." : "Reativar empresa"}
+            {busy ? t("reactivating") : t("reactivate")}
           </button>
         ) : (
           <button type="button" onClick={() => setDialogOpen(true)} className={buttonDanger}>
-            Encerrar empresa
+            {t("freeze")}
           </button>
         )}
       </div>
 
       <ConfirmDialog
         open={dialogOpen}
-        title="Encerrar esta empresa?"
-        description="Os dados não serão apagados. A empresa ficará congelada (somente leitura) e poderá ser reativada posteriormente."
-        confirmLabel="Encerrar"
+        title={t("freezeDialogTitle")}
+        description={t("freezeDialogDescription")}
+        confirmLabel={t("freezeConfirmLabel")}
         tone="danger"
         confirming={busy}
         error={error}
@@ -255,11 +257,11 @@ function LifecycleSection({
         }}
       >
         <label className={labelClass}>
-          Motivo (opcional)
+          {t("freezeReasonLabel")}
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Ex.: contrato encerrado, cliente desistiu..."
+            placeholder={t("freezeReasonPlaceholder")}
             className={input}
           />
         </label>

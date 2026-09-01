@@ -71,7 +71,9 @@
       "higherIsBetter": "Higher is better",
       "seeFullExplanation": "See full explanation →",
       "learnMoreAbout": "Learn more about {name}"
-    }
+    },
+    "showingCount": "Showing {shown} of {total}",
+    "loadMore": "Load more"
   },
   "workspace": {
     "quickAccessCards": {
@@ -704,7 +706,34 @@
       "save": "Save logo",
       "removing": "Removing...",
       "remove": "Remove logo"
-    }
+    },
+    "title": "Company settings",
+    "logoHeading": "Logo",
+    "loadError": "Could not load this company's data.",
+    "forbidden": "You don't have permission to edit this company.",
+    "companyData": "Company data",
+    "name": "Name",
+    "tradeName": "Trade name",
+    "segment": "Segment",
+    "cnpj": "Tax ID",
+    "notes": "Notes",
+    "saveError": "Could not save the changes.",
+    "dataSaved": "Data saved.",
+    "saving": "Saving...",
+    "saveData": "Save data",
+    "lifecycle": "Lifecycle",
+    "frozenDescription": "This company is closed. Reactivate it to start recording data again.",
+    "activeDescription": "Closing doesn't delete any data — the company becomes frozen (read-only) and can be reactivated at any time.",
+    "freezeError": "Could not close the company.",
+    "reactivateError": "Could not reactivate the company.",
+    "reactivating": "Reactivating...",
+    "reactivate": "Reactivate company",
+    "freeze": "Close company",
+    "freezeDialogTitle": "Close this company?",
+    "freezeDialogDescription": "The data won't be deleted. The company will become frozen (read-only) and can be reactivated later.",
+    "freezeConfirmLabel": "Close",
+    "freezeReasonLabel": "Reason (optional)",
+    "freezeReasonPlaceholder": "E.g.: contract ended, client withdrew..."
   },
   "authHero": {
     "points": [
@@ -861,6 +890,55 @@
       "errorColumn": "Error",
       "newImport": "New import",
       "mappingIntroRest": "{hasSheet, select, true { (sheet \"{sheetName}\")} other {}} — {rowCount} row(s). Confirm which field each column of the file corresponds to."
+    },
+    "title": "Data Hub",
+    "description": "Import and export this company's data.",
+    "historyTitle": "Import history",
+    "emptyTitle": "No imports done yet.",
+    "emptyDescription": "The history appears here after the first import above.",
+    "writeRestricted": "Only Analyst or higher can import data. You can still export the data above.",
+    "status": {
+      "sent": "Sent",
+      "awaitingMapping": "Awaiting mapping",
+      "readyToConfirm": "Ready to confirm",
+      "completed": "Completed",
+      "completedWithErrors": "Completed with errors",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "history": {
+      "rowsSuffix": "{count} row(s)",
+      "createdSuffix": "{count} created",
+      "updatedSuffix": "{count} updated",
+      "skippedSuffix": "{count} skipped",
+      "invalidSuffix": "{count} invalid",
+      "rowError": "{hasField, select, true {Row {number} ({field}): } other {Row {number}: }}"
+    }
+  },
+  "audit": {
+    "title": "Audit",
+    "forbidden": "Only organization admins can view the audit log.",
+    "whenColumn": "When",
+    "actionColumn": "Action",
+    "entityColumn": "Entity",
+    "empty": "No events recorded yet."
+  },
+  "glossario": {
+    "title": "Glossary",
+    "description": "All metrics and acronyms used in the system, explained in detail.",
+    "searchLabel": "Search indicator",
+    "searchPlaceholder": "Search indicator...",
+    "alphabetNavLabel": "Alphabetical navigation",
+    "emptyTitle": "No indicator found.",
+    "emptyDescription": "Try another search term or remove the category filter.",
+    "exampleLabel": "Example:",
+    "categories": {
+      "all": "All",
+      "financeiro": "Financial",
+      "marketing": "Marketing",
+      "vendas": "Sales",
+      "clientes": "Customers",
+      "crescimento": "Growth"
     }
   }
 }

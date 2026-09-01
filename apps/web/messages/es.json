@@ -71,7 +71,9 @@
       "higherIsBetter": "Mayor es mejor",
       "seeFullExplanation": "Ver explicación completa →",
       "learnMoreAbout": "Más información sobre {name}"
-    }
+    },
+    "showingCount": "Mostrando {shown} de {total}",
+    "loadMore": "Cargar más"
   },
   "workspace": {
     "quickAccessCards": {
@@ -704,7 +706,34 @@
       "save": "Guardar logotipo",
       "removing": "Eliminando...",
       "remove": "Eliminar logotipo"
-    }
+    },
+    "title": "Configuración de la empresa",
+    "logoHeading": "Logotipo",
+    "loadError": "No se pudieron cargar los datos de esta empresa.",
+    "forbidden": "No tienes permiso para editar esta empresa.",
+    "companyData": "Datos de la empresa",
+    "name": "Nombre",
+    "tradeName": "Nombre comercial",
+    "segment": "Segmento",
+    "cnpj": "NIF",
+    "notes": "Observaciones",
+    "saveError": "No se pudieron guardar los cambios.",
+    "dataSaved": "Datos guardados.",
+    "saving": "Guardando...",
+    "saveData": "Guardar datos",
+    "lifecycle": "Ciclo de vida",
+    "frozenDescription": "Esta empresa está cerrada. Reactívala para volver a registrar datos.",
+    "activeDescription": "Cerrar no elimina ningún dato — la empresa queda congelada (solo lectura) y puede reactivarse en cualquier momento.",
+    "freezeError": "No se pudo cerrar la empresa.",
+    "reactivateError": "No se pudo reactivar la empresa.",
+    "reactivating": "Reactivando...",
+    "reactivate": "Reactivar empresa",
+    "freeze": "Cerrar empresa",
+    "freezeDialogTitle": "¿Cerrar esta empresa?",
+    "freezeDialogDescription": "Los datos no se eliminarán. La empresa quedará congelada (solo lectura) y podrá reactivarse más adelante.",
+    "freezeConfirmLabel": "Cerrar",
+    "freezeReasonLabel": "Motivo (opcional)",
+    "freezeReasonPlaceholder": "Ej.: contrato terminado, el cliente desistió..."
   },
   "authHero": {
     "points": [
@@ -861,6 +890,55 @@
       "errorColumn": "Error",
       "newImport": "Nueva importación",
       "mappingIntroRest": "{hasSheet, select, true { (hoja \"{sheetName}\")} other {}} — {rowCount} fila(s). Confirma a qué campo corresponde cada columna del archivo."
+    },
+    "title": "Centro de Datos",
+    "description": "Importa y exporta los datos de esta empresa.",
+    "historyTitle": "Historial de importaciones",
+    "emptyTitle": "Aún no se realizó ninguna importación.",
+    "emptyDescription": "El historial aparece aquí después de la primera importación de arriba.",
+    "writeRestricted": "Solo Analista o superior puede importar datos. Aún puedes exportar los datos de arriba.",
+    "status": {
+      "sent": "Enviado",
+      "awaitingMapping": "Esperando mapeo",
+      "readyToConfirm": "Listo para confirmar",
+      "completed": "Completado",
+      "completedWithErrors": "Completado con errores",
+      "failed": "Falló",
+      "cancelled": "Cancelado"
+    },
+    "history": {
+      "rowsSuffix": "{count} fila(s)",
+      "createdSuffix": "{count} creada(s)",
+      "updatedSuffix": "{count} actualizada(s)",
+      "skippedSuffix": "{count} omitida(s)",
+      "invalidSuffix": "{count} inválida(s)",
+      "rowError": "{hasField, select, true {Fila {number} ({field}): } other {Fila {number}: }}"
+    }
+  },
+  "audit": {
+    "title": "Auditoría",
+    "forbidden": "Solo los administradores de la organización pueden consultar la auditoría.",
+    "whenColumn": "Cuándo",
+    "actionColumn": "Acción",
+    "entityColumn": "Entidad",
+    "empty": "Aún no hay eventos registrados."
+  },
+  "glossario": {
+    "title": "Glosario",
+    "description": "Todas las métricas y siglas usadas en el sistema, explicadas en detalle.",
+    "searchLabel": "Buscar indicador",
+    "searchPlaceholder": "Buscar indicador...",
+    "alphabetNavLabel": "Navegación alfabética",
+    "emptyTitle": "Ningún indicador encontrado.",
+    "emptyDescription": "Prueba otro término de búsqueda o quita el filtro de categoría.",
+    "exampleLabel": "Ejemplo:",
+    "categories": {
+      "all": "Todos",
+      "financeiro": "Financiero",
+      "marketing": "Marketing",
+      "vendas": "Ventas",
+      "clientes": "Clientes",
+      "crescimento": "Crecimiento"
     }
   }
 }

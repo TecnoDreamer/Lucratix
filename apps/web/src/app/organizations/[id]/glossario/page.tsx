@@ -2,20 +2,21 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { METRIC_DEFINITIONS } from "@/domain/metrics/metric-definitions";
-import { METRIC_CATEGORY_LABELS, type MetricCategory, type MetricDefinition } from "@/domain/metrics/metric-types";
-import { ALPHABET, filterMetricsByCategory, groupMetricsByLetter, searchMetrics } from "@/domain/metrics/metric-utils";
+import type { MetricCategory, MetricDefinition } from "@/domain/metrics/metric-types";
+import {
+  ALPHABET,
+  filterMetricsByCategory,
+  groupMetricsByLetter,
+  searchMetrics,
+  useMetricCategoryLabels,
+} from "@/domain/metrics/metric-utils";
 import { card, input, sectionTitle } from "@/lib/ui";
 import { EmptyState } from "@/components/ui";
 import { IconBookOpen, IconChevronDown, IconSearch } from "@/components/icons";
 
-const CATEGORY_FILTERS: { value: MetricCategory | "all"; label: string }[] = [
-  { value: "all", label: "Todos" },
-  ...(Object.entries(METRIC_CATEGORY_LABELS) as [MetricCategory, string][]).map(([value, label]) => ({
-    value,
-    label,
-  })),
-];
+const CATEGORY_VALUES: (MetricCategory | "all")[] = ["all", "financeiro", "marketing", "vendas", "clientes", "crescimento"];
 
 export default function GlossaryPage() {
   return (
@@ -26,6 +27,8 @@ export default function GlossaryPage() {
 }
 
 function GlossaryContent() {
+  const t = useTranslations("glossario");
+  const categoryLabels = useMetricCategoryLabels();
   const searchParams = useSearchParams();
   const deepLinkMetric = searchParams.get("metric");
 
@@ -81,45 +84,43 @@ function GlossaryContent() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconBookOpen className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Glossário</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Todas as métricas e siglas usadas no sistema, explicadas em detalhe.
-      </p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative flex-1">
-          <span className="sr-only">Buscar indicador</span>
+          <span className="sr-only">{t("searchLabel")}</span>
           <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar indicador..."
+            placeholder={t("searchPlaceholder")}
             className={`${input} pl-9`}
           />
         </label>
 
         <div className="flex flex-wrap gap-1.5">
-          {CATEGORY_FILTERS.map((filter) => (
+          {CATEGORY_VALUES.map((value) => (
             <button
-              key={filter.value}
+              key={value}
               type="button"
-              onClick={() => setCategory(filter.value)}
-              aria-pressed={category === filter.value}
+              onClick={() => setCategory(value)}
+              aria-pressed={category === value}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                category === filter.value
+                category === value
                   ? "bg-blue-600 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
             >
-              {filter.label}
+              {value === "all" ? t("categories.all") : categoryLabels[value]}
             </button>
           ))}
         </div>
       </div>
 
-      <nav aria-label="Navegação alfabética" className="mt-3 flex flex-wrap gap-1">
+      <nav aria-label={t("alphabetNavLabel")} className="mt-3 flex flex-wrap gap-1">
         {ALPHABET.map((letter) => {
           const hasContent = availableLetters.has(letter);
           return (
@@ -144,8 +145,8 @@ function GlossaryContent() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={<IconSearch className="h-5 w-5" />}
-            title="Nenhum indicador encontrado."
-            description="Tente outro termo de busca ou remova o filtro de categoria."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         ) : (
           <div className="flex flex-col gap-6">
@@ -157,6 +158,7 @@ function GlossaryContent() {
                     <li key={metric.id}>
                       <GlossaryItem
                         metric={metric}
+                        categoryLabel={categoryLabels[metric.category]}
                         expanded={expanded.has(metric.id)}
                         highlighted={highlighted === metric.id}
                         onToggle={() => toggle(metric.id)}
@@ -179,17 +181,20 @@ function GlossaryContent() {
 
 function GlossaryItem({
   metric,
+  categoryLabel,
   expanded,
   highlighted,
   onToggle,
   itemRef,
 }: {
   metric: MetricDefinition;
+  categoryLabel: string;
   expanded: boolean;
   highlighted: boolean;
   onToggle: () => void;
   itemRef: (el: HTMLDivElement | null) => void;
 }) {
+  const t = useTranslations("glossario");
   const panelId = `glossary-panel-${metric.id}`;
 
   return (
@@ -216,7 +221,7 @@ function GlossaryItem({
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline dark:bg-slate-800 dark:text-slate-400">
-            {METRIC_CATEGORY_LABELS[metric.category]}
+            {categoryLabel}
           </span>
           <IconChevronDown
             className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -234,7 +239,7 @@ function GlossaryItem({
           )}
           {metric.example && (
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              <span className="font-medium">Exemplo:</span> {metric.example}
+              <span className="font-medium">{t("exampleLabel")}</span> {metric.example}
             </p>
           )}
           {metric.note && (
