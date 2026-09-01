@@ -2,29 +2,75 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
-import { buttonGhost, buttonPrimary, card, input, label, pageContainer } from "@/lib/ui";
+import { buttonGhost, buttonPrimary, buttonSecondary, card, input, label, pageContainer } from "@/lib/ui";
 import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { CompanyCard } from "@/components/company-card";
-import { IconAlertCircle, IconLogOut, IconMail, IconPlus, IconSearch, IconShieldCheck, IconSparkles } from "@/components/icons";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import {
+  IconAlertCircle,
+  IconLogOut,
+  IconMail,
+  IconPlus,
+  IconSearch,
+  IconShieldCheck,
+  IconSparkles,
+} from "@/components/icons";
 import { currentMonthPeriod, type OrganizationSummary } from "@/lib/metrics";
-import type { Organization, User } from "@/lib/types";
+import type { Organization, OrganizationPage, OrganizationStatus, User } from "@/lib/types";
 
 // Abaixo desse número de empresas, a busca só adiciona ruído visual sem
 // ajudar em nada (Parte "Busca e organização" do prompt de redesign:
 // "não adicionar complexidade desnecessária caso haja poucas empresas").
+// Capturado uma única vez, na primeira carga (sem busca ainda), e nunca
+// recalculado — senão a caixa de busca sumiria assim que uma busca
+// reduzisse o resultado a poucos itens.
 const SEARCH_THRESHOLD = 6;
+const PAGE_SIZE = 24;
+
+type StatusFilter = OrganizationStatus | "all";
+
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: "active", label: "Ativas" },
+  { value: "frozen", label: "Encerradas" },
+  { value: "all", label: "Todas" },
+];
+
+function fetchOrganizationsPage(params: {
+  search: string;
+  status: StatusFilter;
+  offset: number;
+}): Promise<OrganizationPage> {
+  const query = new URLSearchParams({
+    status: params.status,
+    limit: String(PAGE_SIZE),
+    offset: String(params.offset),
+  });
+  if (params.search.trim()) query.set("search", params.search.trim());
+  return api.get<OrganizationPage>(`/api/v1/organizations?${query.toString()}`);
+}
+
+function fetchSummariesFor(organizationIds: string[]): Promise<OrganizationSummary[]> {
+  if (organizationIds.length === 0) return Promise.resolve([]);
+  const query = new URLSearchParams({ period: currentMonthPeriod() });
+  for (const id of organizationIds) query.append("organization_id", id);
+  return api.get<OrganizationSummary[]>(`/api/v1/organizations/summary?${query.toString()}`);
+}
 
 export default function OrganizationsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [items, setItems] = useState<Organization[]>([]);
+  const [total, setTotal] = useState(0);
+  // null até a primeira carga resolver — ver SEARCH_THRESHOLD acima.
+  const [initialTotal, setInitialTotal] = useState<number | null>(null);
   // Indicadores rápidos por empresa (Receita/Leads/Conversão/CAC), por
   // organization_id — dado complementar: se essa chamada falhar, os cards
   // continuam mostrando o resto normalmente, sem indicador nenhum.
   const [summaries, setSummaries] = useState<Record<string, OrganizationSummary>>({});
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   // Falha ao carregar a lista inicial (rede/servidor) — leva a tela inteira
   // a uma tela de retry dedicada em vez de mostrar a lista/formulário com
   // dado que sabemos estar incompleto (ver docs/auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md,
@@ -38,76 +84,118 @@ export default function OrganizationsPage() {
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
 
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendDevToken, setResendDevToken] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      // Independentes entre si: rodam em paralelo em vez de em fila.
-      const [me, orgs] = await Promise.all([
-        api.get<User>("/api/v1/auth/me"),
-        api.get<Organization[]>("/api/v1/organizations"),
-      ]);
-      setUser(me);
-      setOrganizations(orgs);
-    } catch (err) {
+  const handleAuthError = useCallback(
+    (err: unknown) => {
       if (err instanceof ApiError && err.status === 401) {
         router.push(loginRedirectPath(err));
+        return true;
+      }
+      return false;
+    },
+    [router]
+  );
+
+  const loadFirstPage = useCallback(
+    async (search: string, status: StatusFilter) => {
+      setLoading(true);
+      setLoadError(null);
+      let page: OrganizationPage;
+      try {
+        page = await fetchOrganizationsPage({ search, status, offset: 0 });
+      } catch (err) {
+        if (handleAuthError(err)) return;
+        setLoadError(
+          err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor."
+        );
+        setLoading(false);
         return;
       }
-      // ApiError = servidor respondeu com um erro real (mensagem específica);
-      // qualquer outro erro (fetch rejeitado) = API inalcançável.
-      setLoadError(
-        err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor."
-      );
-      return;
-    } finally {
+      setItems(page.items);
+      setTotal(page.total);
+      setInitialTotal((prev) => prev ?? page.total);
       setLoading(false);
-    }
 
-    // Dado complementar, buscado à parte (só depois que a lista principal
-    // já carregou com sucesso): uma falha aqui não deve derrubar a tela
-    // inteira para a tela de erro, nem atrasar a lista em si.
-    try {
-      const summaryList = await api.get<OrganizationSummary[]>(
-        `/api/v1/organizations/summary?period=${currentMonthPeriod()}`
-      );
-      setSummaries(Object.fromEntries(summaryList.map((s) => [s.organization_id, s])));
-    } catch {
-      // Silencioso de propósito — ver comentário do estado `summaries` acima.
-    }
-  }, [router]);
+      // Resumo (dado complementar) buscado à parte — uma falha aqui não
+      // deve derrubar a tela inteira nem atrasar a lista em si.
+      try {
+        const summaryList = await fetchSummariesFor(page.items.map((org) => org.id));
+        setSummaries((prev) => ({
+          ...prev,
+          ...Object.fromEntries(summaryList.map((s) => [s.organization_id, s])),
+        }));
+      } catch {
+        // Silencioso de propósito — ver comentário do estado `summaries` acima.
+      }
+    },
+    [handleAuthError]
+  );
 
   useEffect(() => {
-    void Promise.resolve().then(() => void load());
-  }, [load]);
+    // A conta de usuário só precisa ser buscada uma vez.
+    api
+      .get<User>("/api/v1/auth/me")
+      .then(setUser)
+      .catch((err: unknown) => {
+        handleAuthError(err);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // loadFirstPage é async, mas `setLoading(true)`/`setLoadError(null)`
+    // (seu primeiro trecho) rodam de forma síncrona ao chamar a função —
+    // adiado em uma microtask pro corpo do efeito nunca disparar setState
+    // sincronamente (mesmo padrão já usado em outros efeitos do projeto).
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void loadFirstPage(debouncedQuery, statusFilter);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, statusFilter, loadFirstPage]);
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    try {
+      const page = await fetchOrganizationsPage({
+        search: debouncedQuery,
+        status: statusFilter,
+        offset: items.length,
+      });
+      setItems((prev) => [...prev, ...page.items]);
+      setTotal(page.total);
+      const summaryList = await fetchSummariesFor(page.items.map((org) => org.id));
+      setSummaries((prev) => ({
+        ...prev,
+        ...Object.fromEntries(summaryList.map((s) => [s.organization_id, s])),
+      }));
+    } catch (err) {
+      if (!handleAuthError(err)) {
+        setLoadError(err instanceof ApiError ? err.message : "Não foi possível conectar ao servidor.");
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCreateError(null);
     setCreating(true);
     try {
-      const org = await api.post<Organization>("/api/v1/organizations", { name });
-      setOrganizations((prev) => [...prev, org]);
-      // Empresa recém-criada não tem dado financeiro/funil neste período —
-      // preenche o resumo localmente com "não aplicável" em vez de deixar o
-      // card sem a seção de indicadores até o próximo carregamento da
-      // página (mesmo resultado que GET /organizations/summary devolveria).
-      setSummaries((prev) => ({
-        ...prev,
-        [org.id]: {
-          organization_id: org.id,
-          revenue: { value: null, is_applicable: false, reason: null },
-          conversion_rate: { value: null, is_applicable: false, reason: null },
-          cac: { value: null, is_applicable: false, reason: null },
-          leads: null,
-        },
-      }));
+      await api.post<Organization>("/api/v1/organizations", { name });
       setName("");
+      // Recarrega do zero em vez de inserir localmente — mais simples e
+      // sempre reflete a ordenação/paginação de verdade do servidor.
+      await loadFirstPage(debouncedQuery, statusFilter);
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : "Nao foi possivel criar a empresa.");
     } finally {
@@ -139,15 +227,8 @@ export default function OrganizationsPage() {
     router.push("/login");
   }
 
-  const filteredOrganizations = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return organizations;
-    return organizations.filter(
-      (org) =>
-        org.name.toLowerCase().includes(q) ||
-        (org.trade_name?.toLowerCase().includes(q) ?? false)
-    );
-  }, [organizations, query]);
+  const hasMore = items.length < total;
+  const showSearch = initialTotal !== null && initialTotal > SEARCH_THRESHOLD;
 
   if (loadError && !loading) {
     return (
@@ -161,7 +242,7 @@ export default function OrganizationsPage() {
           </h1>
           <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{loadError}</p>
         </div>
-        <button onClick={() => void load()} className={`${buttonPrimary} mt-1`}>
+        <button onClick={() => void loadFirstPage(debouncedQuery, statusFilter)} className={`${buttonPrimary} mt-1`}>
           Tentar novamente
         </button>
       </div>
@@ -230,19 +311,40 @@ export default function OrganizationsPage() {
         </div>
       )}
 
-      {!loading && organizations.length > SEARCH_THRESHOLD && (
-        <label className="relative mt-6 block max-w-sm">
-          <span className="sr-only">Buscar empresa</span>
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar empresa..."
-            className={`${input} pl-9`}
-          />
-        </label>
-      )}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Filtrar por status" className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-900">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                statusFilter === tab.value
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-50"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {showSearch && (
+          <label className="relative block w-full max-w-sm sm:w-auto">
+            <span className="sr-only">Buscar empresa</span>
+            <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar empresa..."
+              className={`${input} pl-9`}
+            />
+          </label>
+        )}
+      </div>
 
       <div className="mt-6">
         {loading ? (
@@ -251,26 +353,49 @@ export default function OrganizationsPage() {
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full hidden lg:block" />
           </div>
-        ) : organizations.length === 0 ? (
+        ) : items.length === 0 && !debouncedQuery.trim() && statusFilter === "active" ? (
           <EmptyState
             icon={<IconSparkles className="h-5 w-5" />}
             title="Nenhuma empresa ainda. Cadastre a primeira abaixo."
             description="Cada empresa/cliente tem seus próprios dados, métricas e histórico, totalmente isolados dos demais."
           />
-        ) : filteredOrganizations.length === 0 ? (
+        ) : items.length === 0 && debouncedQuery.trim() ? (
           <EmptyState
             icon={<IconSearch className="h-5 w-5" />}
-            title="Nenhuma empresa encontrada."
+            title={`Nenhuma empresa encontrada para "${debouncedQuery.trim()}".`}
             description="Tente outro termo de busca."
           />
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={<IconSparkles className="h-5 w-5" />}
+            title="Nenhuma empresa neste filtro."
+            description="Troque de aba para ver empresas em outro estado."
+          />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredOrganizations.map((org, i) => (
-              <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
-                <CompanyCard organization={org} summary={summaries[org.id]} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((org, i) => (
+                <li key={org.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}>
+                  <CompanyCard organization={org} summary={summaries[org.id]} />
+                </li>
+              ))}
+            </ul>
+            {hasMore && (
+              <div className="mt-4 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+                <span>
+                  Mostrando {items.length} de {total}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void handleLoadMore()}
+                  disabled={loadingMore}
+                  className={buttonSecondary}
+                >
+                  {loadingMore ? "Carregando..." : "Carregar mais"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

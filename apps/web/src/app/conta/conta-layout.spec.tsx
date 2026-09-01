@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
 import { rememberActiveOrganizationId } from "@/lib/active-organization";
-import type { Organization } from "@/lib/types";
+import type { Organization, OrganizationPage } from "@/lib/types";
 import AccountLayout from "./layout";
 
 let mockSearchParams = new URLSearchParams();
@@ -28,9 +28,17 @@ function fakeOrg(overrides: Partial<Organization> = {}): Organization {
     tracking_start_date: null,
     notes: null,
     created_at: "2026-01-01T00:00:00Z",
+    status: "active",
+    closed_at: null,
+    closure_reason: null,
+    logo_url: null,
     my_role: "ORGANIZATION_OWNER",
     ...overrides,
   };
+}
+
+function fakeOrgPage(items: Organization[]): OrganizationPage {
+  return { items, total: items.length, limit: 100, offset: 0 };
 }
 
 afterEach(() => {
@@ -44,7 +52,7 @@ describe("AccountLayout — resolução do 'Voltar'", () => {
   it("com ?from apontando para uma empresa da lista, volta para a Home dela", async () => {
     const orgA = fakeOrg();
     mockSearchParams = new URLSearchParams({ from: orgA.id });
-    vi.mocked(api.get).mockResolvedValue([orgA]);
+    vi.mocked(api.get).mockResolvedValue(fakeOrgPage([orgA]));
 
     render(
       <AccountLayout>
@@ -63,7 +71,7 @@ describe("AccountLayout — resolução do 'Voltar'", () => {
   it("deep link sem ?from, mas com id lembrado em localStorage presente na lista, resolve pelo storage", async () => {
     const orgA = fakeOrg();
     rememberActiveOrganizationId(orgA.id);
-    vi.mocked(api.get).mockResolvedValue([orgA]);
+    vi.mocked(api.get).mockResolvedValue(fakeOrgPage([orgA]));
 
     render(
       <AccountLayout>
@@ -80,7 +88,7 @@ describe("AccountLayout — resolução do 'Voltar'", () => {
   });
 
   it("deep link sem ?from e sem nada em localStorage cai para 'Suas empresas'", async () => {
-    vi.mocked(api.get).mockResolvedValue([fakeOrg()]);
+    vi.mocked(api.get).mockResolvedValue(fakeOrgPage([fakeOrg()]));
 
     render(
       <AccountLayout>
@@ -100,7 +108,7 @@ describe("AccountLayout — resolução do 'Voltar'", () => {
     const orgA = fakeOrg();
     const foreignId = "99999999-9999-9999-9999-999999999999";
     mockSearchParams = new URLSearchParams({ from: foreignId });
-    vi.mocked(api.get).mockResolvedValue([orgA]);
+    vi.mocked(api.get).mockResolvedValue(fakeOrgPage([orgA]));
 
     render(
       <AccountLayout>
@@ -137,7 +145,7 @@ describe("AccountLayout — resolução do 'Voltar'", () => {
   });
 
   it("renderiza os filhos independentemente do estado do link de voltar", async () => {
-    vi.mocked(api.get).mockResolvedValue([fakeOrg()]);
+    vi.mocked(api.get).mockResolvedValue(fakeOrgPage([fakeOrg()]));
 
     render(
       <AccountLayout>

@@ -45,6 +45,10 @@ function fakeOrg(overrides: Partial<Organization> = {}): Organization {
     tracking_start_date: null,
     notes: null,
     created_at: "2026-01-01T00:00:00Z",
+    status: "active",
+    closed_at: null,
+    closure_reason: null,
+    logo_url: null,
     my_role: "ORGANIZATION_OWNER",
     ...overrides,
   };
