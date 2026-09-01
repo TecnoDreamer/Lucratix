@@ -41,8 +41,8 @@ def test_user_only_lists_own_organizations(client_factory):
     org_x = client_a.post("/api/v1/organizations", json={"name": "Empresa X2"}).json()
     org_y = client_b.post("/api/v1/organizations", json={"name": "Empresa Y2"}).json()
 
-    listed_a = {o["id"] for o in client_a.get("/api/v1/organizations").json()}
-    listed_b = {o["id"] for o in client_b.get("/api/v1/organizations").json()}
+    listed_a = {o["id"] for o in client_a.get("/api/v1/organizations").json()["items"]}
+    listed_b = {o["id"] for o in client_b.get("/api/v1/organizations").json()["items"]}
 
     assert org_x["id"] in listed_a
     assert org_y["id"] not in listed_a
@@ -89,5 +89,5 @@ def test_user_without_membership_cannot_access_any_organization(client_factory):
 
     org_x = client_a.post("/api/v1/organizations", json={"name": "Empresa X5"}).json()
 
-    assert client_c.get("/api/v1/organizations").json() == []
+    assert client_c.get("/api/v1/organizations").json()["items"] == []
     assert client_c.get(f"/api/v1/organizations/{org_x['id']}").status_code == 404

@@ -29,6 +29,10 @@ const FAKE_ORG: Organization = {
   tracking_start_date: null,
   notes: null,
   created_at: new Date().toISOString(),
+  status: "active",
+  closed_at: null,
+  closure_reason: null,
+  logo_url: null,
   my_role: "ORGANIZATION_OWNER",
 };
 

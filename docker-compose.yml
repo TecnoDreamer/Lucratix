@@ -39,6 +39,13 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-Lucratix <onboarding@resend.dev>}
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      # Logotipo de empresa (ver app/core/storage.py). Vazio no .env da raiz
+      # mantem o comportamento de hoje (upload desabilitado, 503) — so
+      # precisa existir aqui pra docker compose repassar pro container
+      # quando o usuario preencher o .env (mesmo padrao do RESEND_API_KEY).
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:

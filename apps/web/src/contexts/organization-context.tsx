@@ -12,6 +12,13 @@ export interface OrganizationContextValue {
   organization: Organization | null;
   loading: boolean;
   error: string | null;
+  // Permite que uma página filha (hoje só `configuracoes`, após PATCH/
+  // freeze/reactivate/logo) empurre a organização atualizada de volta para
+  // o layout — sem isso, o banner de "empresa encerrada" e a sidebar
+  // (nome/logo) só refletiriam a mudança depois de um refetch completo
+  // (troca de `id`/reload), já que o layout busca a organização uma única
+  // vez por `id`, não a cada navegação interna.
+  onOrganizationUpdate: (organization: Organization) => void;
 }
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(null);

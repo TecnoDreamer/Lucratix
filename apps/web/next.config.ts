@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    // Logotipo de organização (feature de gestão de empresas, 2026-09-01) —
+    // hospedado no Cloudinary, precisa estar na allowlist pro next/image
+    // conseguir otimizar/servir a imagem remota.
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+  },
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL;
     if (!backendUrl) return [];

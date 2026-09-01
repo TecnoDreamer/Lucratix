@@ -241,13 +241,23 @@ function fakeOrg(overrides: Partial<Organization> = {}): Organization {
     tracking_start_date: null,
     notes: null,
     created_at: "2026-01-01T00:00:00Z",
+    status: "active",
+    closed_at: null,
+    closure_reason: null,
+    logo_url: null,
     my_role: "ORGANIZATION_OWNER",
     ...overrides,
   };
 }
 
 function renderPage(ctxOverrides: Partial<OrganizationContextValue> = {}) {
-  const value: OrganizationContextValue = { organization: fakeOrg(), loading: false, error: null, ...ctxOverrides };
+  const value: OrganizationContextValue = {
+    organization: fakeOrg(),
+    loading: false,
+    error: null,
+    onOrganizationUpdate: vi.fn(),
+    ...ctxOverrides,
+  };
   return render(
     <OrganizationProvider value={value}>
       <AnalyticsPage />

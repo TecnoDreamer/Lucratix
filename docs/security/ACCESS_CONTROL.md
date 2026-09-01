@@ -77,4 +77,21 @@ mesmo padrão já usado em `organizations/[id]/layout.tsx` para itens de navega�
   Super Admin — com os botões desabilitados na própria linha do usuário logado (trava anti-lockout do
   lado do backend, refletida na UI).
 
+## Exceção: Super Admin pode enviar/remover logotipo sem membership (2026-09-01)
+
+`POST`/`DELETE /organizations/{id}/logo` são os únicos dois endpoints com escopo de organização que um
+Super Admin pode chamar **sem** ter membership na empresa — todo o resto do RF de gestão de empresas
+(dados cadastrais, congelar/reativar, leitura) continua exigindo `ORGANIZATION_ADMIN`+ real, sem bypass de
+plataforma. `get_organization_context` (o ponto único de isolamento multi-tenant, RNF-002) **não foi
+alterado** para isso — ganhou uma dependency irmã, usada só nestes dois endpoints:
+`require_org_admin_or_platform_admin` (`app/core/deps.py`). Tenta membership primeiro; se não achar, cai
+para `is_platform_admin`.
+
+Ordem de resolução preserva o não-vazamento de existência já garantido pelo resto do sistema: organização
+inexistente → `404`; membership com papel insuficiente → `403` (já revela que a organização existe, mas
+recusa a ação); nem membro nem Super Admin → `404` (indistinguível de "organização não existe" para quem
+não tem acesso nenhum a ela). Auditoria registra qual caminho foi usado
+(`organization.logo_updated_by_platform_admin` vs. `organization.logo_updated`). Ver
+[organizations/LOGOTIPO.md](../organizations/LOGOTIPO.md) para o fluxo completo.
+
 Link "Painel Admin" aparece em "Suas empresas" (`organizations/page.tsx`) só para quem tem o papel.

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { cardHover } from "@/lib/ui";
 import { Badge } from "@/components/ui";
-import { IconBuilding, IconChevronRight, IconClock } from "@/components/icons";
+import { OrganizationLogo } from "@/components/organization-logo";
+import { IconChevronRight, IconClock } from "@/components/icons";
 import { roleLabel } from "@/lib/roles";
 import { formatMetric, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
@@ -39,9 +40,7 @@ export function CompanyCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-sm shadow-blue-600/30">
-            <IconBuilding className="h-5 w-5" />
-          </span>
+          <OrganizationLogo logoUrl={organization.logo_url} name={organization.name} size={44} />
           <span className="min-w-0">
             <span className="block truncate font-semibold text-slate-900 dark:text-slate-50">
               {organization.name}
@@ -56,10 +55,11 @@ export function CompanyCard({
         <IconChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600" />
       </div>
 
-      {(role || organization.segment) && (
+      {(role || organization.segment || organization.status === "frozen") && (
         <div className="flex flex-wrap gap-1.5">
           {role && <Badge tone="blue">{role}</Badge>}
           {organization.segment && <Badge tone="slate">{organization.segment}</Badge>}
+          {organization.status === "frozen" && <Badge tone="slate">Encerrada</Badge>}
         </div>
       )}
 

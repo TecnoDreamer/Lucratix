@@ -123,7 +123,10 @@ export default function OrganizationDetailPage() {
     }
   }
 
-  const showActions = canPerformActions(organization?.my_role);
+  // Toda "Ação rápida" leva a um fluxo de escrita, que o backend já bloqueia
+  // (409) numa empresa encerrada — escondida aqui evita oferecer um atalho
+  // que vai terminar em erro.
+  const showActions = canPerformActions(organization?.my_role) && organization?.status !== "frozen";
   const quickAccessCards = visibleQuickAccess(organization?.my_role, quickAccess);
 
   // Único sinal derivado de dado real para o painel de atenção — a ausência

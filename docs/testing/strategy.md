@@ -42,6 +42,17 @@ A lógica com maior densidade de regra de negócio crítica (motor de métricas,
 - **Integration/API/Security:** implementados e verificados com Postgres real via GitHub Actions CI (não neste ambiente local — Docker Desktop indisponível).
 - **E2E:** 8 cenários Playwright, orquestração de Postgres + API + front-end via `e2e-ci.yml`.
 
+## Teste de regressão estrutural (2026-09-01)
+
+`tests/api/test_organization_lifecycle.py` é um caso parametrizado por **todo** endpoint de escrita
+conhecido com escopo de organização (financeiro, funil, produtos, baseline, marketing, campanhas,
+experimentos, metas, importações, memberships, a própria organização, logo) — confirma `409` numa empresa
+congelada. Diferente da maioria dos testes deste projeto, o valor dele não é só cobrir o que existe hoje:
+é pegar automaticamente um módulo **futuro** que esqueça de passar por `get_organization_context`/
+`require_role` (o ponto único de bloqueio de escrita, ver
+[organizations/CICLO_DE_VIDA.md](../organizations/CICLO_DE_VIDA.md)). Ao adicionar um novo endpoint de
+escrita com escopo de organização, adicione-o também à lista parametrizada deste teste.
+
 ## O que não está coberto ainda
 
 - Testes de carga/performance (explicitamente adiado, seção 15 do prompt mestre: "não otimizar prematuramente").

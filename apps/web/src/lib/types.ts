@@ -23,6 +23,8 @@ export interface Membership {
   dev_token?: string | null;
 }
 
+export type OrganizationStatus = "active" | "frozen";
+
 export interface Organization {
   id: string;
   name: string;
@@ -34,7 +36,21 @@ export interface Organization {
   tracking_start_date: string | null;
   notes: string | null;
   created_at: string;
+  status: OrganizationStatus;
+  closed_at: string | null;
+  closure_reason: string | null;
+  logo_url: string | null;
   my_role: MembershipRole | null;
+}
+
+// Página de resultados de GET /organizations (busca + paginação
+// server-side, 2026-09-01) — antes devolvia sempre a lista inteira do
+// usuário, sem filtro nenhum.
+export interface OrganizationPage {
+  items: Organization[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface Baseline {

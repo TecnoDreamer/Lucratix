@@ -45,3 +45,7 @@ password_reset_rate_limiter = RateLimiter(max_attempts=5, window_seconds=300)
 # de verdade existe (app/core/email.py) — o comentario ali de "quando essa
 # integracao existir" era sobre isto.
 email_verification_rate_limiter = RateLimiter(max_attempts=5, window_seconds=300)
+# Protecao barata contra estourar a cota gratuita do Cloudinary (25
+# creditos/mes) por engano/abuso — 10 tentativas em 5 minutos e mais que
+# suficiente pra um fluxo normal de "tentei, nao gostei, troquei de novo".
+logo_upload_rate_limiter = RateLimiter(max_attempts=10, window_seconds=300)

@@ -9,10 +9,11 @@ import { Skeleton } from "@/components/ui";
 import { hasMinimumRole, roleLabel } from "@/lib/roles";
 import { rememberActiveOrganizationId } from "@/lib/active-organization";
 import { OrganizationProvider } from "@/contexts/organization-context";
+import { OrganizationLogo } from "@/components/organization-logo";
+import { FrozenOrganizationBanner } from "@/components/frozen-organization-banner";
 import {
   IconArrowLeft,
   IconBookOpen,
-  IconBuilding,
   IconDatabase,
   IconDollar,
   IconFileText,
@@ -60,6 +61,11 @@ const NAV_ITEMS: {
   // (mesmo padrão de "Ações rápidas" da Início, ver page.tsx/lib/roles.ts).
   { href: "central-de-dados", label: "Central de Dados", icon: IconDatabase },
   { href: "glossario", label: "Glossário", icon: IconBookOpen },
+  // Dados cadastrais/logotipo/ciclo de vida da EMPRESA — distinto de "Conta →
+  // Configurações" abaixo (que é preferência pessoal do usuário, sem escopo
+  // de organização). Só quem pode editar a empresa (RN de PATCH
+  // /organizations/{id}) vê esta entrada.
+  { href: "configuracoes", label: "Configurações da empresa", icon: IconSettings, minRole: "ORGANIZATION_ADMIN" },
 ];
 
 export default function OrganizationLayout({ children }: { children: ReactNode }) {
@@ -167,9 +173,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </Link>
 
       <div className="mt-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-sm shadow-blue-600/30">
-          <IconBuilding className="h-5 w-5" />
-        </div>
+        <OrganizationLogo logoUrl={organization?.logo_url} name={organization?.name ?? ""} size={40} />
         {loading ? (
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <Skeleton className="h-5 w-32" />
@@ -286,7 +290,14 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
 
       <div className="min-w-0 flex-1">
         <div className="mx-auto w-full max-w-5xl px-4 print:max-w-none print:px-0 sm:px-6">
-          <OrganizationProvider value={{ organization, loading, error: loadError }}>
+          {organization?.status === "frozen" && (
+            <div className="pt-4">
+              <FrozenOrganizationBanner closureReason={organization.closure_reason} />
+            </div>
+          )}
+          <OrganizationProvider
+            value={{ organization, loading, error: loadError, onOrganizationUpdate: setOrganization }}
+          >
             {children}
           </OrganizationProvider>
         </div>

@@ -1,7 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
-import type { Organization, User } from "@/lib/types";
+import type { Organization, OrganizationPage, User } from "@/lib/types";
 import OrganizationsPage from "./page";
 
 const mockPush = vi.fn();
@@ -40,13 +40,50 @@ function fakeOrg(overrides: Partial<Organization> = {}): Organization {
     tracking_start_date: null,
     notes: null,
     created_at: "2026-01-15T10:00:00Z",
+    status: "active",
+    closed_at: null,
+    closure_reason: null,
+    logo_url: null,
     my_role: "ORGANIZATION_OWNER",
     ...overrides,
   };
 }
 
+function page(items: Organization[], overrides: Partial<OrganizationPage> = {}): OrganizationPage {
+  return { items, total: items.length, limit: 24, offset: 0, ...overrides };
+}
+
+/** Monta um mock de `api.get` cobrindo os 3 endpoints que a página chama:
+ * /auth/me, /organizations (lista paginada) e /organizations/summary. */
+function mockApi({
+  user = FAKE_USER,
+  organizations = [] as Organization[],
+  summary = [] as unknown[],
+  organizationsByUrl,
+}: {
+  user?: User;
+  organizations?: Organization[];
+  summary?: unknown[];
+  organizationsByUrl?: (url: string) => Organization[] | null;
+}) {
+  vi.mocked(api.get).mockImplementation((path: string) => {
+    if (path.includes("/auth/me")) return Promise.resolve(user);
+    if (path.includes("/organizations/summary")) return Promise.resolve(summary);
+    if (path.includes("/api/v1/organizations")) {
+      const override = organizationsByUrl?.(path);
+      return Promise.resolve(page(override ?? organizations));
+    }
+    return Promise.reject(new Error(`unexpected path ${path}`));
+  });
+}
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   mockPush.mockReset();
   vi.mocked(api.get).mockReset();
   vi.mocked(api.post).mockReset();
@@ -54,11 +91,7 @@ afterEach(() => {
 
 describe("OrganizationsPage", () => {
   it("mostra as empresas em cards depois de carregar", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([fakeOrg({ name: "Empresa A" }), fakeOrg({ name: "Empresa B" })]);
-    });
+    mockApi({ organizations: [fakeOrg({ name: "Empresa A" }), fakeOrg({ name: "Empresa B" })] });
 
     render(<OrganizationsPage />);
 
@@ -69,11 +102,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("não mostra o link do Painel Admin para quem não é Super Admin", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({ user: FAKE_USER });
 
     render(<OrganizationsPage />);
 
@@ -84,11 +113,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("mostra o link do Painel Admin para quem é Super Admin", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, is_platform_admin: true });
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({ user: { ...FAKE_USER, is_platform_admin: true } });
 
     render(<OrganizationsPage />);
 
@@ -97,11 +122,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("não mostra aviso de e-mail quando já verificado", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({ user: FAKE_USER });
 
     render(<OrganizationsPage />);
 
@@ -112,11 +133,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("mostra aviso não bloqueante de e-mail não verificado, com botão de reenviar", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, email_verified: false });
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({ user: { ...FAKE_USER, email_verified: false } });
     vi.mocked(api.post).mockResolvedValue({
       message: "Se o e-mail informado estiver cadastrado e ainda não verificado...",
     });
@@ -140,11 +157,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("mostra o link de confirmar em modo dev quando resend-verification devolve dev_token", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve({ ...FAKE_USER, email_verified: false });
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({ user: { ...FAKE_USER, email_verified: false } });
     vi.mocked(api.post).mockResolvedValue({
       message: "Se o e-mail informado estiver cadastrado e ainda não verificado...",
       dev_token: "token-reenvio",
@@ -159,11 +172,7 @@ describe("OrganizationsPage", () => {
   });
 
   it("mostra o estado vazio quando não há empresas", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
-    });
+    mockApi({});
 
     render(<OrganizationsPage />);
 
@@ -172,12 +181,16 @@ describe("OrganizationsPage", () => {
     });
   });
 
-  it("não mostra busca com poucas empresas, mas mostra e filtra com mais de 6", async () => {
+  it("não mostra busca com poucas empresas, mas mostra e filtra (server-side, com debounce) com mais de 6", async () => {
     const manyOrgs = Array.from({ length: 7 }, (_, i) => fakeOrg({ name: `Empresa ${i + 1}` }));
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve(manyOrgs);
+    mockApi({
+      organizations: manyOrgs,
+      organizationsByUrl: (url) => {
+        if (url.includes("search=Empresa+3") || url.includes("search=Empresa%203")) {
+          return manyOrgs.filter((o) => o.name === "Empresa 3");
+        }
+        return null;
+      },
     });
 
     render(<OrganizationsPage />);
@@ -190,17 +203,83 @@ describe("OrganizationsPage", () => {
     expect(search).toBeInTheDocument();
 
     fireEvent.change(search, { target: { value: "Empresa 3" } });
-    expect(screen.getByText("Empresa 3")).toBeInTheDocument();
+    // Busca é debounced (300ms) — sem avançar o relógio, ainda mostra o
+    // resultado anterior (nenhum request novo disparado ainda).
+    await act(async () => {
+      vi.advanceTimersByTime(350);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Empresa 3")).toBeInTheDocument();
+    });
     expect(screen.queryByText("Empresa 1")).not.toBeInTheDocument();
   });
 
-  it("permite criar uma nova empresa pelo formulário", async () => {
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) return Promise.resolve([]);
-      return Promise.resolve([]);
+  it("busca aparece depois de cadastrar empresas na mesma sessão, mesmo tendo começado com 0", async () => {
+    // Regressão: `initialTotal` era capturado uma única vez, na primeíssima
+    // carga — para um usuário novo (0 empresas), isso travava em 0 pra
+    // sempre nessa sessão, e a busca nunca aparecia mesmo depois de
+    // cadastrar dezenas de empresas (só um reload recalcularia do zero).
+    const orgs: Organization[] = [];
+    mockApi({ organizationsByUrl: () => orgs.slice() });
+    vi.mocked(api.post).mockImplementation(async (_path: string, body: unknown) => {
+      const newOrg = fakeOrg({ name: (body as { name: string }).name });
+      orgs.push(newOrg);
+      return newOrg;
     });
-    vi.mocked(api.post).mockResolvedValue(fakeOrg({ name: "Nova Empresa Criada" }));
+
+    render(<OrganizationsPage />);
+    await waitFor(() => {
+      expect(screen.getByText("Nenhuma empresa ainda. Cadastre a primeira abaixo.")).toBeInTheDocument();
+    });
+    expect(screen.queryByPlaceholderText("Buscar empresa...")).not.toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText("Nova empresa");
+    const createForm = screen.getByRole("button", { name: "Criar" }).closest("form")!;
+    for (let i = 1; i <= 7; i++) {
+      fireEvent.change(nameInput, { target: { value: `Empresa ${i}` } });
+      fireEvent.submit(createForm);
+      // Sequencial de propósito: cada criação precisa terminar (e o form
+      // resetar) antes da próxima, já que reaproveitam o mesmo input/mock.
+      await waitFor(() => {
+        expect(screen.getByText(`Empresa ${i}`)).toBeInTheDocument();
+      });
+    }
+
+    expect(screen.getByPlaceholderText("Buscar empresa...")).toBeInTheDocument();
+  });
+
+  it("permite trocar de aba entre Ativas/Encerradas/Todas", async () => {
+    mockApi({
+      organizations: [fakeOrg({ name: "Empresa Ativa" })],
+      organizationsByUrl: (url) => {
+        if (url.includes("status=frozen")) return [fakeOrg({ name: "Empresa Encerrada", status: "frozen" })];
+        return null;
+      },
+    });
+
+    render(<OrganizationsPage />);
+    await waitFor(() => {
+      expect(screen.getByText("Empresa Ativa")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Encerradas" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Empresa Encerrada")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Empresa Ativa")).not.toBeInTheDocument();
+  });
+
+  it("permite criar uma nova empresa pelo formulário", async () => {
+    let created = false;
+    mockApi({
+      organizationsByUrl: () => (created ? [fakeOrg({ name: "Nova Empresa Criada" })] : []),
+    });
+    vi.mocked(api.post).mockImplementation(async () => {
+      created = true;
+      return fakeOrg({ name: "Nova Empresa Criada" });
+    });
 
     render(<OrganizationsPage />);
 
@@ -219,29 +298,21 @@ describe("OrganizationsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Nova Empresa Criada")).toBeInTheDocument();
     });
-    // A empresa recém-criada não tem dado no período — o resumo aparece
-    // como "não aplicável" imediatamente, sem esperar um novo carregamento
-    // da página (GET /organizations/summary não é chamado de novo aqui).
-    expect(screen.getByText("Receita")).toBeInTheDocument();
-    expect(screen.getAllByText("não aplicável")).toHaveLength(4);
   });
 
   it("mostra os indicadores de cada empresa vindos de GET /organizations/summary", async () => {
     const orgA = fakeOrg({ name: "Empresa A" });
-    vi.mocked(api.get).mockImplementation((path: string) => {
-      if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
-      if (path.includes("/organizations/summary")) {
-        return Promise.resolve([
-          {
-            organization_id: orgA.id,
-            revenue: { value: 42850, is_applicable: true, reason: null },
-            conversion_rate: { value: 0.084, is_applicable: true, reason: null },
-            cac: { value: 145.5, is_applicable: true, reason: null },
-            leads: 328,
-          },
-        ]);
-      }
-      return Promise.resolve([orgA]);
+    mockApi({
+      organizations: [orgA],
+      summary: [
+        {
+          organization_id: orgA.id,
+          revenue: { value: 42850, is_applicable: true, reason: null },
+          conversion_rate: { value: 0.084, is_applicable: true, reason: null },
+          cac: { value: 145.5, is_applicable: true, reason: null },
+          leads: 328,
+        },
+      ],
     });
 
     render(<OrganizationsPage />);
@@ -256,7 +327,8 @@ describe("OrganizationsPage", () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path.includes("/auth/me")) return Promise.resolve(FAKE_USER);
       if (path.includes("/organizations/summary")) return Promise.reject(new Error("falhou"));
-      return Promise.resolve([fakeOrg({ name: "Empresa Sem Resumo" })]);
+      if (path.includes("/api/v1/organizations")) return Promise.resolve(page([fakeOrg({ name: "Empresa Sem Resumo" })]));
+      return Promise.reject(new Error(`unexpected path ${path}`));
     });
 
     render(<OrganizationsPage />);

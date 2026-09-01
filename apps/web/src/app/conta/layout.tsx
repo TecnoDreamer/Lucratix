@@ -8,7 +8,7 @@ import { link as linkClass } from "@/lib/ui";
 import { IconArrowLeft, IconUser } from "@/components/icons";
 import { AccountProvider } from "@/contexts/account-context";
 import { accountBackTarget, resolveActiveOrganization } from "@/lib/active-organization";
-import type { Organization } from "@/lib/types";
+import type { Organization, OrganizationPage } from "@/lib/types";
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
   // `useSearchParams` exige um limite de Suspense em build de producao
@@ -30,10 +30,16 @@ function AccountLayoutInner({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    // status=all + limit=100: GET /organizations agora pagina por padrão
+    // (24 por página). resolveActiveOrganization precisa da lista real do
+    // usuário pra validar `?from`/localStorage (nunca confiar num id cru —
+    // ver active-organization.ts), então busca até 100 de uma vez. Acima
+    // disso, degrada com segurança pro fallback "Suas empresas" — sem
+    // vazamento, só um "Voltar" menos preciso pra quem tem muitas empresas.
     api
-      .get<Organization[]>("/api/v1/organizations")
-      .then((orgs) => {
-        if (!cancelled) setOrganizations(orgs);
+      .get<OrganizationPage>("/api/v1/organizations?status=all&limit=100")
+      .then((page) => {
+        if (!cancelled) setOrganizations(page.items);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
