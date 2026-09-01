@@ -8,12 +8,283 @@
     "edit": "Editar",
     "close": "Cerrar",
     "notApplicable": "no aplicable",
-    "genericConnectionError": "No se pudo conectar con la API."
+    "genericConnectionError": "No se pudo conectar con la API.",
+    "passwordInput": {
+      "show": "Mostrar contraseña",
+      "hide": "Ocultar contraseña",
+      "capsLockOn": "Bloq Mayús está activado."
+    }
   },
   "account": {
     "language": {
       "title": "Idioma",
       "description": "Elige el idioma de la interfaz. Los números, fechas y valores se mantienen en el formato estándar de Brasil, sin importar el idioma elegido."
+    }
+  },
+  "home": {
+    "about": {
+      "backToLogin": "Volver al inicio de sesión",
+      "signIn": "Entrar",
+      "signUp": "Regístrate",
+      "heroTitle": "Tus clientes. Tus números. Una sola visión.",
+      "heroDescription": "Lucratix reúne baseline, embudo, campañas, productos y finanzas de cada cliente que atiendes — en organizaciones aisladas, con métricas calculadas de una sola forma, para orientar la próxima decisión en vez de solo memorizar un número.",
+      "heroCtaHow": "Ver cómo funciona",
+      "heroCtaFaq": "Preguntas frecuentes",
+      "whatIsTitle": "Qué es Lucratix",
+      "whatIsParagraph1": "Lucratix es una plataforma de business intelligence y analytics pensada para quien cuida el marketing y el resultado de más de un cliente al mismo tiempo. Cada cliente se convierte en su propia organización, con sus datos completamente aislados de los demás, y la plataforma conecta lo que pasó en campañas y embudo con lo que realmente pasó en las finanzas de ese cliente.",
+      "whatIsParagraph2": "No es un gestor de anuncios, no sustituye herramientas de automatización de marketing, y no es un sistema fiscal o contable. El foco es otro: organizar lo que ya se registra — baseline, campañas, embudo, productos, finanzas — en un solo lugar, con una fórmula única para cada métrica e historial que nunca se sobrescribe.",
+      "howHelpsTitle": "Cómo ayuda Lucratix",
+      "benefits": [
+        {
+          "title": "Aislamiento real entre clientes",
+          "text": "Cada empresa registrada es una organización aislada: el dato de un cliente nunca aparece para otro. Esto se prueba automáticamente, no es solo una promesa."
+        },
+        {
+          "title": "Un baseline que nunca se reescribe",
+          "text": "El historial de cada cliente queda preservado. Las comparaciones usan el período anterior real de ese cliente, no un promedio genérico inventado."
+        },
+        {
+          "title": "Métrica con fórmula única",
+          "text": "ROAS, CAC, LTV y las demás métricas nacen de un único motor de cálculo, documentado en el glosario — sin dos pantallas mostrando cuentas diferentes para el mismo número."
+        },
+        {
+          "title": "Transparencia cuando falta un dato",
+          "text": "Si un período está incompleto, el sistema avisa en vez de mostrar un número parcial como si fuera el resultado final."
+        },
+        {
+          "title": "Auditoría de cada cambio",
+          "text": "Los cambios relevantes quedan registrados: quién lo hizo, qué y cuándo — un registro de auditoría, no solo control de permisos."
+        }
+      ],
+      "featuresTitle": "Principales funcionalidades",
+      "features": [
+        { "title": "Dashboard", "text": "Panorama del cliente en un solo lugar: KPIs principales y comparación automática con el período anterior." },
+        { "title": "Analytics", "text": "Vista ejecutiva y de marketing en cualquier rango de fechas, con ROAS, ROI, CTR, CPC, CPM, CPL y CPA." },
+        { "title": "Productos", "text": "Catálogo de productos por cliente, con margen calculado a partir de la lista de precios registrada." },
+        { "title": "Finanzas", "text": "Ingresos, costo y ganancia por período — la base de todo lo que aparece en el dashboard y en los informes." },
+        { "title": "Marketing", "text": "Campañas por canal, con inversión y retorno rastreados campaña a campaña." },
+        { "title": "Embudo", "text": "De la impresión a la recompra: cada etapa del embudo del cliente, con la tasa de conversión entre ellas." },
+        { "title": "Experimentos", "text": "Pruebas de CRO con significancia estadística real, no una impresión sobre qué variante \"parece\" mejor." },
+        { "title": "Informe", "text": "Informe ejecutivo listo para presentar al cliente, con exportación en PDF mediante la función de impresión del navegador." },
+        { "title": "Auditoría", "text": "Historial de quién cambió qué y cuándo, por organización." },
+        { "title": "Glosario", "text": "Todas las métricas del sistema explicadas en detalle, con fórmula y ejemplo — sin siglas misteriosas." }
+      ],
+      "strengthsTitle": "Puntos fuertes",
+      "strengths": [
+        "Aislamiento multi-tenant cubierto por pruebas automatizadas de seguridad dedicadas, no solo por convención de código.",
+        "Sesión única por cuenta: iniciar sesión en un nuevo dispositivo revoca automáticamente la sesión anterior.",
+        "Motor de métricas único — ninguna pantalla recalcula una fórmula por su cuenta.",
+        "Cuatro roles de acceso por organización (propietario, administrador, analista, visualizador), cada uno con permisos claros.",
+        "Arquitectura de integraciones futuras ya documentada (ej.: Power BI), incluso cuando aún no está disponible para su uso.",
+        "Cubierto por pruebas automatizadas de extremo a extremo y de backend en cada cambio, antes de cualquier publicación."
+      ],
+      "howItWorksTitle": "Cómo funciona",
+      "steps": [
+        { "title": "Crea tu cuenta", "text": "Nombre, correo y contraseña — el registro es libre, sin necesidad de invitación." },
+        { "title": "Registra tu primera empresa", "text": "Cada cliente que atiendes se convierte en una organización aislada dentro de Lucratix." },
+        { "title": "Registra los datos del cliente", "text": "Finanzas, campañas de marketing, embudo y productos — la base de todo lo que viene después." },
+        { "title": "Sigue el dashboard y Analytics", "text": "Con comparación automática contra el período anterior de ese mismo cliente." },
+        { "title": "Genera el informe ejecutivo", "text": "Lleva el resultado listo, en PDF, a tu próxima conversación con el cliente." }
+      ],
+      "techTitle": "Tecnologías y herramientas",
+      "techSubtitle": "Para quien quiere saber qué hay debajo del capó.",
+      "techGroups": [
+        { "title": "Frontend", "items": ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"] },
+        { "title": "Backend", "items": ["FastAPI", "SQLAlchemy 2.0", "Alembic"] },
+        { "title": "Base de datos", "items": ["PostgreSQL"] },
+        { "title": "Seguridad", "items": ["JWT", "Hash de contraseña con Argon2", "Sesión única por cuenta"] },
+        { "title": "Calidad y pruebas", "items": ["pytest", "Vitest", "Playwright", "ruff", "mypy"] }
+      ],
+      "glossaryTitle": "Glosario",
+      "glossarySubtitle": "Los términos usados en esta página, explicados en una frase. El glosario completo de métricas (ROAS, CAC, LTV y las demás) está disponible dentro de la cuenta, en la sección Glosario de cada organización.",
+      "glossary": [
+        {
+          "term": "Organización",
+          "text": "Cada empresa/cliente que registras en Lucratix. Todo dato — finanzas, campañas, embudo, productos — pertenece a una organización y nunca es visible desde otra."
+        },
+        {
+          "term": "Baseline",
+          "text": "El período de referencia de una organización, preservado para siempre. Las comparaciones de período (\"contra el mes anterior\", por ejemplo) usan el historial real del propio cliente, nunca un promedio inventado."
+        },
+        {
+          "term": "Embudo de conversión",
+          "text": "La secuencia de etapas por las que pasa un cliente, desde la impresión del anuncio hasta la recompra, con la tasa de conversión calculada entre cada etapa."
+        },
+        {
+          "term": "Experimento (CRO)",
+          "text": "Una prueba que compara dos versiones (A/B) de algo — una página, una oferta — evaluada con significancia estadística, no por impresión."
+        },
+        {
+          "term": "Rol",
+          "text": "El nivel de acceso de una persona dentro de una organización: Propietario, Administrador, Analista o Visualizador — cada uno viendo y pudiendo hacer cosas diferentes."
+        },
+        {
+          "term": "Auditoría",
+          "text": "El registro de quién cambió qué y cuándo, por organización — usado para rastrear cambios, no solo para controlar quién tiene permiso."
+        },
+        {
+          "term": "Sesión única",
+          "text": "Cada cuenta mantiene solo una sesión activa a la vez. Iniciar sesión en un nuevo dispositivo revoca automáticamente la sesión anterior."
+        },
+        {
+          "term": "Comparación de período",
+          "text": "Todo indicador puede compararse contra el período anterior equivalente de ese mismo cliente, con aviso explícito cuando el período tiene datos incompletos."
+        }
+      ],
+      "faqTitle": "Preguntas frecuentes",
+      "faq": [
+        {
+          "q": "¿Qué es Lucratix?",
+          "a": "Una plataforma de business intelligence y analytics para quien gestiona el marketing y el resultado de varios clientes a la vez — cada cliente aislado en su propia organización, con dashboard, embudo, campañas e informes conectados al resultado financiero real, no solo a métricas de anuncios."
+        },
+        {
+          "q": "¿Para quién fue creada Lucratix?",
+          "a": "Para consultorías, agencias y profesionales de marketing y growth que atienden a más de un cliente y necesitan una visión organizada — y aislada — del resultado de cada uno."
+        },
+        {
+          "q": "¿Necesito una invitación para registrarme?",
+          "a": "No. El registro es libre: basta indicar nombre, correo y contraseña en la pantalla de Registro."
+        },
+        {
+          "q": "¿Cada cliente que atiendo queda aislado de los demás?",
+          "a": "Sí. Cada cliente es una organización separada dentro de Lucratix, y ese aislamiento está cubierto por pruebas automatizadas de seguridad — no depende solo del cuidado manual."
+        },
+        {
+          "q": "¿Qué es el \"baseline\" y por qué importa?",
+          "a": "Es el historial preservado de cada cliente. Nunca se sobrescribe, así que toda comparación de período usa el desempeño real anterior de ese mismo cliente, en vez de un promedio genérico."
+        },
+        {
+          "q": "¿Lucratix sustituye al gestor de anuncios (Google Ads, Meta Ads)?",
+          "a": "No. Lucratix no crea ni gestiona campañas de anuncios — reúne los resultados de esas campañas y los conecta con las finanzas del cliente, para mostrar qué convirtió realmente en resultado."
+        },
+        {
+          "q": "¿Puedo generar un informe para presentar al cliente?",
+          "a": "Sí. La pantalla de Informe arma un informe ejecutivo del período y ofrece exportación en PDF mediante la función de impresión del navegador."
+        },
+        {
+          "q": "¿Qué significan los roles Propietario, Administrador, Analista y Visualizador?",
+          "a": "Son los cuatro niveles de acceso dentro de una organización. En general, el Visualizador sigue el dashboard e indicadores; el Analista también accede a Analytics e informes detallados; Administrador y Propietario, además, gestionan la organización y quién tiene acceso a ella."
+        },
+        {
+          "q": "¿Lucratix se integra con Power BI?",
+          "a": "La arquitectura de esa integración ya está documentada, pero aún no está disponible para su uso — depende de una licencia que hoy no está configurada."
+        },
+        {
+          "q": "Olvidé mi contraseña, ¿cómo recupero el acceso?",
+          "a": "En la pantalla de inicio de sesión, usa el enlace \"Olvidé mi contraseña\" para recibir un enlace seguro de restablecimiento en el correo registrado."
+        },
+        {
+          "q": "¿La plataforma funciona bien en el celular?",
+          "a": "Sí. Las pantallas se construyeron con diseño responsivo, incluyendo la pantalla de inicio de sesión y registro."
+        },
+        {
+          "q": "¿Lucratix afirma que una campaña \"causó\" un resultado?",
+          "a": "No. Las comparaciones de período muestran qué cambió y en cuánto, sin atribuir causalidad a una campaña específica — la interpretación del motivo del cambio sigue siendo tuya."
+        }
+      ],
+      "ctaTitle": "¿Listo para organizar el resultado de tus clientes?",
+      "ctaSubtitle": "El registro es libre y toma menos de un minuto — sin necesidad de invitación.",
+      "ctaCreateAccount": "Crear mi cuenta",
+      "ctaAlreadyHaveAccount": "Ya tengo cuenta — entrar"
+    }
+  },
+  "authHero": {
+    "points": [
+      "Baselines y paneles por cliente, siempre aislados",
+      "Embudo completo: impresión hasta recompra",
+      "Experimentos de CRO con significancia estadística real"
+    ],
+    "kpiLabels": ["Ingresos", "Margen", "Ganancia"],
+    "demoDataDisclaimer": "Datos ilustrativos — no reflejan una empresa real."
+  },
+  "auth": {
+    "login": {
+      "heroEyebrow": "Acceso a la plataforma",
+      "heroTitle": "Tus clientes. Tus números. Una sola visión.",
+      "heroDescription": "Baselines, embudo, campañas y experimentos de CRO — organizados por empresa, listos para orientar la próxima decisión.",
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Accede a tu entorno de inteligencia empresarial.",
+      "sessionRevokedSuffix": "Inicia sesión de nuevo para continuar.",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "forgotPassword": "Olvidé mi contraseña",
+      "submitting": "Iniciando sesión...",
+      "submit": "Entrar",
+      "sessionProtected": "Tu sesión permanece protegida y sigues conectado de forma segura.",
+      "noAccountPrefix": "¿Aún no tienes cuenta?",
+      "signUp": "Regístrate",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "register": {
+      "heroEyebrow": "Empieza ahora",
+      "heroTitle": "Sustituye las hojas de cálculo sueltas por una sola visión, actualizada y confiable.",
+      "heroDescription": "Registra tu primera empresa en segundos y empieza a registrar baselines, campañas y resultados hoy mismo.",
+      "title": "Crear cuenta en Lucratix",
+      "subtitle": "Empieza a transformar datos en decisiones en pocos minutos.",
+      "nameLabel": "Nombre",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeContinue": "Continuar para confirmar el correo →",
+      "submitting": "Enviando...",
+      "submit": "Registrarse",
+      "hasAccountPrefix": "¿Ya tienes cuenta?",
+      "signIn": "Entrar",
+      "learnMorePrefix": "¿Quieres saber más antes de registrarte?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "forgotPassword": {
+      "heroEyebrow": "Recuperación de acceso",
+      "heroTitle": "Pasa. Vamos a recuperar el acceso a tu cuenta.",
+      "heroDescription": "Indica el correo registrado y te enviaremos un enlace seguro para elegir una nueva contraseña.",
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Indica tu correo para recibir un enlace de restablecimiento.",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeContinue": "Continuar para restablecer la contraseña →",
+      "backToLogin": "Volver al inicio de sesión",
+      "emailLabel": "Correo electrónico",
+      "submitting": "Enviando...",
+      "submit": "Enviar enlace de restablecimiento",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "resetPassword": {
+      "heroEyebrow": "Recuperación de acceso",
+      "heroTitle": "Elige una nueva contraseña para continuar.",
+      "heroDescription": "Usa una contraseña fuerte y exclusiva para Lucratix — nunca reutilices contraseñas de otros servicios.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "invalidLinkTitle": "Enlace inválido",
+      "invalidLinkSubtitle": "Este enlace de restablecimiento está incompleto o ya fue usado.",
+      "requestNewLink": "Solicitar un nuevo enlace →",
+      "doneTitle": "Contraseña cambiada con éxito",
+      "doneSubtitle": "Tu contraseña fue restablecida. Inicia sesión de nuevo para continuar.",
+      "goToLogin": "Ir al inicio de sesión",
+      "title": "Nueva contraseña",
+      "subtitle": "Elige una nueva contraseña para tu cuenta.",
+      "newPasswordLabel": "Nueva contraseña",
+      "confirmPasswordLabel": "Confirmar nueva contraseña",
+      "submitting": "Guardando...",
+      "submit": "Restablecer contraseña",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "confirmEmail": {
+      "heroEyebrow": "Confirmación de correo",
+      "heroTitle": "Confirmando tu acceso a Lucratix.",
+      "heroDescription": "Esto garantiza que solo tú puedas usar la cuenta registrada con este correo.",
+      "loadingTitle": "Confirmando...",
+      "successTitle": "Correo confirmado",
+      "successSubtitle": "Tu correo fue verificado con éxito.",
+      "goToOrganizations": "Ir a Tus empresas",
+      "errorTitle": "Enlace inválido",
+      "errorSubtitleWithToken": "Este enlace de confirmación está incompleto, caducado o ya fue usado.",
+      "errorSubtitleWithoutToken": "Este enlace de confirmación está incompleto o ya fue usado.",
+      "errorHintPrefix": "Puedes solicitar un nuevo correo de confirmación desde",
+      "errorHintLink": "Tus empresas",
+      "errorHintSuffix": "después de iniciar sesión.",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
     }
   }
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { buttonPrimary, link as linkClass } from "@/lib/ui";
 import { Alert } from "@/components/ui";
@@ -26,12 +27,14 @@ function ResetPasswordContent() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const t = useTranslations("auth.resetPassword");
+  const tCommon = useTranslations("common");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     if (newPassword !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t("passwordMismatch"));
       return;
     }
     setSubmitting(true);
@@ -42,7 +45,7 @@ function ResetPasswordContent() {
       });
       setDone(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
     } finally {
       setSubmitting(false);
     }
@@ -51,9 +54,9 @@ function ResetPasswordContent() {
   return (
     <div className="flex flex-1">
       <AuthHero
-        eyebrow="Recuperação de acesso"
-        title="Escolha uma nova senha para continuar."
-        description="Use uma senha forte e exclusiva para a Lucratix — nunca reaproveite senhas de outros serviços."
+        eyebrow={t("heroEyebrow")}
+        title={t("heroTitle")}
+        description={t("heroDescription")}
       />
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
@@ -67,42 +70,38 @@ function ResetPasswordContent() {
           {!token ? (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                Link inválido
+                {t("invalidLinkTitle")}
               </h1>
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                Este link de redefinição está incompleto ou já foi usado.
+                {t("invalidLinkSubtitle")}
               </p>
               <Link
                 href="/esqueci-senha"
                 className={`mt-6 inline-block text-sm ${linkClass}`}
               >
-                Solicitar um novo link →
+                {t("requestNewLink")}
               </Link>
             </>
           ) : done ? (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                Senha alterada com sucesso
+                {t("doneTitle")}
               </h1>
-              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                Sua senha foi redefinida. Entre novamente para continuar.
-              </p>
+              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t("doneSubtitle")}</p>
               <Link href="/login" className={`${buttonPrimary} mt-6 inline-flex w-full justify-center py-2.5`}>
-                Ir para o login
+                {t("goToLogin")}
               </Link>
             </>
           ) : (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                Nova senha
+                {t("title")}
               </h1>
-              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                Escolha uma nova senha para sua conta.
-              </p>
+              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
               <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
                 <PasswordInput
-                  label="Nova senha"
+                  label={t("newPasswordLabel")}
                   value={newPassword}
                   onChange={setNewPassword}
                   autoComplete="new-password"
@@ -110,7 +109,7 @@ function ResetPasswordContent() {
                   autoFocus
                 />
                 <PasswordInput
-                  label="Confirmar nova senha"
+                  label={t("confirmPasswordLabel")}
                   value={confirmPassword}
                   onChange={setConfirmPassword}
                   autoComplete="new-password"
@@ -124,16 +123,16 @@ function ResetPasswordContent() {
                   disabled={submitting}
                   className={`${buttonPrimary} mt-1 w-full py-2.5`}
                 >
-                  {submitting ? "Salvando..." : "Redefinir senha"}
+                  {submitting ? t("submitting") : t("submit")}
                 </button>
               </form>
             </>
           )}
 
           <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            Ainda não conhece a Lucratix?{" "}
+            {t("learnMorePrefix")}{" "}
             <Link href="/sobre" className={linkClass}>
-              Conheça a aplicação
+              {t("learnMoreLink")}
             </Link>
           </p>
         </div>

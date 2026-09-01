@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { buttonPrimary, link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
@@ -40,6 +41,8 @@ function ConfirmEmailContent() {
   // confirmando o e-mail com sucesso. firedRef sozinho ja garante uma unica
   // chamada; nao ha necessidade de um segundo mecanismo de cancelamento.
   const firedRef = useRef(false);
+  const t = useTranslations("auth.confirmEmail");
+  const tCommon = useTranslations("common");
 
   useEffect(() => {
     if (!token || firedRef.current) return;
@@ -50,17 +53,18 @@ function ConfirmEmailContent() {
         setStatus("success");
       })
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
         setStatus("error");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tCommon é estável entre renders (mesma instância do hook), incluí-la recriaria o efeito sem necessidade.
   }, [token]);
 
   return (
     <div className="flex flex-1">
       <AuthHero
-        eyebrow="Confirmação de e-mail"
-        title="Confirmando o seu acesso à Lucratix."
-        description="Isso garante que só você consegue usar a conta cadastrada com este e-mail."
+        eyebrow={t("heroEyebrow")}
+        title={t("heroTitle")}
+        description={t("heroDescription")}
       />
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
@@ -74,7 +78,7 @@ function ConfirmEmailContent() {
           {status === "loading" && (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                Confirmando...
+                {t("loadingTitle")}
               </h1>
               <Skeleton className="mt-6 h-10 w-full" />
             </>
@@ -83,16 +87,16 @@ function ConfirmEmailContent() {
           {status === "success" && (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                E-mail confirmado
+                {t("successTitle")}
               </h1>
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                Seu e-mail foi verificado com sucesso.
+                {t("successSubtitle")}
               </p>
               <Link
                 href="/organizations"
                 className={`${buttonPrimary} mt-6 inline-flex w-full justify-center py-2.5`}
               >
-                Ir para Suas empresas
+                {t("goToOrganizations")}
               </Link>
             </>
           )}
@@ -100,27 +104,25 @@ function ConfirmEmailContent() {
           {status === "error" && (
             <>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-                Link inválido
+                {t("errorTitle")}
               </h1>
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                {token
-                  ? (error ?? "Este link de confirmação está incompleto, expirado ou já foi usado.")
-                  : "Este link de confirmação está incompleto ou já foi usado."}
+                {token ? (error ?? t("errorSubtitleWithToken")) : t("errorSubtitleWithoutToken")}
               </p>
               <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-                Você pode pedir um novo e-mail de confirmação a partir de{" "}
+                {t("errorHintPrefix")}{" "}
                 <Link href="/organizations" className={linkClass}>
-                  Suas empresas
+                  {t("errorHintLink")}
                 </Link>{" "}
-                depois de entrar.
+                {t("errorHintSuffix")}
               </p>
             </>
           )}
 
           <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            Ainda não conhece a Lucratix?{" "}
+            {t("learnMorePrefix")}{" "}
             <Link href="/sobre" className={linkClass}>
-              Conheça a aplicação
+              {t("learnMoreLink")}
             </Link>
           </p>
         </div>
