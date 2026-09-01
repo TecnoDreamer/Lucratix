@@ -247,6 +247,24 @@ export function IconChevronDown(props: IconProps) {
   );
 }
 
+export function IconChevronUp(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="m6 15 6-6 6 6" />
+    </svg>
+  );
+}
+
+// Usado em "Restaurar padrão" (Configurações → Acessos rápidos).
+export function IconRotateCcw(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+    </svg>
+  );
+}
+
 export function IconBookOpen(props: IconProps) {
   return (
     <svg {...base(props)}>

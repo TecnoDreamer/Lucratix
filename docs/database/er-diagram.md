@@ -16,6 +16,8 @@ erDiagram
     EXPERIMENTS ||--o{ EXPERIMENT_VARIANTS : has
     USERS ||--o{ PASSWORD_RESET_TOKENS : requests
     USERS ||--o{ SESSIONS : has
+    USERS ||--o{ USER_WORKSPACE_PREFERENCES : has
+    ORGANIZATIONS ||--o{ USER_WORKSPACE_PREFERENCES : has
 
     USERS {
         uuid id PK
@@ -148,6 +150,14 @@ erDiagram
         timestamptz expires_at
         timestamptz revoked_at
         timestamptz created_at
+    }
+    USER_WORKSPACE_PREFERENCES {
+        uuid id PK
+        uuid user_id FK
+        uuid organization_id FK
+        jsonb quick_access
+        timestamptz created_at
+        timestamptz updated_at
     }
 ```
 

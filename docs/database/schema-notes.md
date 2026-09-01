@@ -31,6 +31,7 @@ Auditoria de banco de 2026-08-27: nenhum desses recursos existe hoje, e nenhum f
 - `users.email` — `UNIQUE`.
 - `financial_periods (organization_id, period)` — `UNIQUE` (um registro por organização/período; revisão de período é uma decisão de UX/API a documentar em ADR quando a Fase 10 for implementada).
 - `funnel_snapshots (organization_id, period)` — `UNIQUE`, mesmo racional.
+- `user_workspace_preferences (user_id, organization_id)` — `UNIQUE` (uma preferência por usuário+empresa, migration `0013_user_workspace_preferences`, 2026-08-31). Coluna `quick_access` (JSONB) é **nullable de propósito**: `NULL` = "nunca configurou, usar o padrão", diferente de `[]` = "desativou todos os cards" — "Restaurar padrão" grava `NULL`, não a lista padrão atual, para que um card novo adicionado numa versão futura apareça automaticamente para quem já restaurou. O registro de quais cards existem (rota, título, papel mínimo) vive no frontend (`apps/web/src/lib/quick-access.ts`); esta tabela só guarda ids opinativos e ordem, validados contra uma allow-list (`app/modules/workspace_preferences/registry.py`) — nunca decide sozinha o que é permitido (isso é sempre recalculado a partir do papel atual do usuário).
 
 ## Migrations
 

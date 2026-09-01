@@ -4,6 +4,23 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-08-31
 
+### Added (workspace: navegação e acessos rápidos)
+- Corrigido o "Voltar" de Configurações: sempre ia para "Suas empresas", nunca para a empresa ativa
+  (`apps/web/src/app/conta/layout.tsx` tinha um link fixo). Agora resolve via `?from=<orgId>` (escrito pela
+  sidebar) + `localStorage` como fallback para deep link/refresh, sempre validado contra a lista real de
+  organizações do usuário (nunca confia num id cru vindo da URL) — cobre botão visual, Back nativo,
+  sidebar, deep link, refresh e sessão expirada. Nunca usa `router.back()` (histórico pode conter deep
+  link/refresh/página externa). Ver `docs/workspace/NAVEGACAO.md`.
+- Cards de "Acesso rápido" da Home agora são configuráveis (ativar/desativar, reordenar por
+  cima/baixo — sem drag-and-drop, requisito de acessibilidade) e persistidos por usuário+empresa
+  (nova tabela `user_workspace_preferences`, migration `0013_user_workspace_preferences`; novo endpoint
+  `GET/PATCH /api/v1/organizations/{id}/workspace-preferences`, sem exigir papel mínimo — é preferência
+  pessoal de UI, mesma categoria do tema claro/escuro). Uma preferência salva nunca "ressuscita" um card
+  que o papel atual do usuário não permite (regra estrutural, não só validação de entrada — ver
+  `docs/workspace/ACESSOS_RAPIDOS.md`). Nova seção "Acessos rápidos" em Configurações.
+- Home reordenada: Acesso rápido → Ações rápidas → Histórico/Registrar baseline → Resumo do mês (KPIs) →
+  alerta de queda de receita (mantido junto do Resumo, por derivar da mesma comparação de baseline).
+
 ### Added (verificação de e-mail)
 - E-mail transacional real (RF-001) — cadastro nunca enviava e-mail de confirmação nenhum, porque nenhum
   serviço de envio existia. Pedido de autenticação por e-mail e WhatsApp; pesquisado antes de prometer

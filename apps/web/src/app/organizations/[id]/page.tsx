@@ -9,15 +9,15 @@ import { Alert, Badge, Card, EmptyState, Skeleton } from "@/components/ui";
 import { QuickAccessCard } from "@/components/quick-access-card";
 import { useOrganization } from "@/contexts/organization-context";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { useWorkspacePreferences } from "@/hooks/use-workspace-preferences";
 import { currentMonthPeriod, formatMetric } from "@/lib/metrics";
-import { canPerformActions, hasMinimumRole, roleLabel } from "@/lib/roles";
+import { canPerformActions, roleLabel } from "@/lib/roles";
+import { quickAccessHref, visibleQuickAccess } from "@/lib/quick-access";
 import {
   IconClock,
-  IconDatabase,
   IconDollar,
   IconFileText,
   IconFlask,
-  IconFunnel,
   IconGrid,
   IconMegaphone,
   IconPackage,
@@ -34,68 +34,10 @@ function formatTrackingSince(date: string): string {
   return new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// PARTE 4 do prompt de redesign de UX (2026-08-27): atalhos principais, não
-// todos os módulos da sidebar (isso já existe na navegação completa).
-// `minRole`: mesmo critério da sidebar (ver layout.tsx) — Analytics exige
-// ANALYST+ no backend, então não faz sentido oferecer o atalho pra quem só
-// vai receber um 403 ao clicar. Central de Dados (2026-08-30) é o único item
-// aqui que não é um módulo de visualização — adicionado porque a entrada de
-// sidebar sozinha não bastava: é uma ferramenta de importação/exportação em
-// massa, útil o bastante para merecer destaque na tela que todo mundo vê
-// primeiro, não só descoberta navegando a sidebar inteira.
-function quickAccessItems(id: string): {
-  href: string;
-  icon: typeof IconTrendingUp;
-  title: string;
-  description: string;
-  minRole?: "ANALYST";
-}[] {
-  return [
-    {
-      href: `/organizations/${id}/analytics`,
-      icon: IconTrendingUp,
-      title: "Analytics",
-      description: "Acompanhe métricas, tendências e desempenho.",
-      minRole: "ANALYST",
-    },
-    {
-      href: `/organizations/${id}/financials`,
-      icon: IconDollar,
-      title: "Financeiro",
-      description: "Visualize receitas, custos e indicadores financeiros.",
-    },
-    {
-      href: `/organizations/${id}/marketing`,
-      icon: IconMegaphone,
-      title: "Marketing",
-      description: "Acompanhe campanhas, canais e performance.",
-    },
-    {
-      href: `/organizations/${id}/funnel`,
-      icon: IconFunnel,
-      title: "Funil",
-      description: "Analise conversões e etapas do funil.",
-    },
-    {
-      href: `/organizations/${id}/products`,
-      icon: IconPackage,
-      title: "Produtos",
-      description: "Consulte produtos, serviços e desempenho.",
-    },
-    {
-      href: `/organizations/${id}/experiments`,
-      icon: IconFlask,
-      title: "Experimentos",
-      description: "Acompanhe testes, hipóteses e resultados.",
-    },
-    {
-      href: `/organizations/${id}/central-de-dados`,
-      icon: IconDatabase,
-      title: "Central de Dados",
-      description: "Importe e exporte dados em massa (CSV, Excel, JSON).",
-    },
-  ];
-}
+// O registro de cards de acesso rápido (rota, título, ícone, papel mínimo)
+// vive em lib/quick-access.ts — reaproveitado também por Configurações
+// (Acessos rápidos) para o mesmo card poder ser habilitado/reordenado por
+// usuário+empresa (ver hooks/use-workspace-preferences.ts).
 
 // PARTE 6: ações rápidas — sempre para rotas já existentes (nenhum fluxo
 // novo criado só para isso). Escondidas por completo para VIEWER (RN-010:
@@ -122,6 +64,7 @@ export default function OrganizationDetailPage() {
   const router = useRouter();
   const { organization, loading: orgLoading } = useOrganization();
   const { dashboard, revenueComparison, loading: dashboardLoading } = useDashboard(id, currentMonthPeriod());
+  const { quickAccess, loading: quickAccessLoading } = useWorkspacePreferences(id);
 
   const [baselines, setBaselines] = useState<Baseline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,6 +124,7 @@ export default function OrganizationDetailPage() {
   }
 
   const showActions = canPerformActions(organization?.my_role);
+  const quickAccessCards = visibleQuickAccess(organization?.my_role, quickAccess);
 
   // Único sinal derivado de dado real para o painel de atenção — a ausência
   // de baseline já é comunicada pelo empty state do histórico logo abaixo,
@@ -227,63 +171,23 @@ export default function OrganizationDetailPage() {
         </div>
       </div>
 
-      {/* Resumo de KPIs — PARTE 5. Reusa o mesmo hook/endpoint do Dashboard
-          dedicado (useDashboard), sem duplicar a lógica de busca. */}
-      <section className="mt-6">
-        <h2 className={sectionTitle}>Resumo do mês</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {dashboardLoading
-            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
-            : dashboard &&
-              SUMMARY_CARDS.map(({ key, label: metricLabel, percent, icon: Icon }) => {
-                const metric = dashboard[key];
-                return (
-                  <Card key={key} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {metricLabel}
-                      </p>
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
-                        <Icon className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-                      {formatMetric(metric, { percent })}
-                    </p>
-                  </Card>
-                );
-              })}
-        </div>
-        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-          <Link href={`/organizations/${id}/dashboard`} className={linkClass}>
-            Ver indicadores completos, com filtro de período
-          </Link>
-        </p>
-      </section>
-
-      {/* Alertas — PARTE 7. Só aparece quando há um sinal real derivado de
-          dado já buscado; nunca um alerta fabricado. */}
-      {revenueDropAlert && (
-        <section className="mt-6">
-          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-            <IconTrendingDown className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <p className="font-medium">Atenção</p>
-              <p className="mt-0.5">{revenueDropAlert}</p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Acesso rápido — PARTE 4. */}
+      {/* Acesso rápido — PARTE 4. Ordem/visibilidade configuráveis em
+          Configurações → Acessos rápidos (ver hooks/use-workspace-preferences.ts);
+          skeleton evita esconder a seção inteira enquanto a preferência carrega. */}
       <section className="mt-6">
         <h2 className={sectionTitle}>Acesso rápido</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {quickAccessItems(id)
-            .filter((item) => !item.minRole || hasMinimumRole(organization?.my_role, item.minRole))
-            .map(({ href, icon, title, description }) => (
-              <QuickAccessCard key={href} href={href} icon={icon} title={title} description={description} />
-            ))}
+          {quickAccessLoading
+            ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
+            : quickAccessCards.map((cardDef) => (
+                <QuickAccessCard
+                  key={cardDef.id}
+                  href={quickAccessHref(id, cardDef)}
+                  icon={cardDef.icon}
+                  title={cardDef.title}
+                  description={cardDef.description}
+                />
+              ))}
         </div>
       </section>
 
@@ -407,6 +311,56 @@ export default function OrganizationDetailPage() {
           </button>
         </form>
       </Card>
+
+      {/* Resumo de KPIs — PARTE 5. Reusa o mesmo hook/endpoint do Dashboard
+          dedicado (useDashboard), sem duplicar a lógica de busca. */}
+      <section className="mt-8">
+        <h2 className={sectionTitle}>Resumo do mês</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {dashboardLoading
+            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
+            : dashboard &&
+              SUMMARY_CARDS.map(({ key, label: metricLabel, percent, icon: Icon }) => {
+                const metric = dashboard[key];
+                return (
+                  <Card key={key} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {metricLabel}
+                      </p>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                      {formatMetric(metric, { percent })}
+                    </p>
+                  </Card>
+                );
+              })}
+        </div>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+          <Link href={`/organizations/${id}/dashboard`} className={linkClass}>
+            Ver indicadores completos, com filtro de período
+          </Link>
+        </p>
+      </section>
+
+      {/* Alertas — PARTE 7. Só aparece quando há um sinal real derivado de
+          dado já buscado; nunca um alerta fabricado. Mantido logo abaixo do
+          Resumo do mês (não em outro lugar da página) porque deriva da
+          mesma comparação de baseline dos KPIs acima. */}
+      {revenueDropAlert && (
+        <section className="mt-6">
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <IconTrendingDown className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Atenção</p>
+              <p className="mt-0.5">{revenueDropAlert}</p>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

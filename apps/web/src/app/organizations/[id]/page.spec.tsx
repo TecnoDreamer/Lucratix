@@ -67,13 +67,25 @@ function renderWithOrg(
   );
 }
 
-function mockApiGet(opts: { baselines?: unknown[]; dashboard?: Dashboard; comparison?: PeriodComparison | null }) {
+function mockApiGet(opts: {
+  baselines?: unknown[];
+  dashboard?: Dashboard;
+  comparison?: PeriodComparison | null;
+  quickAccess?: { id: string; enabled: boolean }[] | null;
+}) {
   vi.mocked(api.get).mockImplementation((path: string) => {
     if (path.includes("/compare-to-baseline")) {
       if (opts.comparison === null) {
         return Promise.reject(new ApiError(404, "sem baseline"));
       }
       return Promise.resolve(opts.comparison ?? null);
+    }
+    if (path.includes("/workspace-preferences")) {
+      return Promise.resolve({
+        organization_id: "org-123",
+        quick_access: opts.quickAccess ?? null,
+        updated_at: null,
+      });
     }
     if (path.includes("/dashboard")) {
       return Promise.resolve(opts.dashboard ?? FAKE_DASHBOARD);
@@ -123,8 +135,31 @@ describe("OrganizationDetailPage — página inicial da empresa", () => {
       ["Experimentos", "/organizations/org-123/experiments"],
       ["Central de Dados", "/organizations/org-123/central-de-dados"],
     ]) {
-      expect(screen.getByRole("link", { name: new RegExp(label) })).toHaveAttribute("href", href);
+      await waitFor(() => {
+        expect(screen.getByRole("link", { name: new RegExp(label) })).toHaveAttribute("href", href);
+      });
     }
+  });
+
+  it("respeita ordem/visibilidade salva em preferência (VIEWER + preferência não pode ressuscitar Analytics)", async () => {
+    mockApiGet({
+      comparison: null,
+      quickAccess: [
+        { id: "marketing", enabled: true },
+        { id: "analytics", enabled: true },
+        { id: "financials", enabled: false },
+      ],
+    });
+    renderWithOrg({ my_role: "VIEWER" });
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: /Marketing/ })).toBeInTheDocument();
+    });
+    // Analytics exige ANALYST+: mesmo com enabled:true na preferência salva,
+    // VIEWER nunca deve ver o card (regra estrutural de resolveQuickAccess).
+    expect(screen.queryByRole("link", { name: /Analytics/ })).not.toBeInTheDocument();
+    // Financeiro foi desabilitado na preferência.
+    expect(screen.queryByRole("link", { name: /Financeiro/ })).not.toBeInTheDocument();
   });
 
   it("esconde o atalho de Analytics para VIEWER (exige ANALYST+ no backend)", async () => {
