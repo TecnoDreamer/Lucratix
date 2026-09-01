@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -44,3 +45,8 @@ class UserRead(BaseModel):
     email: EmailStr
     is_platform_admin: bool
     email_verified: bool
+    locale: str | None
+
+
+class UserLocaleUpdate(BaseModel):
+    locale: Literal["pt-BR", "en", "es"]

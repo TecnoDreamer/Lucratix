@@ -1,0 +1,1038 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "notApplicable": "not applicable",
+    "genericConnectionError": "Could not connect to the API.",
+    "channel": "Channel",
+    "campaigns": "Campaigns",
+    "pleaseWait": "Please wait...",
+    "passwordInput": {
+      "show": "Show password",
+      "hide": "Hide password",
+      "capsLockOn": "Caps Lock is on."
+    },
+    "seriesChart": {
+      "defaultLabel": "Monthly evolution",
+      "labelWithMetric": "{label} — monthly evolution",
+      "labelNoData": "{chartLabel}: not enough data in the period",
+      "noData": "Not enough data in the period.",
+      "target": "Target",
+      "targetValue": "target: {value}",
+      "tableCaption": "{chartLabel}, by month",
+      "month": "Month",
+      "value": "Value",
+      "noDataCell": "no data",
+      "noTarget": "no target"
+    },
+    "dateRangeFilter": {
+      "period": "Period",
+      "invalidRange": "The start date cannot be after the end date.",
+      "presets": {
+        "currentMonth": "This month",
+        "previousMonth": "Previous month",
+        "last3Months": "Last 3 months",
+        "last6Months": "Last 6 months",
+        "currentQuarter": "This quarter",
+        "currentYear": "This year",
+        "custom": "Custom"
+      },
+      "from": "From",
+      "to": "To"
+    },
+    "dataDomains": {
+      "financial": "Financial",
+      "funnel": "Funnel",
+      "products": "Products",
+      "marketing": "Marketing"
+    },
+    "exportPanel": {
+      "title": "Export data",
+      "description": "Download this company's data in CSV, Excel, or JSON.",
+      "data": "Data",
+      "dataAriaLabel": "Data to export",
+      "format": "Format",
+      "formatAriaLabel": "Export format",
+      "filterByDate": "Filter by period (default: all periods)",
+      "from": "From",
+      "to": "To",
+      "invalidRange": "The start date cannot be after the end date.",
+      "exportError": "Could not export the data.",
+      "exporting": "Exporting...",
+      "export": "Export"
+    },
+    "metricHelp": {
+      "lowerIsBetter": "Lower is better",
+      "higherIsBetter": "Higher is better",
+      "seeFullExplanation": "See full explanation →",
+      "learnMoreAbout": "Learn more about {name}"
+    },
+    "showingCount": "Showing {shown} of {total}",
+    "loadMore": "Load more"
+  },
+  "workspace": {
+    "quickAccessCards": {
+      "analytics": {
+        "title": "Analytics",
+        "description": "Track metrics, trends, and performance."
+      },
+      "financials": {
+        "title": "Financials",
+        "description": "View revenue, costs, and financial indicators."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Track campaigns, channels, and performance."
+      },
+      "funnel": {
+        "title": "Funnel",
+        "description": "Analyze conversions and funnel stages."
+      },
+      "products": {
+        "title": "Products",
+        "description": "Browse products, services, and performance."
+      },
+      "experiments": {
+        "title": "Experiments",
+        "description": "Track tests, hypotheses, and results."
+      },
+      "central-de-dados": {
+        "title": "Data Hub",
+        "description": "Import and export bulk data (CSV, Excel, JSON)."
+      }
+    }
+  },
+  "account": {
+    "title": "Settings",
+    "subtitle": "Your account preferences, applied to every company you access.",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose how the light/dark theme behaves on this device.",
+      "radiogroupLabel": "Theme",
+      "options": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      }
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose the interface language. Numbers, dates, and values remain in Brazil's standard format regardless of the chosen language."
+    },
+    "quickAccess": {
+      "title": "Quick access",
+      "description": "Choose which shortcuts appear on each company's Home, and in what order.",
+      "noOrganizations": "You aren't part of any company yet.",
+      "organizationLabel": "Company",
+      "appliedTo": "Applied to {name}.",
+      "showCard": "Show {title}",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "movedAnnouncement": "{title} moved to position {position} of {total}.",
+      "save": "Save",
+      "saving": "Saving...",
+      "savedAnnouncement": "Preferences saved.",
+      "saveGenericError": "Could not save your preferences.",
+      "restoreDefault": "Restore default",
+      "restoring": "Restoring...",
+      "restoredAnnouncement": "Default restored.",
+      "restoreGenericError": "Could not restore the default."
+    },
+    "layout": {
+      "title": "Account",
+      "backTo": "Back to {name}",
+      "yourCompanies": "Your companies"
+    }
+  },
+  "home": {
+    "about": {
+      "backToLogin": "Back to login",
+      "signIn": "Sign in",
+      "signUp": "Sign up",
+      "heroTitle": "Your clients. Your numbers. One single view.",
+      "heroDescription": "Lucratix brings together baseline, funnel, campaigns, products, and financials for every client you manage — in isolated organizations, with metrics calculated one single way, to guide the next decision instead of just memorizing a number.",
+      "heroCtaHow": "See how it works",
+      "heroCtaFaq": "Frequently asked questions",
+      "whatIsTitle": "What Lucratix is",
+      "whatIsParagraph1": "Lucratix is a business intelligence and analytics platform built for people who handle marketing and results for more than one client at the same time. Each client becomes its own organization, with data fully isolated from the others, and the platform connects what happened in campaigns and the funnel to what actually happened in that client's financials.",
+      "whatIsParagraph2": "It isn't an ad manager, doesn't replace marketing automation tools, and isn't a tax or accounting system. The focus is different: organizing what's already recorded — baseline, campaigns, funnel, products, financials — in one single place, with one single formula for each metric and history that's never overwritten.",
+      "howHelpsTitle": "How Lucratix helps",
+      "benefits": [
+        {
+          "title": "Real isolation between clients",
+          "text": "Every registered company is an isolated organization: one client's data never shows up for another. This is automatically tested, not just a promise."
+        },
+        {
+          "title": "A baseline that's never rewritten",
+          "text": "Each client's history stays preserved. Comparisons use that client's real previous period, not a made-up generic average."
+        },
+        {
+          "title": "One single formula per metric",
+          "text": "ROAS, CAC, LTV, and the other metrics all come from a single calculation engine, documented in the glossary — no two screens showing different math for the same number."
+        },
+        {
+          "title": "Transparency when data is missing",
+          "text": "If a period is incomplete, the system warns you instead of showing a partial number as if it were the final result."
+        },
+        {
+          "title": "An audit trail for every change",
+          "text": "Relevant changes are recorded: who did it, what, and when — an audit trail, not just permission control."
+        }
+      ],
+      "featuresTitle": "Main features",
+      "features": [
+        {
+          "title": "Dashboard",
+          "text": "A client's whole picture in one place: main KPIs and automatic comparison against the previous period."
+        },
+        {
+          "title": "Analytics",
+          "text": "Executive and marketing view over any date range, with ROAS, ROI, CTR, CPC, CPM, CPL, and CPA."
+        },
+        {
+          "title": "Products",
+          "text": "Per-client product catalog, with margin calculated from the registered price list."
+        },
+        {
+          "title": "Financials",
+          "text": "Revenue, cost, and profit by period — the foundation for everything shown on the dashboard and in reports."
+        },
+        {
+          "title": "Marketing",
+          "text": "Campaigns by channel, with investment and return tracked campaign by campaign."
+        },
+        {
+          "title": "Funnel",
+          "text": "From impression to repeat purchase: every stage of the client's funnel, with the conversion rate between them."
+        },
+        {
+          "title": "Experiments",
+          "text": "CRO tests with real statistical significance, not a gut feeling about which variant \"seems\" better."
+        },
+        {
+          "title": "Report",
+          "text": "An executive report ready to present to the client, with PDF export via the browser's print function."
+        },
+        {
+          "title": "Audit log",
+          "text": "History of who changed what and when, per organization."
+        },
+        {
+          "title": "Glossary",
+          "text": "Every metric in the system explained in detail, with formula and example — no mysterious acronyms."
+        }
+      ],
+      "strengthsTitle": "Strengths",
+      "strengths": [
+        "Multi-tenant isolation covered by dedicated automated security tests, not just by code convention.",
+        "Single session per account: signing in on a new device automatically revokes the previous session.",
+        "A single metrics engine — no screen recalculates a formula on its own.",
+        "Four access roles per organization (owner, admin, analyst, viewer), each with clear permissions.",
+        "Future integration architecture already documented (e.g., Power BI), even when not yet available for use.",
+        "Covered by automated end-to-end and backend tests on every change, before any release."
+      ],
+      "howItWorksTitle": "How it works",
+      "steps": [
+        {
+          "title": "Create your account",
+          "text": "Name, email, and password — sign-up is open, no invitation required."
+        },
+        {
+          "title": "Register your first company",
+          "text": "Every client you manage becomes an isolated organization inside Lucratix."
+        },
+        {
+          "title": "Record the client's data",
+          "text": "Financials, marketing campaigns, funnel, and products — the foundation for everything that comes next."
+        },
+        {
+          "title": "Track dashboard and Analytics",
+          "text": "With automatic comparison against that same client's previous period."
+        },
+        {
+          "title": "Generate the executive report",
+          "text": "Bring the finished result, as a PDF, to your next conversation with the client."
+        }
+      ],
+      "techTitle": "Technologies and tools",
+      "techSubtitle": "For anyone who wants to know what's under the hood.",
+      "techGroups": [
+        {
+          "title": "Frontend",
+          "items": [
+            "Next.js 16",
+            "React 19",
+            "TypeScript",
+            "Tailwind CSS v4"
+          ]
+        },
+        {
+          "title": "Backend",
+          "items": [
+            "FastAPI",
+            "SQLAlchemy 2.0",
+            "Alembic"
+          ]
+        },
+        {
+          "title": "Database",
+          "items": [
+            "PostgreSQL"
+          ]
+        },
+        {
+          "title": "Security",
+          "items": [
+            "JWT",
+            "Password hashing with Argon2",
+            "Single session per account"
+          ]
+        },
+        {
+          "title": "Quality and testing",
+          "items": [
+            "pytest",
+            "Vitest",
+            "Playwright",
+            "ruff",
+            "mypy"
+          ]
+        }
+      ],
+      "glossaryTitle": "Glossary",
+      "glossarySubtitle": "The terms used on this page, explained in one sentence. The full metrics glossary (ROAS, CAC, LTV, and the rest) is available inside the account, in each organization's Glossary section.",
+      "glossary": [
+        {
+          "term": "Organization",
+          "text": "Every company/client you register in Lucratix. All data — financials, campaigns, funnel, products — belongs to one organization and is never visible from another."
+        },
+        {
+          "term": "Baseline",
+          "text": "An organization's reference period, preserved forever. Period comparisons (\"against last month,\" for example) use that same client's real history, never a made-up average."
+        },
+        {
+          "term": "Conversion funnel",
+          "text": "The sequence of stages a client goes through, from ad impression to repeat purchase, with the conversion rate calculated between each stage."
+        },
+        {
+          "term": "Experiment (CRO)",
+          "text": "A test comparing two versions (A/B) of something — a page, an offer — evaluated with statistical significance, not by gut feeling."
+        },
+        {
+          "term": "Role",
+          "text": "A person's access level within an organization: Owner, Admin, Analyst, or Viewer — each seeing and able to do different things."
+        },
+        {
+          "term": "Audit log",
+          "text": "The record of who changed what and when, per organization — used to trace changes, not just to control who has permission."
+        },
+        {
+          "term": "Single session",
+          "text": "Each account keeps only one active session at a time. Signing in on a new device automatically revokes the previous session."
+        },
+        {
+          "term": "Period comparison",
+          "text": "Every indicator can be compared against that same client's equivalent previous period, with an explicit warning when the period has incomplete data."
+        }
+      ],
+      "faqTitle": "Frequently asked questions",
+      "faq": [
+        {
+          "q": "What is Lucratix?",
+          "a": "A business intelligence and analytics platform for people managing marketing and results for several clients at once — each client isolated in its own organization, with dashboard, funnel, campaigns, and reports connected to real financial results, not just ad metrics."
+        },
+        {
+          "q": "Who was Lucratix built for?",
+          "a": "For consultancies, agencies, and marketing/growth professionals who serve more than one client and need an organized — and isolated — view of each one's results."
+        },
+        {
+          "q": "Do I need an invitation to sign up?",
+          "a": "No. Sign-up is open: just provide name, email, and password on the Sign up screen."
+        },
+        {
+          "q": "Is each client I manage isolated from the others?",
+          "a": "Yes. Each client is a separate organization inside Lucratix, and this isolation is covered by automated security tests — it doesn't rely only on manual care."
+        },
+        {
+          "q": "What is a \"baseline\" and why does it matter?",
+          "a": "It's each client's preserved history. It's never overwritten, so every period comparison uses that same client's real previous performance, instead of a generic average."
+        },
+        {
+          "q": "Does Lucratix replace the ad manager (Google Ads, Meta Ads)?",
+          "a": "No. Lucratix doesn't create or manage ad campaigns — it gathers those campaigns' results and connects them to the client's financials, to show what actually converted into results."
+        },
+        {
+          "q": "Can I generate a report to present to the client?",
+          "a": "Yes. The Report screen builds an executive report for the period and offers PDF export through the browser's print function."
+        },
+        {
+          "q": "What do the Owner, Admin, Analyst, and Viewer roles mean?",
+          "a": "They're the four access levels within an organization. Broadly, the Viewer tracks dashboard and indicators; the Analyst also accesses Analytics and detailed reports; Admin and Owner, in addition, manage the organization and who has access to it."
+        },
+        {
+          "q": "Does Lucratix integrate with Power BI?",
+          "a": "The architecture for that integration is already documented, but it isn't available for use yet — it depends on licensing that isn't configured today."
+        },
+        {
+          "q": "I forgot my password, how do I recover access?",
+          "a": "On the login screen, use the \"Forgot my password\" link to receive a secure reset link at your registered email."
+        },
+        {
+          "q": "Does the platform work well on mobile?",
+          "a": "Yes. The screens were built with a responsive layout, including the login and sign-up screens."
+        },
+        {
+          "q": "Does Lucratix claim that a campaign \"caused\" a result?",
+          "a": "No. Period comparisons show what changed and by how much, without attributing causation to a specific campaign — the interpretation of why it changed is still yours."
+        }
+      ],
+      "ctaTitle": "Ready to organize your clients' results?",
+      "ctaSubtitle": "Sign-up is open and takes less than a minute — no invitation required.",
+      "ctaCreateAccount": "Create my account",
+      "ctaAlreadyHaveAccount": "Already have an account — sign in"
+    }
+  },
+  "organizations": {
+    "list": {
+      "title": "Your companies",
+      "loggedInAsPrefix": "Signed in as",
+      "adminPanel": "Admin panel",
+      "signOut": "Sign out",
+      "confirmEmailBanner": "Confirm your email ({email}) to keep access to your account.",
+      "resending": "Sending...",
+      "resendVerification": "Resend confirmation email",
+      "resendDevModeLink": "Confirm now (development mode) →",
+      "resendGenericError": "Could not resend the email.",
+      "statusTabs": {
+        "groupLabel": "Filter by status",
+        "active": "Active",
+        "frozen": "Closed",
+        "all": "All"
+      },
+      "searchLabel": "Search company",
+      "searchPlaceholder": "Search company...",
+      "emptyNoOrganizations": {
+        "title": "No companies yet. Register the first one below.",
+        "description": "Each company/client has its own data, metrics, and history, fully isolated from the others."
+      },
+      "emptySearch": {
+        "title": "No company found for \"{query}\".",
+        "description": "Try a different search term."
+      },
+      "emptyFilter": {
+        "title": "No companies in this filter.",
+        "description": "Switch tabs to see companies in another state."
+      },
+      "showingCount": "Showing {shown} of {total}",
+      "loadMore": "Load more",
+      "addNewTitle": "Add new company",
+      "addNewDescription": "Each company/client registered here gets its own space, isolated from the others.",
+      "newOrganizationLabel": "New company",
+      "newOrganizationPlaceholder": "Company/client name",
+      "creating": "Creating...",
+      "create": "Create",
+      "createGenericError": "Could not create the company.",
+      "loadErrorTitle": "Could not load your companies",
+      "retry": "Try again",
+      "connectionError": "Could not connect to the server."
+    },
+    "companyCard": {
+      "closedBadge": "Closed",
+      "summary": {
+        "revenue": "Revenue",
+        "leads": "Leads",
+        "conversion": "Conversion",
+        "cac": "CAC"
+      },
+      "createdAt": "Created on {date}",
+      "openCompany": "Open company →"
+    }
+  },
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "analyst": "Analyst",
+    "viewer": "Viewer"
+  },
+  "organizationHome": {
+    "youAreIn": "You're in",
+    "dataSince": "Data since {date}",
+    "switchOrganization": "Switch company",
+    "quickAccess": "Quick access",
+    "quickActions": "Quick actions",
+    "quickActionItems": {
+      "registerRevenue": "Record revenue/expense",
+      "createCampaign": "Create campaign",
+      "addProduct": "Add product",
+      "createExperiment": "Create experiment",
+      "generateReport": "Generate report"
+    },
+    "baselineHistoryTitle": "Baseline history",
+    "noBaselineTitle": "No baseline recorded yet.",
+    "noBaselineDescription": "Record the first one below to track the business's progress over time.",
+    "summary": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC"
+    },
+    "registerNewBaselineTitle": "Record new baseline",
+    "blankFieldsHint": "Fields left blank are recorded as \"not available\", never as zero.",
+    "saving": "Saving...",
+    "registerBaseline": "Record baseline",
+    "monthSummaryTitle": "Month summary",
+    "seeFullIndicators": "See full indicators, with period filter",
+    "attention": "Attention",
+    "revenueDropAlert": "Revenue dropped {percent}% versus the baseline this month.",
+    "baselineGenericError": "Could not record the baseline."
+  },
+  "organizationLayout": {
+    "notFound": "Company not found or you don't have access to it.",
+    "yourCompanies": "Your companies",
+    "yourRole": "Your role: {role}",
+    "nav": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "products": "Products",
+      "financials": "Financials",
+      "marketing": "Marketing",
+      "funnel": "Funnel",
+      "experiments": "Experiments",
+      "reports": "Report",
+      "audit": "Audit log",
+      "centralDeDados": "Data Hub",
+      "glossary": "Glossary",
+      "companySettings": "Company settings"
+    },
+    "accountSectionTitle": "Account",
+    "accountSettings": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "navMenuLabel": "Navigation menu"
+  },
+  "analytics": {
+    "executiveViewTitle": "Executive View",
+    "notApplicable": "not applicable",
+    "vsPreviousPeriod": "vs. previous period",
+    "vsPreviousPeriodNa": "vs. previous period: n/a",
+    "ofTarget": "of target",
+    "incompleteDataWarning": "Financial data available for {available} of {total} months in the selected period — totals reflect only the recorded months.",
+    "monthlyEvolutionTitle": "Monthly evolution",
+    "exportCsv": "Export CSV",
+    "marketingTitle": "Marketing",
+    "noCampaignsWarning": "No campaign with a registered date in the selected period — marketing metrics could not be calculated.",
+    "byChannel": "By channel",
+    "metricLabels": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC",
+      "conversionRate": "Conversion",
+      "averageTicket": "Average ticket",
+      "recurrenceRate": "Recurrence",
+      "roas": "ROAS",
+      "roi": "ROI",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "cpl": "CPL",
+      "cpa": "CPA"
+    },
+    "correlationPanel": {
+      "title": "Correlation between metrics",
+      "description": "Compares two metrics month by month in the period selected above. Correlation shows that two metrics move together — never that one causes the other.",
+      "metricX": "Metric X",
+      "metricY": "Metric Y",
+      "genericError": "Could not calculate the correlation.",
+      "strength": {
+        "strong": "strong",
+        "moderate": "moderate",
+        "weak": "weak",
+        "veryWeak": "very weak"
+      },
+      "direction": {
+        "positive": "positive",
+        "negative": "negative"
+      },
+      "correlationLabel": "{strength} {direction} correlation",
+      "noCorrelation": "No correlation",
+      "monthsUsed": "{count, plural, one {# month} other {# months}} with both metrics in the period."
+    },
+    "correlationChart": {
+      "scatterLabel": "Scatter plot between {xLabel} and {yLabel}",
+      "scatterLabelNoData": "{chartLabel}: no months with both metrics in the period",
+      "noMonths": "No months with both metrics in the period.",
+      "tableCaption": "{chartLabel}, by month",
+      "month": "Month",
+      "noData": "no data"
+    },
+    "targetsPanel": {
+      "title": "Targets",
+      "description": "Set a monthly target per KPI. Revenue and Profit show the progress summed over the period selected above; the other metrics (ratios, not sums) compare month by month in the evolution chart.",
+      "metric": "Metric",
+      "month": "Month",
+      "target": "Target",
+      "save": "Save target",
+      "saving": "Saving...",
+      "loading": "Loading targets...",
+      "empty": "No targets set yet.",
+      "removeAriaLabel": "Remove {metric} target for {period}",
+      "loadError": "Could not load the targets.",
+      "invalidValue": "Enter a numeric value for the target.",
+      "saveError": "Could not save the target.",
+      "deleteError": "Could not remove the target."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notApplicable": "not applicable",
+    "baselineComparisonTitle": "Revenue: baseline vs. selected period",
+    "baseline": "Baseline",
+    "current": "Current",
+    "variation": "Variation",
+    "noBaselineToCompare": "No baseline recorded yet to compare against.",
+    "variationDisclaimer": "This variation is only observed — it does not claim to have been caused by the marketing actions taken (see docs/product/user-journey.md).",
+    "metricLabels": {
+      "revenue": "Revenue",
+      "profit": "Profit",
+      "margin": "Margin",
+      "cac": "CAC",
+      "conversionRate": "Conversion",
+      "averageTicket": "Average ticket",
+      "recurrenceRate": "Recurrence"
+    }
+  },
+  "financials": {
+    "title": "Financials",
+    "saveGenericError": "Could not save the period.",
+    "emptyTitle": "No financial period recorded yet.",
+    "emptyDescription": "Record the first period below.",
+    "period": "Period",
+    "revenue": "Revenue",
+    "profit": "Profit",
+    "margin": "Margin",
+    "costs": "Costs",
+    "expenses": "Expenses",
+    "marketingInvestment": "Marketing investment",
+    "saving": "Saving...",
+    "savePeriod": "Save period"
+  },
+  "funnel": {
+    "title": "Funnel",
+    "saveGenericError": "Could not save the funnel.",
+    "emptyTitle": "No funnel snapshot recorded yet.",
+    "period": "Period",
+    "saving": "Saving...",
+    "savePeriod": "Save period",
+    "fields": {
+      "impressions": "Impressions",
+      "visits": "Visits",
+      "leads": "Leads",
+      "mqls": "MQLs",
+      "sqls": "SQLs",
+      "opportunities": "Opportunities",
+      "customers": "Customers",
+      "repeat_purchases": "Repeat purchases"
+    }
+  },
+  "products": {
+    "title": "Products and services",
+    "createGenericError": "Could not create the product.",
+    "updateGenericError": "Could not update the product.",
+    "emptyTitle": "No product registered yet.",
+    "emptyDescription": "Add the first product or service below.",
+    "name": "Name",
+    "price": "Price",
+    "cost": "Cost",
+    "margin": "Margin",
+    "status": "Status",
+    "active": "active",
+    "inactive": "inactive",
+    "creating": "Creating...",
+    "add": "Add"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "createChannelGenericError": "Could not create the channel.",
+    "createCampaignGenericError": "Could not create the campaign.",
+    "channelsTitle": "Channels",
+    "noChannels": "No channel registered yet.",
+    "newChannel": "New channel",
+    "newChannelPlaceholder": "E.g.: Google Ads",
+    "add": "Add",
+    "campaignsTitle": "Campaigns",
+    "noCampaigns": "No campaign recorded yet.",
+    "name": "Name",
+    "period": "Period",
+    "investment": "Investment",
+    "attributedRevenue": "Attributed revenue",
+    "channel": "Channel",
+    "selectPlaceholder": "Select",
+    "campaignName": "Campaign name",
+    "startDate": "Start",
+    "endDate": "End",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "leads": "Leads",
+    "customers": "Customers",
+    "creating": "Creating...",
+    "addCampaign": "Add campaign"
+  },
+  "reports": {
+    "title": "Executive report",
+    "printOrSavePdf": "Print / Save as PDF",
+    "generatedFor": "{name} — generated on {date}",
+    "vsBaseline": "Vs. baseline",
+    "revenueLabel": "Revenue",
+    "na": "n/a",
+    "variationNotApplicable": "variation not applicable",
+    "noBaselineYet": "No baseline recorded yet.",
+    "periodMarketing": "Marketing for the period",
+    "noCampaignsThisPeriod": "No campaign with a registered date in this period.",
+    "vsPreviousMonth": "vs. previous month"
+  },
+  "orgSettings": {
+    "frozenBanner": {
+      "title": "This company is closed.",
+      "description": "Data remains available to view, but new records are blocked.",
+      "reasonPrefix": "Reason"
+    },
+    "logo": {
+      "uploadGenericError": "Could not upload the image.",
+      "removeGenericError": "Could not remove the logo.",
+      "previewAlt": "Logo preview",
+      "formatHint": "PNG, JPEG, or WEBP, up to 2 MB.",
+      "uploading": "Uploading...",
+      "save": "Save logo",
+      "removing": "Removing...",
+      "remove": "Remove logo"
+    },
+    "title": "Company settings",
+    "logoHeading": "Logo",
+    "loadError": "Could not load this company's data.",
+    "forbidden": "You don't have permission to edit this company.",
+    "companyData": "Company data",
+    "name": "Name",
+    "tradeName": "Trade name",
+    "segment": "Segment",
+    "cnpj": "Tax ID",
+    "notes": "Notes",
+    "saveError": "Could not save the changes.",
+    "dataSaved": "Data saved.",
+    "saving": "Saving...",
+    "saveData": "Save data",
+    "lifecycle": "Lifecycle",
+    "frozenDescription": "This company is closed. Reactivate it to start recording data again.",
+    "activeDescription": "Closing doesn't delete any data — the company becomes frozen (read-only) and can be reactivated at any time.",
+    "freezeError": "Could not close the company.",
+    "reactivateError": "Could not reactivate the company.",
+    "reactivating": "Reactivating...",
+    "reactivate": "Reactivate company",
+    "freeze": "Close company",
+    "freezeDialogTitle": "Close this company?",
+    "freezeDialogDescription": "The data won't be deleted. The company will become frozen (read-only) and can be reactivated later.",
+    "freezeConfirmLabel": "Close",
+    "freezeReasonLabel": "Reason (optional)",
+    "freezeReasonPlaceholder": "E.g.: contract ended, client withdrew..."
+  },
+  "authHero": {
+    "points": [
+      "Baselines and dashboards per client, always isolated",
+      "Full funnel: impression to repeat purchase",
+      "CRO experiments with real statistical significance"
+    ],
+    "kpiLabels": [
+      "Revenue",
+      "Margin",
+      "Profit"
+    ],
+    "demoDataDisclaimer": "Illustrative data — does not reflect a real company."
+  },
+  "auth": {
+    "login": {
+      "heroEyebrow": "Platform access",
+      "heroTitle": "Your clients. Your numbers. One single view.",
+      "heroDescription": "Baselines, funnel, campaigns, and CRO experiments — organized by company, ready to guide the next decision.",
+      "title": "Welcome back",
+      "subtitle": "Access your business intelligence environment.",
+      "sessionRevokedSuffix": "Sign in again to continue.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot my password",
+      "submitting": "Signing in...",
+      "submit": "Sign in",
+      "sessionProtected": "Your session stays protected and you remain securely connected.",
+      "noAccountPrefix": "Don't have an account yet?",
+      "signUp": "Sign up",
+      "learnMorePrefix": "Don't know Lucratix yet?",
+      "learnMoreLink": "Learn about the app"
+    },
+    "register": {
+      "heroEyebrow": "Get started now",
+      "heroTitle": "Replace scattered spreadsheets with one single, up-to-date, reliable view.",
+      "heroDescription": "Register your first company in seconds and start tracking baselines, campaigns, and results today.",
+      "title": "Create your Lucratix account",
+      "subtitle": "Start turning data into decisions in minutes.",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeContinue": "Continue to confirm your email →",
+      "submitting": "Submitting...",
+      "submit": "Sign up",
+      "hasAccountPrefix": "Already have an account?",
+      "signIn": "Sign in",
+      "learnMorePrefix": "Want to learn more before signing up?",
+      "learnMoreLink": "Learn about the app"
+    },
+    "forgotPassword": {
+      "heroEyebrow": "Account recovery",
+      "heroTitle": "It happens. Let's get you back into your account.",
+      "heroDescription": "Enter your registered email and we'll send you a secure link to choose a new password.",
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email to receive a reset link.",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeContinue": "Continue to reset your password →",
+      "backToLogin": "Back to login",
+      "emailLabel": "Email",
+      "submitting": "Sending...",
+      "submit": "Send reset link",
+      "learnMorePrefix": "Don't know Lucratix yet?",
+      "learnMoreLink": "Learn about the app"
+    },
+    "resetPassword": {
+      "heroEyebrow": "Account recovery",
+      "heroTitle": "Choose a new password to continue.",
+      "heroDescription": "Use a strong, unique password for Lucratix — never reuse passwords from other services.",
+      "passwordMismatch": "Passwords don't match.",
+      "invalidLinkTitle": "Invalid link",
+      "invalidLinkSubtitle": "This reset link is incomplete or has already been used.",
+      "requestNewLink": "Request a new link →",
+      "doneTitle": "Password changed successfully",
+      "doneSubtitle": "Your password has been reset. Sign in again to continue.",
+      "goToLogin": "Go to login",
+      "title": "New password",
+      "subtitle": "Choose a new password for your account.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "submitting": "Saving...",
+      "submit": "Reset password",
+      "learnMorePrefix": "Don't know Lucratix yet?",
+      "learnMoreLink": "Learn about the app"
+    },
+    "confirmEmail": {
+      "heroEyebrow": "Email confirmation",
+      "heroTitle": "Confirming your access to Lucratix.",
+      "heroDescription": "This ensures that only you can use the account registered with this email.",
+      "loadingTitle": "Confirming...",
+      "successTitle": "Email confirmed",
+      "successSubtitle": "Your email was verified successfully.",
+      "goToOrganizations": "Go to Your companies",
+      "errorTitle": "Invalid link",
+      "errorSubtitleWithToken": "This confirmation link is incomplete, expired, or has already been used.",
+      "errorSubtitleWithoutToken": "This confirmation link is incomplete or has already been used.",
+      "errorHintPrefix": "You can request a new confirmation email from",
+      "errorHintLink": "Your companies",
+      "errorHintSuffix": "after signing in.",
+      "learnMorePrefix": "Don't know Lucratix yet?",
+      "learnMoreLink": "Learn about the app"
+    }
+  },
+  "centralDeDados": {
+    "importWizard": {
+      "title": "Import data",
+      "domainLabel": "Domain",
+      "acceptedFormats": "Accepted formats: CSV, Excel (.xlsx), or JSON, up to 5 MB.",
+      "sending": "Sending...",
+      "continueButton": "Continue",
+      "sheetIntro": "{fileName} has more than one sheet. Which sheet corresponds to {domainLabel}?",
+      "sheetLabel": "Sheet",
+      "cancel": "Cancel",
+      "uploadError": "Could not send the file.",
+      "previewLoadError": "Could not load the preview.",
+      "doNotMap": "— do not map —",
+      "requiredSuffix": " (required)",
+      "confidenceHigh": "high confidence",
+      "confidenceMedium": "medium confidence",
+      "confidenceLow": "low confidence",
+      "confidenceNone": "no suggestion",
+      "dateFormatLabel": "Date format (Period field)",
+      "dateFormatDMY": "Day/Month/Year (31/12/2026)",
+      "dateFormatMDY": "Month/Day/Year (12/31/2026)",
+      "dateFormatISO": "Year-Month-Day (2026-12-31)",
+      "validating": "Validating...",
+      "missingRequiredField": "Required field not mapped: {fields}.",
+      "incompleteMapping": "Incomplete mapping — review the fields below.",
+      "mappingSaveError": "Could not save the mapping.",
+      "confirmError": "Could not confirm the import.",
+      "errorsLoadError": "Could not load the errors.",
+      "rowsSuffix": "{count} row(s)",
+      "validSuffix": "{count} valid",
+      "duplicateSuffix": "{count} duplicate",
+      "invalidSuffix": "{count} invalid",
+      "statusValid": "valid",
+      "statusInvalid": "invalid",
+      "statusDuplicate": "duplicate",
+      "rowColumn": "Row",
+      "statusColumn": "Status",
+      "dataColumn": "Data",
+      "loadMore": "Load more",
+      "loadingEllipsis": "Loading...",
+      "duplicateRowsLabel": "Duplicate rows",
+      "duplicateSkip": "Skip (keep the existing record)",
+      "duplicateUpdate": "Update the existing record",
+      "confirming": "Confirming...",
+      "confirmImport": "Confirm import",
+      "importCompleted": "Import completed: {created} created, {updated} updated, {skipped} skipped",
+      "invalidPart": ", {count} invalid",
+      "viewErrors": "View errors",
+      "fieldColumn": "Field",
+      "errorColumn": "Error",
+      "newImport": "New import",
+      "mappingIntroRest": "{hasSheet, select, true { (sheet \"{sheetName}\")} other {}} — {rowCount} row(s). Confirm which field each column of the file corresponds to."
+    },
+    "title": "Data Hub",
+    "description": "Import and export this company's data.",
+    "historyTitle": "Import history",
+    "emptyTitle": "No imports done yet.",
+    "emptyDescription": "The history appears here after the first import above.",
+    "writeRestricted": "Only Analyst or higher can import data. You can still export the data above.",
+    "status": {
+      "sent": "Sent",
+      "awaitingMapping": "Awaiting mapping",
+      "readyToConfirm": "Ready to confirm",
+      "completed": "Completed",
+      "completedWithErrors": "Completed with errors",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "history": {
+      "rowsSuffix": "{count} row(s)",
+      "createdSuffix": "{count} created",
+      "updatedSuffix": "{count} updated",
+      "skippedSuffix": "{count} skipped",
+      "invalidSuffix": "{count} invalid",
+      "rowError": "{hasField, select, true {Row {number} ({field}): } other {Row {number}: }}"
+    }
+  },
+  "audit": {
+    "title": "Audit",
+    "forbidden": "Only organization admins can view the audit log.",
+    "whenColumn": "When",
+    "actionColumn": "Action",
+    "entityColumn": "Entity",
+    "empty": "No events recorded yet."
+  },
+  "glossario": {
+    "title": "Glossary",
+    "description": "All metrics and acronyms used in the system, explained in detail.",
+    "searchLabel": "Search indicator",
+    "searchPlaceholder": "Search indicator...",
+    "alphabetNavLabel": "Alphabetical navigation",
+    "emptyTitle": "No indicator found.",
+    "emptyDescription": "Try another search term or remove the category filter.",
+    "exampleLabel": "Example:",
+    "categories": {
+      "all": "All",
+      "financeiro": "Financial",
+      "marketing": "Marketing",
+      "vendas": "Sales",
+      "clientes": "Customers",
+      "crescimento": "Growth"
+    }
+  },
+  "admin": {
+    "layout": {
+      "title": "Admin Panel",
+      "superAdmin": "Super Admin",
+      "backToOrganizations": "Your companies",
+      "exitPanel": "Exit panel",
+      "navOrganizations": "Companies",
+      "navUsers": "Users"
+    },
+    "organizations": {
+      "title": "All companies",
+      "description": "Every company registered on the platform, who owns it, and how many members it has.",
+      "loadError": "Could not load.",
+      "empty": "No companies registered yet.",
+      "ownerLine": "{hasOwner, select, true {Owner: {ownerName} ({ownerEmail})} other {No owner set}} · {count} member(s)",
+      "manageMembers": "Manage members"
+    },
+    "members": {
+      "backToOrganizations": "All companies",
+      "title": "Company members",
+      "loadError": "Could not load the members.",
+      "grantError": "Could not grant access.",
+      "roleChangeError": "Could not change the role.",
+      "revokeError": "Could not revoke access.",
+      "empty": "No members in this company yet.",
+      "nameColumn": "Name",
+      "emailColumn": "Email",
+      "roleColumn": "Role",
+      "revoking": "Revoking...",
+      "revoke": "Revoke",
+      "grantAccess": "Grant access",
+      "grantAccessHint": "If the email doesn't have an account on the platform yet, enter the name — the account is created right away.",
+      "nameIfNoAccount": "Name (if there's no account yet)",
+      "granting": "Granting...",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeAccountCreated": "Account created for {email}. Copy the link below and send it manually — it sets the password on first access."
+    },
+    "users": {
+      "title": "All users",
+      "description": "Every account registered on the platform, active or not, with or without access to any company.",
+      "loadError": "Could not load the users.",
+      "createError": "Could not create the user.",
+      "updateError": "Could not update the user.",
+      "empty": "No users registered yet.",
+      "nameColumn": "Name",
+      "emailColumn": "Email",
+      "organizationsColumn": "Companies",
+      "statusColumn": "Status",
+      "superAdminColumn": "Super Admin",
+      "you": "(you)",
+      "active": "active",
+      "inactive": "inactive",
+      "superAdminBadge": "super admin",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "removeSuperAdmin": "Remove super admin",
+      "makeSuperAdmin": "Make super admin",
+      "createUser": "Create user",
+      "createUserHint": "Creates the account with no access to any company yet — grant access later from the company screen.",
+      "creating": "Creating...",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeCopyLink": "Copy the link below and send it manually — it sets the password on first access."
+    }
+  },
+  "experiments": {
+    "title": "Experiments (CRO)",
+    "createError": "Could not create the experiment.",
+    "variantUpdateError": "Could not update the variant.",
+    "emptyTitle": "No experiments created yet.",
+    "emptyDescription": "Create the first A/B test below — control and variant are created automatically.",
+    "leadingVariant": "Leading variant (indicative): {name}",
+    "noLeadingVariant": "No leading variant indicated.",
+    "newExperiment": "New experiment",
+    "hypothesisLabel": "Hypothesis",
+    "pageOrProcessLabel": "Page/process",
+    "primaryMetricLabel": "Primary metric",
+    "metricConversionRate": "Conversion rate",
+    "metricAverageTicket": "Average ticket",
+    "metricCac": "CAC",
+    "creating": "Creating...",
+    "createButton": "Create experiment (Control + Variant)",
+    "baseline": "baseline",
+    "test": "test",
+    "significant": "significant",
+    "notSignificant": "not significant",
+    "sampleSizePlaceholder": "Sample",
+    "conversionsPlaceholder": "Conversions"
+  }
+}

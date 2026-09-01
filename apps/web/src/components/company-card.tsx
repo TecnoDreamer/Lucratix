@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { cardHover } from "@/lib/ui";
 import { Badge } from "@/components/ui";
 import { OrganizationLogo } from "@/components/organization-logo";
 import { IconChevronRight, IconClock } from "@/components/icons";
-import { roleLabel } from "@/lib/roles";
+import { useRoleLabel } from "@/lib/roles";
 import { formatMetric, type OrganizationSummary } from "@/lib/metrics";
 import type { Organization } from "@/lib/types";
 
@@ -31,7 +32,11 @@ export function CompanyCard({
   organization: Organization;
   summary?: OrganizationSummary;
 }) {
+  const t = useTranslations("organizations.companyCard");
+  const tCommon = useTranslations("common");
+  const roleLabel = useRoleLabel();
   const role = roleLabel(organization.my_role);
+  const notApplicable = tCommon("notApplicable");
 
   return (
     <Link
@@ -59,17 +64,20 @@ export function CompanyCard({
         <div className="flex flex-wrap gap-1.5">
           {role && <Badge tone="blue">{role}</Badge>}
           {organization.segment && <Badge tone="slate">{organization.segment}</Badge>}
-          {organization.status === "frozen" && <Badge tone="slate">Encerrada</Badge>}
+          {organization.status === "frozen" && <Badge tone="slate">{t("closedBadge")}</Badge>}
         </div>
       )}
 
       {summary && (
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-center dark:bg-slate-800/60">
           {[
-            { label: "Receita", value: formatMetric(summary.revenue) },
-            { label: "Leads", value: summary.leads === null ? "não aplicável" : summary.leads.toLocaleString("pt-BR") },
-            { label: "Conversão", value: formatMetric(summary.conversion_rate, { percent: true }) },
-            { label: "CAC", value: formatMetric(summary.cac) },
+            { label: t("summary.revenue"), value: formatMetric(summary.revenue, { notApplicableLabel: notApplicable }) },
+            { label: t("summary.leads"), value: summary.leads === null ? notApplicable : summary.leads.toLocaleString("pt-BR") },
+            {
+              label: t("summary.conversion"),
+              value: formatMetric(summary.conversion_rate, { percent: true, notApplicableLabel: notApplicable }),
+            },
+            { label: t("summary.cac"), value: formatMetric(summary.cac, { notApplicableLabel: notApplicable }) },
           ].map(({ label: metricLabel, value }) => (
             <div key={metricLabel} className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
@@ -84,10 +92,10 @@ export function CompanyCard({
       <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
         <span className="flex items-center gap-1.5">
           <IconClock className="h-3.5 w-3.5" />
-          Criada em {formatCreatedAt(organization.created_at)}
+          {t("createdAt", { date: formatCreatedAt(organization.created_at) })}
         </span>
         <span className="font-medium text-blue-600 group-hover:underline dark:text-blue-400">
-          Abrir empresa →
+          {t("openCompany")}
         </span>
       </div>
     </Link>

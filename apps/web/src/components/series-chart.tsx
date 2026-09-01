@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { useTranslations } from "next-intl";
 import { formatCompactNumber, formatMonthYear, formatPercentage } from "@/lib/formatters";
 import type { MetricResult } from "@/lib/metrics";
 
@@ -69,22 +70,23 @@ function buildLinePath(values: (number | null)[], x: (i: number) => number, y: (
  * cada círculo, não uma leitura sequencial normal da página.
  */
 export function SeriesChart({ points, percent, label, targets }: SeriesChartProps) {
+  const t = useTranslations("common.seriesChart");
   const gradientId = useId();
   const values = points.map((p) => (p.metric.is_applicable ? p.metric.value : null));
   const present = values.filter((v): v is number => v !== null);
   const targetValues = targets ?? points.map(() => null);
   const presentTargets = targetValues.filter((v): v is number => v !== null);
-  const chartLabel = label ? `${label} — evolução mensal` : "Evolução mensal";
+  const chartLabel = label ? t("labelWithMetric", { label }) : t("defaultLabel");
 
   if (present.length === 0) {
     return (
       <div
         role="img"
-        aria-label={`${chartLabel}: sem dados suficientes no período`}
+        aria-label={t("labelNoData", { chartLabel })}
         className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
         style={{ height: HEIGHT }}
       >
-        Sem dados suficientes no período.
+        {t("noData")}
       </div>
     );
   }
@@ -161,7 +163,7 @@ export function SeriesChart({ points, percent, label, targets }: SeriesChartProp
             strokeLinecap="round"
             className="text-amber-500 dark:text-amber-400"
           >
-            <title>Meta</title>
+            <title>{t("target")}</title>
           </path>
         )}
 
@@ -174,7 +176,9 @@ export function SeriesChart({ points, percent, label, targets }: SeriesChartProp
             <circle key={p.period} cx={x(i)} cy={y(v)} r={2.5} fill="currentColor">
               <title>
                 {formatMonthYear(p.period)}: {formatCompactValue(v, percent)}
-                {targetValues[i] !== null ? ` (meta: ${formatCompactValue(targetValues[i]!, percent)})` : ""}
+                {targetValues[i] !== null
+                  ? ` (${t("targetValue", { value: formatCompactValue(targetValues[i]!, percent) })})`
+                  : ""}
               </title>
             </circle>
           );
@@ -198,21 +202,21 @@ export function SeriesChart({ points, percent, label, targets }: SeriesChartProp
       </svg>
 
       <table className="sr-only">
-        <caption>{chartLabel}, por mês</caption>
+        <caption>{t("tableCaption", { chartLabel })}</caption>
         <thead>
           <tr>
-            <th scope="col">Mês</th>
-            <th scope="col">Valor</th>
-            {targets && <th scope="col">Meta</th>}
+            <th scope="col">{t("month")}</th>
+            <th scope="col">{t("value")}</th>
+            {targets && <th scope="col">{t("target")}</th>}
           </tr>
         </thead>
         <tbody>
           {points.map((p, i) => (
             <tr key={p.period}>
               <td>{formatMonthYear(p.period)}</td>
-              <td>{values[i] === null ? "sem dado" : formatCompactValue(values[i]!, percent)}</td>
+              <td>{values[i] === null ? t("noDataCell") : formatCompactValue(values[i]!, percent)}</td>
               {targets && (
-                <td>{targetValues[i] === null ? "sem meta" : formatCompactValue(targetValues[i]!, percent)}</td>
+                <td>{targetValues[i] === null ? t("noTarget") : formatCompactValue(targetValues[i]!, percent)}</td>
               )}
             </tr>
           ))}

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import type { Experiment, ExperimentResult } from "@/lib/business";
 import { buttonPrimary, buttonSecondary, input, label, select as selectClass, sectionTitle } from "@/lib/ui";
@@ -19,6 +20,8 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function ExperimentsPage() {
+  const t = useTranslations("experiments");
+  const tCommon = useTranslations("common");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -44,7 +47,7 @@ export default function ExperimentsPage() {
           router.push(loginRedirectPath(err));
           return;
         }
-        setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -52,6 +55,8 @@ export default function ExperimentsPage() {
     return () => {
       cancelled = true;
     };
+    // t/tCommon (tradutores) omitidos de propósito: nunca são referencialmente
+    // estáveis entre renders — ver nota em organizations/page.tsx.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -70,7 +75,7 @@ export default function ExperimentsPage() {
       setHypothesis("");
       setPageOrProcess("");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível criar o experimento.");
+      setError(err instanceof ApiError ? err.message : t("createError"));
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +97,7 @@ export default function ExperimentsPage() {
       );
       setResults((prev) => ({ ...prev, [experimentId]: result }));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível atualizar a variante.");
+      setError(err instanceof ApiError ? err.message : t("variantUpdateError"));
     }
   }
 
@@ -100,7 +105,7 @@ export default function ExperimentsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconFlask className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Experimentos (CRO)</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -115,8 +120,8 @@ export default function ExperimentsPage() {
         ) : experiments.length === 0 ? (
           <EmptyState
             icon={<IconFlask className="h-5 w-5" />}
-            title="Nenhum experimento criado ainda."
-            description="Crie o primeiro teste A/B abaixo — controle e variante são criados automaticamente."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         ) : (
           <ul className="flex flex-col gap-3">
@@ -154,8 +159,8 @@ export default function ExperimentsPage() {
                       <div className="mt-3 rounded-lg bg-blue-50 p-3 text-xs text-blue-900 dark:bg-blue-500/10 dark:text-blue-200">
                         <p className="font-medium">
                           {result.leading_variant_name
-                            ? `Variante em vantagem (indicativo): ${result.leading_variant_name}`
-                            : "Nenhuma variante em vantagem indicada."}
+                            ? t("leadingVariant", { name: result.leading_variant_name })
+                            : t("noLeadingVariant")}
                         </p>
                         <p className="mt-1 text-blue-800/80 dark:text-blue-200/80">{result.note}</p>
                       </div>
@@ -169,14 +174,14 @@ export default function ExperimentsPage() {
       </div>
 
       <Card className="mt-6 p-5">
-        <h2 className={sectionTitle}>Novo experimento</h2>
+        <h2 className={sectionTitle}>{t("newExperiment")}</h2>
         <form onSubmit={handleCreate} className="mt-3 flex flex-col gap-3">
           <label className={label}>
-            Hipótese
+            {t("hypothesisLabel")}
             <input required value={hypothesis} onChange={(e) => setHypothesis(e.target.value)} className={input} />
           </label>
           <label className={label}>
-            Página/processo
+            {t("pageOrProcessLabel")}
             <input
               required
               value={pageOrProcess}
@@ -185,19 +190,19 @@ export default function ExperimentsPage() {
             />
           </label>
           <label className={label}>
-            Métrica principal
+            {t("primaryMetricLabel")}
             <select
               value={primaryMetric}
               onChange={(e) => setPrimaryMetric(e.target.value)}
               className={selectClass}
             >
-              <option value="conversion_rate">Taxa de conversão</option>
-              <option value="average_ticket">Ticket médio</option>
-              <option value="cac">CAC</option>
+              <option value="conversion_rate">{t("metricConversionRate")}</option>
+              <option value="average_ticket">{t("metricAverageTicket")}</option>
+              <option value="cac">{t("metricCac")}</option>
             </select>
           </label>
           <button type="submit" disabled={submitting} className={`${buttonPrimary} self-start`}>
-            {submitting ? "Criando..." : "Criar experimento (Controle + Variante)"}
+            {submitting ? t("creating") : t("createButton")}
           </button>
         </form>
       </Card>
@@ -214,6 +219,8 @@ function VariantEditor({
   significance?: { p_value: number | null; is_significant: boolean | null };
   onSave: (sampleSize: string, conversions: string) => void;
 }) {
+  const t = useTranslations("experiments");
+  const tCommon = useTranslations("common");
   const [sampleSize, setSampleSize] = useState(variant.sample_size?.toString() ?? "");
   const [conversions, setConversions] = useState(variant.conversions?.toString() ?? "");
 
@@ -221,10 +228,10 @@ function VariantEditor({
     <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
       <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-50">
         {variant.name}
-        <Badge tone="slate">{variant.name === "Controle" ? "baseline" : "teste"}</Badge>
+        <Badge tone="slate">{variant.name === "Controle" ? t("baseline") : t("test")}</Badge>
         {significance?.p_value !== null && significance?.p_value !== undefined && (
           <Badge tone={significance.is_significant ? "emerald" : "slate"}>
-            {significance.is_significant ? "significativo" : "não significativo"} (p=
+            {significance.is_significant ? t("significant") : t("notSignificant")} (p=
             {significance.p_value.toFixed(3)})
           </Badge>
         )}
@@ -232,20 +239,20 @@ function VariantEditor({
       <div className="mt-2 flex gap-2">
         <input
           type="number"
-          placeholder="Amostra"
+          placeholder={t("sampleSizePlaceholder")}
           value={sampleSize}
           onChange={(e) => setSampleSize(e.target.value)}
           className={`${input} w-20 text-xs`}
         />
         <input
           type="number"
-          placeholder="Conversões"
+          placeholder={t("conversionsPlaceholder")}
           value={conversions}
           onChange={(e) => setConversions(e.target.value)}
           className={`${input} w-24 text-xs`}
         />
         <button onClick={() => onSave(sampleSize, conversions)} className={`${buttonSecondary} px-2.5 py-1 text-xs`}>
-          Salvar
+          {tCommon("save")}
         </button>
       </div>
     </div>

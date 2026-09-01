@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeWatcher } from "@/components/theme-watcher";
+import { LocaleSync } from "@/components/locale-sync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,10 +28,17 @@ export const metadata: Metadata = {
   applicationName: "Lucratix",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Idioma resolvido no servidor a partir do cookie NEXT_LOCALE (ver
+  // src/i18n/request.ts) — nunca da URL. `<html lang>` reflete o idioma
+  // de verdade (acessibilidade/SEO), independente de qualquer prefixo de
+  // rota, que este app deliberadamente não tem (docs/adr/0009).
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="pt-BR"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
@@ -37,8 +47,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <ThemeWatcher />
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeWatcher />
+          <LocaleSync />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

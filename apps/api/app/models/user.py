@@ -32,6 +32,13 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # por isso vive como flag no usuario e nao como Membership.role.
     is_platform_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Idioma da interface (i18n, 2026-09-01) — mesma semantica de tri-state
+    # de email_verified_at acima: None e "nunca escolheu, usa o padrao
+    # pt-BR" (aplicado no frontend), nao "escolheu pt-BR". Global por
+    # usuario (nao por organizacao) — ao contrario de user_workspace_preferences,
+    # idioma nao muda dependendo de qual empresa o usuario esta vendo.
+    locale: Mapped[str | None] = mapped_column(String(5), nullable=True)
+
     memberships: Mapped[list["Membership"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

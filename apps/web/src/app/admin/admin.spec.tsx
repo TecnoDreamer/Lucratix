@@ -24,6 +24,7 @@ const PLATFORM_ADMIN: User = {
   email: "admin@example.com",
   is_platform_admin: true,
   email_verified: true,
+  locale: null,
 };
 
 const REGULAR_USER: User = {
@@ -32,6 +33,7 @@ const REGULAR_USER: User = {
   email: "comum@example.com",
   is_platform_admin: false,
   email_verified: true,
+  locale: null,
 };
 
 afterEach(() => {

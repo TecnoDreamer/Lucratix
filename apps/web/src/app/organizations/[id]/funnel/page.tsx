@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type FunnelSnapshot } from "@/lib/business";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
@@ -17,20 +18,24 @@ function currentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
-const FIELDS: { key: keyof FunnelSnapshot; label: string }[] = [
-  { key: "impressions", label: "Impressões" },
-  { key: "visits", label: "Visitas" },
-  { key: "leads", label: "Leads" },
-  { key: "mqls", label: "MQLs" },
-  { key: "sqls", label: "SQLs" },
-  { key: "opportunities", label: "Oportunidades" },
-  { key: "customers", label: "Clientes" },
-  { key: "repeat_purchases", label: "Recompras" },
+const FIELD_KEYS: (keyof FunnelSnapshot)[] = [
+  "impressions",
+  "visits",
+  "leads",
+  "mqls",
+  "sqls",
+  "opportunities",
+  "customers",
+  "repeat_purchases",
 ];
 
 export default function FunnelPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations("funnel");
+  const tCommon = useTranslations("common");
+  const tFields = useTranslations("funnel.fields");
+  const FIELDS = FIELD_KEYS.map((key) => ({ key, label: tFields(key) }));
 
   const [snapshots, setSnapshots] = useState<FunnelSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +57,7 @@ export default function FunnelPage() {
           router.push(loginRedirectPath(err));
           return;
         }
-        setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -81,7 +86,7 @@ export default function FunnelPage() {
         return [...withoutSamePeriod, saved].sort((a, b) => (a.period < b.period ? 1 : -1));
       });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível salvar o funil.");
+      setError(err instanceof ApiError ? err.message : t("saveGenericError"));
     } finally {
       setSubmitting(false);
     }
@@ -91,7 +96,7 @@ export default function FunnelPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconFunnel className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Funil</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -106,14 +111,14 @@ export default function FunnelPage() {
         ) : snapshots.length === 0 ? (
           <EmptyState
             icon={<IconFunnel className="h-5 w-5" />}
-            title="Nenhum snapshot de funil registrado ainda."
+            title={t("emptyTitle")}
           />
         ) : (
           <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
-                  <th className="px-4 py-2.5">Período</th>
+                  <th className="px-4 py-2.5">{t("period")}</th>
                   {FIELDS.map((f) => (
                     <th key={f.key} className="px-4 py-2.5">
                       {f.label}
@@ -129,7 +134,7 @@ export default function FunnelPage() {
                     </td>
                     {FIELDS.map((f) => (
                       <td key={f.key} className="px-4 py-2.5">
-                        {formatValue(s[f.key] as number | null)}
+                        {formatValue(s[f.key] as number | null, tCommon("notApplicable"))}
                       </td>
                     ))}
                   </tr>
@@ -143,7 +148,7 @@ export default function FunnelPage() {
       <Card className="mt-6 p-5">
         <form onSubmit={handleSave} className="flex flex-wrap items-end gap-3">
           <label className={label}>
-            Período
+            {t("period")}
             <input
               type="month"
               value={period.slice(0, 7)}
@@ -163,7 +168,7 @@ export default function FunnelPage() {
             </label>
           ))}
           <button type="submit" disabled={submitting} className={buttonPrimary}>
-            {submitting ? "Salvando..." : "Salvar período"}
+            {submitting ? t("saving") : t("savePeriod")}
           </button>
         </form>
       </Card>

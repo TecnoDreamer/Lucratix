@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { buttonSecondary } from "@/lib/ui";
 import { Alert } from "@/components/ui";
@@ -18,6 +19,7 @@ export function LogoUploader({
   organization: Organization;
   onUpdated: (organization: Organization) => void;
 }) {
+  const t = useTranslations("orgSettings.logo");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -46,7 +48,7 @@ export function LogoUploader({
       setPendingFile(null);
       setPreviewUrl(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível enviar a imagem.");
+      setError(err instanceof ApiError ? err.message : t("uploadGenericError"));
     } finally {
       setUploading(false);
     }
@@ -61,7 +63,7 @@ export function LogoUploader({
       setPendingFile(null);
       setPreviewUrl(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível remover o logotipo.");
+      setError(err instanceof ApiError ? err.message : t("removeGenericError"));
     } finally {
       setRemoving(false);
     }
@@ -75,7 +77,7 @@ export function LogoUploader({
         // eslint-disable-next-line @next/next/no-img-element -- preview local (blob:), next/image não aceita esse esquema
         <img
           src={previewUrl}
-          alt="Pré-visualização do logotipo"
+          alt={t("previewAlt")}
           className="h-16 w-16 shrink-0 rounded-xl object-cover shadow-sm"
         />
       ) : (
@@ -83,9 +85,7 @@ export function LogoUploader({
       )}
 
       <div className="flex flex-1 flex-col gap-2">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          PNG, JPEG ou WEBP, até 2&nbsp;MB.
-        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t("formatHint")}</p>
         <input
           type="file"
           accept=".png,.jpg,.jpeg,.webp"
@@ -100,7 +100,7 @@ export function LogoUploader({
               disabled={uploading}
               className={`${buttonSecondary} text-sm`}
             >
-              {uploading ? "Enviando..." : "Salvar logotipo"}
+              {uploading ? t("uploading") : t("save")}
             </button>
           )}
           {organization.logo_url && !pendingFile && (
@@ -110,7 +110,7 @@ export function LogoUploader({
               disabled={removing}
               className={`${buttonSecondary} text-sm`}
             >
-              {removing ? "Removendo..." : "Remover logotipo"}
+              {removing ? t("removing") : t("remove")}
             </button>
           )}
         </div>

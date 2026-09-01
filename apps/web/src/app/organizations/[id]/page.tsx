@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonPrimary, card, cardHover, input, label, link as linkClass, sectionTitle } from "@/lib/ui";
 import { Alert, Badge, Card, EmptyState, Skeleton } from "@/components/ui";
@@ -11,8 +12,8 @@ import { useOrganization } from "@/contexts/organization-context";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { useWorkspacePreferences } from "@/hooks/use-workspace-preferences";
 import { currentMonthPeriod, formatMetric } from "@/lib/metrics";
-import { canPerformActions, roleLabel } from "@/lib/roles";
-import { quickAccessHref, visibleQuickAccess } from "@/lib/quick-access";
+import { canPerformActions, useRoleLabel } from "@/lib/roles";
+import { quickAccessHref, useQuickAccessLabels, visibleQuickAccess } from "@/lib/quick-access";
 import {
   IconClock,
   IconDollar,
@@ -26,8 +27,8 @@ import {
 } from "@/components/icons";
 import type { Baseline } from "@/lib/types";
 
-function formatNumber(value: number | null): string {
-  return value === null ? "não aplicável" : value.toLocaleString("pt-BR");
+function formatNumber(value: number | null, notApplicableLabel: string): string {
+  return value === null ? notApplicableLabel : value.toLocaleString("pt-BR");
 }
 
 function formatTrackingSince(date: string): string {
@@ -42,21 +43,21 @@ function formatTrackingSince(date: string): string {
 // PARTE 6: ações rápidas — sempre para rotas já existentes (nenhum fluxo
 // novo criado só para isso). Escondidas por completo para VIEWER (RN-010:
 // papel somente leitura, ver lib/roles.ts).
-function quickActionItems(id: string) {
+function quickActionItems(id: string, t: (key: string) => string) {
   return [
-    { href: `/organizations/${id}/financials`, icon: IconDollar, label: "Registrar receita/despesa" },
-    { href: `/organizations/${id}/marketing`, icon: IconMegaphone, label: "Criar campanha" },
-    { href: `/organizations/${id}/products`, icon: IconPackage, label: "Adicionar produto" },
-    { href: `/organizations/${id}/experiments`, icon: IconFlask, label: "Criar experimento" },
-    { href: `/organizations/${id}/reports`, icon: IconFileText, label: "Gerar relatório" },
+    { href: `/organizations/${id}/financials`, icon: IconDollar, label: t("registerRevenue") },
+    { href: `/organizations/${id}/marketing`, icon: IconMegaphone, label: t("createCampaign") },
+    { href: `/organizations/${id}/products`, icon: IconPackage, label: t("addProduct") },
+    { href: `/organizations/${id}/experiments`, icon: IconFlask, label: t("createExperiment") },
+    { href: `/organizations/${id}/reports`, icon: IconFileText, label: t("generateReport") },
   ];
 }
 
-const SUMMARY_CARDS: { key: "revenue" | "profit" | "margin" | "cac"; label: string; percent?: boolean; icon: typeof IconDollar }[] = [
-  { key: "revenue", label: "Receita", icon: IconDollar },
-  { key: "profit", label: "Lucro", icon: IconTrendingUp },
-  { key: "margin", label: "Margem", percent: true, icon: IconGrid },
-  { key: "cac", label: "CAC", icon: IconPackage },
+const SUMMARY_CARD_DEFS: { key: "revenue" | "profit" | "margin" | "cac"; percent?: boolean; icon: typeof IconDollar }[] = [
+  { key: "revenue", icon: IconDollar },
+  { key: "profit", icon: IconTrendingUp },
+  { key: "margin", percent: true, icon: IconGrid },
+  { key: "cac", icon: IconPackage },
 ];
 
 export default function OrganizationDetailPage() {
@@ -65,6 +66,15 @@ export default function OrganizationDetailPage() {
   const { organization, loading: orgLoading } = useOrganization();
   const { dashboard, revenueComparison, loading: dashboardLoading } = useDashboard(id, currentMonthPeriod());
   const { quickAccess, loading: quickAccessLoading } = useWorkspacePreferences(id);
+  const t = useTranslations("organizationHome");
+  const tCommon = useTranslations("common");
+  const roleLabel = useRoleLabel();
+  const summaryLabels: Record<string, string> = {
+    revenue: t("summary.revenue"),
+    profit: t("summary.profit"),
+    margin: t("summary.margin"),
+    cac: t("summary.cac"),
+  };
 
   const [baselines, setBaselines] = useState<Baseline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +101,7 @@ export default function OrganizationDetailPage() {
           router.push(loginRedirectPath(err));
           return;
         }
-        setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -117,7 +127,7 @@ export default function OrganizationDetailPage() {
       setCac("");
       setBaselines(await loadBaselines());
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Nao foi possivel registrar o baseline.");
+      setError(err instanceof ApiError ? err.message : t("baselineGenericError"));
     } finally {
       setSubmitting(false);
     }
@@ -128,6 +138,7 @@ export default function OrganizationDetailPage() {
   // que vai terminar em erro.
   const showActions = canPerformActions(organization?.my_role) && organization?.status !== "frozen";
   const quickAccessCards = visibleQuickAccess(organization?.my_role, quickAccess);
+  const quickAccessLabels = useQuickAccessLabels();
 
   // Único sinal derivado de dado real para o painel de atenção — a ausência
   // de baseline já é comunicada pelo empty state do histórico logo abaixo,
@@ -135,7 +146,11 @@ export default function OrganizationDetailPage() {
   // dados reais"; evitar redundância de mensagens).
   const revenueDropAlert =
     revenueComparison && revenueComparison.percent_change !== null && revenueComparison.percent_change < -0.05
-      ? `Receita caiu ${Math.abs(revenueComparison.percent_change * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% em relação ao baseline neste mês.`
+      ? t("revenueDropAlert", {
+          percent: Math.abs(revenueComparison.percent_change * 100).toLocaleString("pt-BR", {
+            maximumFractionDigits: 1,
+          }),
+        })
       : null;
 
   return (
@@ -149,7 +164,7 @@ export default function OrganizationDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
-              Você está em
+              {t("youAreIn")}
             </p>
             {orgLoading ? (
               <Skeleton className="mt-1.5 h-7 w-48" />
@@ -163,13 +178,13 @@ export default function OrganizationDetailPage() {
               {organization?.segment && <Badge tone="slate">{organization.segment}</Badge>}
               {organization?.tracking_start_date && (
                 <span className="text-xs text-slate-400 dark:text-slate-500">
-                  Dados desde {formatTrackingSince(organization.tracking_start_date)}
+                  {t("dataSince", { date: formatTrackingSince(organization.tracking_start_date) })}
                 </span>
               )}
             </div>
           </div>
           <Link href="/organizations" className={`shrink-0 text-sm ${linkClass}`}>
-            Trocar empresa
+            {t("switchOrganization")}
           </Link>
         </div>
       </div>
@@ -178,7 +193,7 @@ export default function OrganizationDetailPage() {
           Configurações → Acessos rápidos (ver hooks/use-workspace-preferences.ts);
           skeleton evita esconder a seção inteira enquanto a preferência carrega. */}
       <section className="mt-6">
-        <h2 className={sectionTitle}>Acesso rápido</h2>
+        <h2 className={sectionTitle}>{t("quickAccess")}</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {quickAccessLoading
             ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
@@ -187,8 +202,8 @@ export default function OrganizationDetailPage() {
                   key={cardDef.id}
                   href={quickAccessHref(id, cardDef)}
                   icon={cardDef.icon}
-                  title={cardDef.title}
-                  description={cardDef.description}
+                  title={quickAccessLabels[cardDef.id]?.title ?? ""}
+                  description={quickAccessLabels[cardDef.id]?.description ?? ""}
                 />
               ))}
         </div>
@@ -199,9 +214,9 @@ export default function OrganizationDetailPage() {
           pode executar. */}
       {showActions && (
         <section className="mt-6">
-          <h2 className={sectionTitle}>Ações rápidas</h2>
+          <h2 className={sectionTitle}>{t("quickActions")}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            {quickActionItems(id).map(({ href, icon: Icon, label: actionLabel }) => (
+            {quickActionItems(id, (key) => t(`quickActionItems.${key}`)).map(({ href, icon: Icon, label: actionLabel }) => (
               <Link
                 key={href}
                 href={href}
@@ -228,7 +243,7 @@ export default function OrganizationDetailPage() {
       <section id="registrar-baseline" className="mt-8">
         <div className="flex items-center gap-2">
           <IconClock className="h-4 w-4 text-slate-400" />
-          <h2 className={sectionTitle}>Historico de baseline</h2>
+          <h2 className={sectionTitle}>{t("baselineHistoryTitle")}</h2>
         </div>
 
         <div className="mt-3">
@@ -240,8 +255,8 @@ export default function OrganizationDetailPage() {
           ) : baselines.length === 0 ? (
             <EmptyState
               icon={<IconTrendingUp className="h-5 w-5" />}
-              title="Nenhum baseline registrado ainda."
-              description="Registre o primeiro abaixo para acompanhar a evolução do negócio ao longo do tempo."
+              title={t("noBaselineTitle")}
+              description={t("noBaselineDescription")}
             />
           ) : (
             <ul className="flex flex-col gap-2">
@@ -255,9 +270,15 @@ export default function OrganizationDetailPage() {
                       <span>{new Date(b.created_at).toLocaleString("pt-BR")}</span>
                     </div>
                     <div className="mt-1.5 grid grid-cols-3 gap-2 font-medium text-slate-900 dark:text-slate-50">
-                      <span>Receita: {formatNumber(b.revenue)}</span>
-                      <span>Lucro: {formatNumber(b.profit)}</span>
-                      <span>CAC: {formatNumber(b.cac)}</span>
+                      <span>
+                        {t("summary.revenue")}: {formatNumber(b.revenue, tCommon("notApplicable"))}
+                      </span>
+                      <span>
+                        {t("summary.profit")}: {formatNumber(b.profit, tCommon("notApplicable"))}
+                      </span>
+                      <span>
+                        {t("summary.cac")}: {formatNumber(b.cac, tCommon("notApplicable"))}
+                      </span>
                     </div>
                   </Card>
                 </li>
@@ -270,12 +291,12 @@ export default function OrganizationDetailPage() {
       <Card className="mt-8 p-5">
         <div className="flex items-center gap-2">
           <IconGrid className="h-4 w-4 text-slate-400" />
-          <h2 className={sectionTitle}>Registrar novo baseline</h2>
+          <h2 className={sectionTitle}>{t("registerNewBaselineTitle")}</h2>
         </div>
         <form onSubmit={handleCreateBaseline} className="mt-4 flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className={label}>
-              Receita
+              {t("summary.revenue")}
               <input
                 type="number"
                 step="0.01"
@@ -285,7 +306,7 @@ export default function OrganizationDetailPage() {
               />
             </label>
             <label className={label}>
-              Lucro
+              {t("summary.profit")}
               <input
                 type="number"
                 step="0.01"
@@ -295,7 +316,7 @@ export default function OrganizationDetailPage() {
               />
             </label>
             <label className={label}>
-              CAC
+              {t("summary.cac")}
               <input
                 type="number"
                 step="0.01"
@@ -305,12 +326,9 @@ export default function OrganizationDetailPage() {
               />
             </label>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Campos deixados em branco ficam registrados como &quot;nao disponivel&quot;, nunca como
-            zero.
-          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("blankFieldsHint")}</p>
           <button type="submit" disabled={submitting} className={`${buttonPrimary} self-start`}>
-            {submitting ? "Salvando..." : "Registrar baseline"}
+            {submitting ? t("saving") : t("registerBaseline")}
           </button>
         </form>
       </Card>
@@ -318,25 +336,25 @@ export default function OrganizationDetailPage() {
       {/* Resumo de KPIs — PARTE 5. Reusa o mesmo hook/endpoint do Dashboard
           dedicado (useDashboard), sem duplicar a lógica de busca. */}
       <section className="mt-8">
-        <h2 className={sectionTitle}>Resumo do mês</h2>
+        <h2 className={sectionTitle}>{t("monthSummaryTitle")}</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {dashboardLoading
             ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
             : dashboard &&
-              SUMMARY_CARDS.map(({ key, label: metricLabel, percent, icon: Icon }) => {
+              SUMMARY_CARD_DEFS.map(({ key, percent, icon: Icon }) => {
                 const metric = dashboard[key];
                 return (
                   <Card key={key} className="p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {metricLabel}
+                        {summaryLabels[key]}
                       </p>
                       <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
                         <Icon className="h-3.5 w-3.5" />
                       </span>
                     </div>
                     <p className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-                      {formatMetric(metric, { percent })}
+                      {formatMetric(metric, { percent, notApplicableLabel: tCommon("notApplicable") })}
                     </p>
                   </Card>
                 );
@@ -344,7 +362,7 @@ export default function OrganizationDetailPage() {
         </div>
         <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
           <Link href={`/organizations/${id}/dashboard`} className={linkClass}>
-            Ver indicadores completos, com filtro de período
+            {t("seeFullIndicators")}
           </Link>
         </p>
       </section>
@@ -358,7 +376,7 @@ export default function OrganizationDetailPage() {
           <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
             <IconTrendingDown className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-medium">Atenção</p>
+              <p className="font-medium">{t("attention")}</p>
               <p className="mt-0.5">{revenueDropAlert}</p>
             </div>
           </div>

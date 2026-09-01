@@ -121,4 +121,53 @@ def test_logout_clears_session(client):
 
     resp = client.post("/api/v1/auth/logout")
     assert resp.status_code == 204
+
+
+def test_me_locale_is_null_before_ever_choosing_one(client):
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "locale.default@example.com", "password": "SenhaForte123!"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "locale.default@example.com", "password": "SenhaForte123!"},
+    )
+    resp = client.get("/api/v1/auth/me")
+    assert resp.status_code == 200
+    assert resp.json()["locale"] is None
+
+
+def test_update_locale_persists_and_is_reflected_on_me(client):
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "locale.update@example.com", "password": "SenhaForte123!"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "locale.update@example.com", "password": "SenhaForte123!"},
+    )
+
+    resp = client.patch("/api/v1/auth/locale", json={"locale": "en"})
+    assert resp.status_code == 200
+    assert resp.json()["locale"] == "en"
+    assert client.get("/api/v1/auth/me").json()["locale"] == "en"
+
+
+def test_update_locale_rejects_unsupported_value(client):
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "locale.invalid@example.com", "password": "SenhaForte123!"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "locale.invalid@example.com", "password": "SenhaForte123!"},
+    )
+
+    resp = client.patch("/api/v1/auth/locale", json={"locale": "fr"})
+    assert resp.status_code == 422
+
+
+def test_update_locale_requires_authentication(client):
+    resp = client.patch("/api/v1/auth/locale", json={"locale": "en"})
+    assert resp.status_code == 401
     assert client.get("/api/v1/auth/me").status_code == 401

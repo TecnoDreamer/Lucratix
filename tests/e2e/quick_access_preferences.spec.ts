@@ -42,8 +42,13 @@ test("desmarcar e reordenar acessos rápidos em Configurações reflete na Home,
   // Espera os cards de verdade renderizarem (não o skeleton de
   // carregamento) antes de inspecionar a ordem — sem isso, "Financeiro não
   // visível" passa trivialmente durante o loading (nada ainda renderizado),
-  // e a leitura de allTextContents() abaixo captura uma lista vazia.
+  // e a leitura de allTextContents() abaixo captura uma lista vazia ou
+  // parcial (o grid inteiro comita numa única passada do React, mas
+  // allTextContents() não é uma asserção com retry — esperar explicitamente
+  // pelos DOIS cards que a checagem de ordem abaixo depende evita ler a
+  // lista um frame cedo demais).
   await expect(quickAccessSection.getByRole("link", { name: /Marketing/ })).toBeVisible();
+  await expect(quickAccessSection.getByRole("link", { name: /Analytics/ })).toBeVisible();
   // Financeiro sumiu do Acesso rápido (continua existindo na sidebar,
   // por isso o escopo), Marketing agora vem antes de Analytics.
   await expect(quickAccessSection.getByRole("link", { name: /Financeiro/ })).not.toBeVisible();

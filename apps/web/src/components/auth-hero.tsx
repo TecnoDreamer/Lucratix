@@ -1,19 +1,18 @@
+import { useTranslations } from "next-intl";
 import { IconFlask, IconFunnel, IconTrendingUp } from "@/components/icons";
 import { BrandLogo } from "@/components/brand-logo";
 
-const POINTS = [
-  { icon: IconTrendingUp, text: "Baselines e dashboards por cliente, sempre isolados" },
-  { icon: IconFunnel, text: "Funil completo: impressão até recompra" },
-  { icon: IconFlask, text: "Experimentos de CRO com significância estatística real" },
-];
+const POINT_ICONS = [IconTrendingUp, IconFunnel, IconFlask];
 
 // Mini-dashboard demonstrativo do painel de marca — seção 12 do prompt de
 // redesign. Ilustrativo, não são dados reais de nenhuma empresa (nem da
-// Lucratix, que não vende para si mesma).
-const DEMO_KPIS = [
-  { label: "Receita", value: "R$ 185.420", delta: "+12,4%" },
-  { label: "Margem", value: "28,7%", delta: null },
-  { label: "Lucro", value: "R$ 53.215", delta: "+9,1%" },
+// Lucratix, que não vende para si mesma). Valores ficam sempre no formato
+// pt-BR (não são reformatados por idioma — mesma regra de
+// lib/formatters.ts, ver docs/i18n): só os rótulos são traduzidos.
+const DEMO_KPI_VALUES = [
+  { value: "R$ 185.420", delta: "+12,4%" },
+  { value: "28,7%", delta: null },
+  { value: "R$ 53.215", delta: "+9,1%" },
 ];
 
 export function AuthHero({
@@ -25,6 +24,10 @@ export function AuthHero({
   title: string;
   description: string;
 }) {
+  const t = useTranslations("authHero");
+  const points = t.raw("points") as string[];
+  const kpiLabels = t.raw("kpiLabels") as string[];
+
   return (
     <div className="relative hidden flex-1 overflow-hidden bg-gradient-to-br from-[#001640] via-[#012a6b] to-[#0052e0] lg:flex lg:flex-col lg:justify-between lg:px-12 lg:py-14">
       <div
@@ -83,18 +86,21 @@ export function AuthHero({
         </div>
 
         <ul className="mt-8 flex flex-col gap-3">
-          {POINTS.map(({ icon: Icon, text }, i) => (
-            <li
-              key={text}
-              className="flex items-center gap-3 animate-fade-in-up"
-              style={{ animationDelay: `${140 + i * 70}ms` }}
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/20">
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="text-sm text-blue-50">{text}</span>
-            </li>
-          ))}
+          {points.map((text, i) => {
+            const Icon = POINT_ICONS[i];
+            return (
+              <li
+                key={text}
+                className="flex items-center gap-3 animate-fade-in-up"
+                style={{ animationDelay: `${140 + i * 70}ms` }}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/20">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-sm text-blue-50">{text}</span>
+              </li>
+            );
+          })}
         </ul>
 
         <div
@@ -102,10 +108,10 @@ export function AuthHero({
           style={{ animationDelay: "360ms" }}
           aria-hidden
         >
-          {DEMO_KPIS.map(({ label, value, delta }) => (
-            <div key={label} className="flex-1">
+          {DEMO_KPI_VALUES.map(({ value, delta }, i) => (
+            <div key={kpiLabels[i]} className="flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">
-                {label}
+                {kpiLabels[i]}
               </p>
               <p className="mt-1 text-base font-semibold text-white">{value}</p>
               {delta && (
@@ -117,7 +123,7 @@ export function AuthHero({
           ))}
         </div>
         <p className="relative mt-2 text-[11px] text-blue-300/70" aria-hidden>
-          Dados ilustrativos — não refletem uma empresa real.
+          {t("demoDataDisclaimer")}
         </p>
       </div>
     </div>
