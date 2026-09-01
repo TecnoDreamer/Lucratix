@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     # frontend montar a URL).
     frontend_base_url: str = "http://localhost:3000"
 
+    # Logotipo de organização via Cloudinary (PR "gestão de empresas",
+    # 2026-09-01). Mesmo padrão do `resend_api_key`: qualquer um `None`
+    # (padrão) mantém a feature desligada — nenhuma chamada de rede, upload
+    # devolve 503 "não configurado" — liga sozinha quando as 3 env vars
+    # aparecerem, sem precisar de deploy novo. Ver app/core/storage.py.
+    cloudinary_cloud_name: str | None = None
+    cloudinary_api_key: str | None = None
+    cloudinary_api_secret: str | None = None
+
     @property
     def is_production(self) -> bool:
         return self.env == "production"

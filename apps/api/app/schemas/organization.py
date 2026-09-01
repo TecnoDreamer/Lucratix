@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.organization import OrganizationStatus
 from app.schemas.metrics import MetricResultRead
 
 
@@ -41,7 +42,26 @@ class OrganizationRead(BaseModel):
     tracking_start_date: date | None
     notes: str | None
     created_at: datetime
+    status: OrganizationStatus
+    closed_at: datetime | None
+    closure_reason: str | None
+    logo_url: str | None
     my_role: str | None = None
+
+
+class OrganizationPageRead(BaseModel):
+    """Página de resultados de GET /organizations (busca + paginação
+    server-side — antes devolvia sempre a lista inteira do usuário, sem
+    filtro nenhum; não escala para centenas de empresas)."""
+
+    items: list[OrganizationRead]
+    total: int
+    limit: int
+    offset: int
+
+
+class OrganizationFreezeRequest(BaseModel):
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class OrganizationSummaryRead(BaseModel):

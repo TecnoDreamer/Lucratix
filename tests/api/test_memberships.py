@@ -78,7 +78,7 @@ def test_invite_with_unknown_email_and_name_creates_account_and_full_flow_works(
     )
     assert login.status_code == 200
 
-    orgs = new_employee.get("/api/v1/organizations").json()
+    orgs = new_employee.get("/api/v1/organizations").json()["items"]
     assert any(o["id"] == org_id and o["my_role"] == "ANALYST" for o in orgs)
 
 
