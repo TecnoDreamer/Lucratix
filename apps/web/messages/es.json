@@ -1,0 +1,1038 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "notApplicable": "no aplicable",
+    "genericConnectionError": "No se pudo conectar con la API.",
+    "channel": "Canal",
+    "campaigns": "Campañas",
+    "pleaseWait": "Espera...",
+    "passwordInput": {
+      "show": "Mostrar contraseña",
+      "hide": "Ocultar contraseña",
+      "capsLockOn": "Bloq Mayús está activado."
+    },
+    "seriesChart": {
+      "defaultLabel": "Evolución mensual",
+      "labelWithMetric": "{label} — evolución mensual",
+      "labelNoData": "{chartLabel}: datos insuficientes en el período",
+      "noData": "Datos insuficientes en el período.",
+      "target": "Meta",
+      "targetValue": "meta: {value}",
+      "tableCaption": "{chartLabel}, por mes",
+      "month": "Mes",
+      "value": "Valor",
+      "noDataCell": "sin dato",
+      "noTarget": "sin meta"
+    },
+    "dateRangeFilter": {
+      "period": "Período",
+      "invalidRange": "La fecha inicial no puede ser posterior a la fecha final.",
+      "presets": {
+        "currentMonth": "Este mes",
+        "previousMonth": "Mes anterior",
+        "last3Months": "Últimos 3 meses",
+        "last6Months": "Últimos 6 meses",
+        "currentQuarter": "Este trimestre",
+        "currentYear": "Este año",
+        "custom": "Personalizado"
+      },
+      "from": "Desde",
+      "to": "Hasta"
+    },
+    "dataDomains": {
+      "financial": "Financiero",
+      "funnel": "Embudo",
+      "products": "Productos",
+      "marketing": "Marketing"
+    },
+    "exportPanel": {
+      "title": "Exportar datos",
+      "description": "Descarga los datos de esta empresa en CSV, Excel o JSON.",
+      "data": "Datos",
+      "dataAriaLabel": "Datos a exportar",
+      "format": "Formato",
+      "formatAriaLabel": "Formato de exportación",
+      "filterByDate": "Filtrar por período (predeterminado: todos los períodos)",
+      "from": "Desde",
+      "to": "Hasta",
+      "invalidRange": "La fecha inicial no puede ser posterior a la fecha final.",
+      "exportError": "No se pudieron exportar los datos.",
+      "exporting": "Exportando...",
+      "export": "Exportar"
+    },
+    "metricHelp": {
+      "lowerIsBetter": "Menor es mejor",
+      "higherIsBetter": "Mayor es mejor",
+      "seeFullExplanation": "Ver explicación completa →",
+      "learnMoreAbout": "Más información sobre {name}"
+    },
+    "showingCount": "Mostrando {shown} de {total}",
+    "loadMore": "Cargar más"
+  },
+  "workspace": {
+    "quickAccessCards": {
+      "analytics": {
+        "title": "Analytics",
+        "description": "Sigue métricas, tendencias y desempeño."
+      },
+      "financials": {
+        "title": "Finanzas",
+        "description": "Visualiza ingresos, costos e indicadores financieros."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Sigue campañas, canales y desempeño."
+      },
+      "funnel": {
+        "title": "Embudo",
+        "description": "Analiza conversiones y etapas del embudo."
+      },
+      "products": {
+        "title": "Productos",
+        "description": "Consulta productos, servicios y desempeño."
+      },
+      "experiments": {
+        "title": "Experimentos",
+        "description": "Sigue pruebas, hipótesis y resultados."
+      },
+      "central-de-dados": {
+        "title": "Centro de Datos",
+        "description": "Importa y exporta datos masivos (CSV, Excel, JSON)."
+      }
+    }
+  },
+  "account": {
+    "title": "Configuración",
+    "subtitle": "Preferencias de tu cuenta, aplicadas a todas las empresas a las que accedes.",
+    "appearance": {
+      "title": "Apariencia",
+      "description": "Elige cómo se comporta el tema claro/oscuro en este dispositivo.",
+      "radiogroupLabel": "Tema",
+      "options": {
+        "system": "Sistema",
+        "light": "Claro",
+        "dark": "Oscuro"
+      }
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Elige el idioma de la interfaz. Los números, fechas y valores se mantienen en el formato estándar de Brasil, sin importar el idioma elegido."
+    },
+    "quickAccess": {
+      "title": "Accesos rápidos",
+      "description": "Elige qué atajos aparecen en el inicio de cada empresa y en qué orden.",
+      "noOrganizations": "Aún no formas parte de ninguna empresa.",
+      "organizationLabel": "Empresa",
+      "appliedTo": "Aplicado a {name}.",
+      "showCard": "Mostrar {title}",
+      "moveUp": "Mover {title} hacia arriba",
+      "moveDown": "Mover {title} hacia abajo",
+      "movedAnnouncement": "{title} movido a la posición {position} de {total}.",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "savedAnnouncement": "Preferencias guardadas.",
+      "saveGenericError": "No se pudieron guardar tus preferencias.",
+      "restoreDefault": "Restaurar valores predeterminados",
+      "restoring": "Restaurando...",
+      "restoredAnnouncement": "Valores predeterminados restaurados.",
+      "restoreGenericError": "No se pudo restaurar el valor predeterminado."
+    },
+    "layout": {
+      "title": "Cuenta",
+      "backTo": "Volver a {name}",
+      "yourCompanies": "Tus empresas"
+    }
+  },
+  "home": {
+    "about": {
+      "backToLogin": "Volver al inicio de sesión",
+      "signIn": "Entrar",
+      "signUp": "Regístrate",
+      "heroTitle": "Tus clientes. Tus números. Una sola visión.",
+      "heroDescription": "Lucratix reúne baseline, embudo, campañas, productos y finanzas de cada cliente que atiendes — en organizaciones aisladas, con métricas calculadas de una sola forma, para orientar la próxima decisión en vez de solo memorizar un número.",
+      "heroCtaHow": "Ver cómo funciona",
+      "heroCtaFaq": "Preguntas frecuentes",
+      "whatIsTitle": "Qué es Lucratix",
+      "whatIsParagraph1": "Lucratix es una plataforma de business intelligence y analytics pensada para quien cuida el marketing y el resultado de más de un cliente al mismo tiempo. Cada cliente se convierte en su propia organización, con sus datos completamente aislados de los demás, y la plataforma conecta lo que pasó en campañas y embudo con lo que realmente pasó en las finanzas de ese cliente.",
+      "whatIsParagraph2": "No es un gestor de anuncios, no sustituye herramientas de automatización de marketing, y no es un sistema fiscal o contable. El foco es otro: organizar lo que ya se registra — baseline, campañas, embudo, productos, finanzas — en un solo lugar, con una fórmula única para cada métrica e historial que nunca se sobrescribe.",
+      "howHelpsTitle": "Cómo ayuda Lucratix",
+      "benefits": [
+        {
+          "title": "Aislamiento real entre clientes",
+          "text": "Cada empresa registrada es una organización aislada: el dato de un cliente nunca aparece para otro. Esto se prueba automáticamente, no es solo una promesa."
+        },
+        {
+          "title": "Un baseline que nunca se reescribe",
+          "text": "El historial de cada cliente queda preservado. Las comparaciones usan el período anterior real de ese cliente, no un promedio genérico inventado."
+        },
+        {
+          "title": "Métrica con fórmula única",
+          "text": "ROAS, CAC, LTV y las demás métricas nacen de un único motor de cálculo, documentado en el glosario — sin dos pantallas mostrando cuentas diferentes para el mismo número."
+        },
+        {
+          "title": "Transparencia cuando falta un dato",
+          "text": "Si un período está incompleto, el sistema avisa en vez de mostrar un número parcial como si fuera el resultado final."
+        },
+        {
+          "title": "Auditoría de cada cambio",
+          "text": "Los cambios relevantes quedan registrados: quién lo hizo, qué y cuándo — un registro de auditoría, no solo control de permisos."
+        }
+      ],
+      "featuresTitle": "Principales funcionalidades",
+      "features": [
+        {
+          "title": "Dashboard",
+          "text": "Panorama del cliente en un solo lugar: KPIs principales y comparación automática con el período anterior."
+        },
+        {
+          "title": "Analytics",
+          "text": "Vista ejecutiva y de marketing en cualquier rango de fechas, con ROAS, ROI, CTR, CPC, CPM, CPL y CPA."
+        },
+        {
+          "title": "Productos",
+          "text": "Catálogo de productos por cliente, con margen calculado a partir de la lista de precios registrada."
+        },
+        {
+          "title": "Finanzas",
+          "text": "Ingresos, costo y ganancia por período — la base de todo lo que aparece en el dashboard y en los informes."
+        },
+        {
+          "title": "Marketing",
+          "text": "Campañas por canal, con inversión y retorno rastreados campaña a campaña."
+        },
+        {
+          "title": "Embudo",
+          "text": "De la impresión a la recompra: cada etapa del embudo del cliente, con la tasa de conversión entre ellas."
+        },
+        {
+          "title": "Experimentos",
+          "text": "Pruebas de CRO con significancia estadística real, no una impresión sobre qué variante \"parece\" mejor."
+        },
+        {
+          "title": "Informe",
+          "text": "Informe ejecutivo listo para presentar al cliente, con exportación en PDF mediante la función de impresión del navegador."
+        },
+        {
+          "title": "Auditoría",
+          "text": "Historial de quién cambió qué y cuándo, por organización."
+        },
+        {
+          "title": "Glosario",
+          "text": "Todas las métricas del sistema explicadas en detalle, con fórmula y ejemplo — sin siglas misteriosas."
+        }
+      ],
+      "strengthsTitle": "Puntos fuertes",
+      "strengths": [
+        "Aislamiento multi-tenant cubierto por pruebas automatizadas de seguridad dedicadas, no solo por convención de código.",
+        "Sesión única por cuenta: iniciar sesión en un nuevo dispositivo revoca automáticamente la sesión anterior.",
+        "Motor de métricas único — ninguna pantalla recalcula una fórmula por su cuenta.",
+        "Cuatro roles de acceso por organización (propietario, administrador, analista, visualizador), cada uno con permisos claros.",
+        "Arquitectura de integraciones futuras ya documentada (ej.: Power BI), incluso cuando aún no está disponible para su uso.",
+        "Cubierto por pruebas automatizadas de extremo a extremo y de backend en cada cambio, antes de cualquier publicación."
+      ],
+      "howItWorksTitle": "Cómo funciona",
+      "steps": [
+        {
+          "title": "Crea tu cuenta",
+          "text": "Nombre, correo y contraseña — el registro es libre, sin necesidad de invitación."
+        },
+        {
+          "title": "Registra tu primera empresa",
+          "text": "Cada cliente que atiendes se convierte en una organización aislada dentro de Lucratix."
+        },
+        {
+          "title": "Registra los datos del cliente",
+          "text": "Finanzas, campañas de marketing, embudo y productos — la base de todo lo que viene después."
+        },
+        {
+          "title": "Sigue el dashboard y Analytics",
+          "text": "Con comparación automática contra el período anterior de ese mismo cliente."
+        },
+        {
+          "title": "Genera el informe ejecutivo",
+          "text": "Lleva el resultado listo, en PDF, a tu próxima conversación con el cliente."
+        }
+      ],
+      "techTitle": "Tecnologías y herramientas",
+      "techSubtitle": "Para quien quiere saber qué hay debajo del capó.",
+      "techGroups": [
+        {
+          "title": "Frontend",
+          "items": [
+            "Next.js 16",
+            "React 19",
+            "TypeScript",
+            "Tailwind CSS v4"
+          ]
+        },
+        {
+          "title": "Backend",
+          "items": [
+            "FastAPI",
+            "SQLAlchemy 2.0",
+            "Alembic"
+          ]
+        },
+        {
+          "title": "Base de datos",
+          "items": [
+            "PostgreSQL"
+          ]
+        },
+        {
+          "title": "Seguridad",
+          "items": [
+            "JWT",
+            "Hash de contraseña con Argon2",
+            "Sesión única por cuenta"
+          ]
+        },
+        {
+          "title": "Calidad y pruebas",
+          "items": [
+            "pytest",
+            "Vitest",
+            "Playwright",
+            "ruff",
+            "mypy"
+          ]
+        }
+      ],
+      "glossaryTitle": "Glosario",
+      "glossarySubtitle": "Los términos usados en esta página, explicados en una frase. El glosario completo de métricas (ROAS, CAC, LTV y las demás) está disponible dentro de la cuenta, en la sección Glosario de cada organización.",
+      "glossary": [
+        {
+          "term": "Organización",
+          "text": "Cada empresa/cliente que registras en Lucratix. Todo dato — finanzas, campañas, embudo, productos — pertenece a una organización y nunca es visible desde otra."
+        },
+        {
+          "term": "Baseline",
+          "text": "El período de referencia de una organización, preservado para siempre. Las comparaciones de período (\"contra el mes anterior\", por ejemplo) usan el historial real del propio cliente, nunca un promedio inventado."
+        },
+        {
+          "term": "Embudo de conversión",
+          "text": "La secuencia de etapas por las que pasa un cliente, desde la impresión del anuncio hasta la recompra, con la tasa de conversión calculada entre cada etapa."
+        },
+        {
+          "term": "Experimento (CRO)",
+          "text": "Una prueba que compara dos versiones (A/B) de algo — una página, una oferta — evaluada con significancia estadística, no por impresión."
+        },
+        {
+          "term": "Rol",
+          "text": "El nivel de acceso de una persona dentro de una organización: Propietario, Administrador, Analista o Visualizador — cada uno viendo y pudiendo hacer cosas diferentes."
+        },
+        {
+          "term": "Auditoría",
+          "text": "El registro de quién cambió qué y cuándo, por organización — usado para rastrear cambios, no solo para controlar quién tiene permiso."
+        },
+        {
+          "term": "Sesión única",
+          "text": "Cada cuenta mantiene solo una sesión activa a la vez. Iniciar sesión en un nuevo dispositivo revoca automáticamente la sesión anterior."
+        },
+        {
+          "term": "Comparación de período",
+          "text": "Todo indicador puede compararse contra el período anterior equivalente de ese mismo cliente, con aviso explícito cuando el período tiene datos incompletos."
+        }
+      ],
+      "faqTitle": "Preguntas frecuentes",
+      "faq": [
+        {
+          "q": "¿Qué es Lucratix?",
+          "a": "Una plataforma de business intelligence y analytics para quien gestiona el marketing y el resultado de varios clientes a la vez — cada cliente aislado en su propia organización, con dashboard, embudo, campañas e informes conectados al resultado financiero real, no solo a métricas de anuncios."
+        },
+        {
+          "q": "¿Para quién fue creada Lucratix?",
+          "a": "Para consultorías, agencias y profesionales de marketing y growth que atienden a más de un cliente y necesitan una visión organizada — y aislada — del resultado de cada uno."
+        },
+        {
+          "q": "¿Necesito una invitación para registrarme?",
+          "a": "No. El registro es libre: basta indicar nombre, correo y contraseña en la pantalla de Registro."
+        },
+        {
+          "q": "¿Cada cliente que atiendo queda aislado de los demás?",
+          "a": "Sí. Cada cliente es una organización separada dentro de Lucratix, y ese aislamiento está cubierto por pruebas automatizadas de seguridad — no depende solo del cuidado manual."
+        },
+        {
+          "q": "¿Qué es el \"baseline\" y por qué importa?",
+          "a": "Es el historial preservado de cada cliente. Nunca se sobrescribe, así que toda comparación de período usa el desempeño real anterior de ese mismo cliente, en vez de un promedio genérico."
+        },
+        {
+          "q": "¿Lucratix sustituye al gestor de anuncios (Google Ads, Meta Ads)?",
+          "a": "No. Lucratix no crea ni gestiona campañas de anuncios — reúne los resultados de esas campañas y los conecta con las finanzas del cliente, para mostrar qué convirtió realmente en resultado."
+        },
+        {
+          "q": "¿Puedo generar un informe para presentar al cliente?",
+          "a": "Sí. La pantalla de Informe arma un informe ejecutivo del período y ofrece exportación en PDF mediante la función de impresión del navegador."
+        },
+        {
+          "q": "¿Qué significan los roles Propietario, Administrador, Analista y Visualizador?",
+          "a": "Son los cuatro niveles de acceso dentro de una organización. En general, el Visualizador sigue el dashboard e indicadores; el Analista también accede a Analytics e informes detallados; Administrador y Propietario, además, gestionan la organización y quién tiene acceso a ella."
+        },
+        {
+          "q": "¿Lucratix se integra con Power BI?",
+          "a": "La arquitectura de esa integración ya está documentada, pero aún no está disponible para su uso — depende de una licencia que hoy no está configurada."
+        },
+        {
+          "q": "Olvidé mi contraseña, ¿cómo recupero el acceso?",
+          "a": "En la pantalla de inicio de sesión, usa el enlace \"Olvidé mi contraseña\" para recibir un enlace seguro de restablecimiento en el correo registrado."
+        },
+        {
+          "q": "¿La plataforma funciona bien en el celular?",
+          "a": "Sí. Las pantallas se construyeron con diseño responsivo, incluyendo la pantalla de inicio de sesión y registro."
+        },
+        {
+          "q": "¿Lucratix afirma que una campaña \"causó\" un resultado?",
+          "a": "No. Las comparaciones de período muestran qué cambió y en cuánto, sin atribuir causalidad a una campaña específica — la interpretación del motivo del cambio sigue siendo tuya."
+        }
+      ],
+      "ctaTitle": "¿Listo para organizar el resultado de tus clientes?",
+      "ctaSubtitle": "El registro es libre y toma menos de un minuto — sin necesidad de invitación.",
+      "ctaCreateAccount": "Crear mi cuenta",
+      "ctaAlreadyHaveAccount": "Ya tengo cuenta — entrar"
+    }
+  },
+  "organizations": {
+    "list": {
+      "title": "Tus empresas",
+      "loggedInAsPrefix": "Sesión iniciada como",
+      "adminPanel": "Panel de administración",
+      "signOut": "Salir",
+      "confirmEmailBanner": "Confirma tu correo ({email}) para garantizar el acceso a tu cuenta.",
+      "resending": "Enviando...",
+      "resendVerification": "Reenviar correo de confirmación",
+      "resendDevModeLink": "Confirmar ahora (modo desarrollo) →",
+      "resendGenericError": "No se pudo reenviar el correo.",
+      "statusTabs": {
+        "groupLabel": "Filtrar por estado",
+        "active": "Activas",
+        "frozen": "Cerradas",
+        "all": "Todas"
+      },
+      "searchLabel": "Buscar empresa",
+      "searchPlaceholder": "Buscar empresa...",
+      "emptyNoOrganizations": {
+        "title": "Aún no hay empresas. Registra la primera abajo.",
+        "description": "Cada empresa/cliente tiene sus propios datos, métricas e historial, totalmente aislados de los demás."
+      },
+      "emptySearch": {
+        "title": "No se encontró ninguna empresa para \"{query}\".",
+        "description": "Prueba con otro término de búsqueda."
+      },
+      "emptyFilter": {
+        "title": "Ninguna empresa en este filtro.",
+        "description": "Cambia de pestaña para ver empresas en otro estado."
+      },
+      "showingCount": "Mostrando {shown} de {total}",
+      "loadMore": "Cargar más",
+      "addNewTitle": "Agregar nueva empresa",
+      "addNewDescription": "Cada empresa/cliente registrada aquí recibe su propio espacio, aislado de los demás.",
+      "newOrganizationLabel": "Nueva empresa",
+      "newOrganizationPlaceholder": "Nombre de la empresa/cliente",
+      "creating": "Creando...",
+      "create": "Crear",
+      "createGenericError": "No se pudo crear la empresa.",
+      "loadErrorTitle": "No se pudieron cargar tus empresas",
+      "retry": "Intentar de nuevo",
+      "connectionError": "No se pudo conectar con el servidor."
+    },
+    "companyCard": {
+      "closedBadge": "Cerrada",
+      "summary": {
+        "revenue": "Ingresos",
+        "leads": "Leads",
+        "conversion": "Conversión",
+        "cac": "CAC"
+      },
+      "createdAt": "Creada el {date}",
+      "openCompany": "Abrir empresa →"
+    }
+  },
+  "roles": {
+    "owner": "Propietario",
+    "admin": "Administrador",
+    "analyst": "Analista",
+    "viewer": "Visualizador"
+  },
+  "organizationHome": {
+    "youAreIn": "Estás en",
+    "dataSince": "Datos desde {date}",
+    "switchOrganization": "Cambiar de empresa",
+    "quickAccess": "Acceso rápido",
+    "quickActions": "Acciones rápidas",
+    "quickActionItems": {
+      "registerRevenue": "Registrar ingreso/gasto",
+      "createCampaign": "Crear campaña",
+      "addProduct": "Agregar producto",
+      "createExperiment": "Crear experimento",
+      "generateReport": "Generar informe"
+    },
+    "baselineHistoryTitle": "Historial de baseline",
+    "noBaselineTitle": "Aún no hay ningún baseline registrado.",
+    "noBaselineDescription": "Registra el primero abajo para seguir la evolución del negocio a lo largo del tiempo.",
+    "summary": {
+      "revenue": "Ingresos",
+      "profit": "Ganancia",
+      "margin": "Margen",
+      "cac": "CAC"
+    },
+    "registerNewBaselineTitle": "Registrar nuevo baseline",
+    "blankFieldsHint": "Los campos dejados en blanco se registran como \"no disponible\", nunca como cero.",
+    "saving": "Guardando...",
+    "registerBaseline": "Registrar baseline",
+    "monthSummaryTitle": "Resumen del mes",
+    "seeFullIndicators": "Ver indicadores completos, con filtro de período",
+    "attention": "Atención",
+    "revenueDropAlert": "Los ingresos cayeron {percent}% respecto al baseline este mes.",
+    "baselineGenericError": "No se pudo registrar el baseline."
+  },
+  "organizationLayout": {
+    "notFound": "Empresa no encontrada o no tienes acceso a ella.",
+    "yourCompanies": "Tus empresas",
+    "yourRole": "Tu rol: {role}",
+    "nav": {
+      "home": "Inicio",
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "products": "Productos",
+      "financials": "Finanzas",
+      "marketing": "Marketing",
+      "funnel": "Embudo",
+      "experiments": "Experimentos",
+      "reports": "Informe",
+      "audit": "Auditoría",
+      "centralDeDados": "Centro de Datos",
+      "glossary": "Glosario",
+      "companySettings": "Configuración de la empresa"
+    },
+    "accountSectionTitle": "Cuenta",
+    "accountSettings": "Configuración",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "navMenuLabel": "Menú de navegación"
+  },
+  "analytics": {
+    "executiveViewTitle": "Visión Ejecutiva",
+    "notApplicable": "no aplicable",
+    "vsPreviousPeriod": "vs. período anterior",
+    "vsPreviousPeriodNa": "vs. período anterior: n/d",
+    "ofTarget": "de la meta",
+    "incompleteDataWarning": "Datos financieros disponibles para {available} de {total} meses del período seleccionado — los totales reflejan solo los meses con registro.",
+    "monthlyEvolutionTitle": "Evolución mensual",
+    "exportCsv": "Exportar CSV",
+    "marketingTitle": "Marketing",
+    "noCampaignsWarning": "Ninguna campaña con fecha registrada en el período seleccionado — no se pudieron calcular las métricas de marketing.",
+    "byChannel": "Por canal",
+    "metricLabels": {
+      "revenue": "Ingresos",
+      "profit": "Ganancia",
+      "margin": "Margen",
+      "cac": "CAC",
+      "conversionRate": "Conversión",
+      "averageTicket": "Ticket promedio",
+      "recurrenceRate": "Recurrencia",
+      "roas": "ROAS",
+      "roi": "ROI",
+      "ctr": "CTR",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "cpl": "CPL",
+      "cpa": "CPA"
+    },
+    "correlationPanel": {
+      "title": "Correlación entre métricas",
+      "description": "Compara dos métricas mes a mes en el período seleccionado arriba. La correlación muestra que dos métricas se mueven juntas — nunca que una causa la otra.",
+      "metricX": "Métrica X",
+      "metricY": "Métrica Y",
+      "genericError": "No se pudo calcular la correlación.",
+      "strength": {
+        "strong": "fuerte",
+        "moderate": "moderada",
+        "weak": "débil",
+        "veryWeak": "muy débil"
+      },
+      "direction": {
+        "positive": "positiva",
+        "negative": "negativa"
+      },
+      "correlationLabel": "Correlación {strength} {direction}",
+      "noCorrelation": "Sin correlación",
+      "monthsUsed": "{count, plural, one {# mes} other {# meses}} con ambas métricas en el período."
+    },
+    "correlationChart": {
+      "scatterLabel": "Dispersión entre {xLabel} y {yLabel}",
+      "scatterLabelNoData": "{chartLabel}: sin meses con ambas métricas en el período",
+      "noMonths": "Sin meses con ambas métricas en el período.",
+      "tableCaption": "{chartLabel}, por mes",
+      "month": "Mes",
+      "noData": "sin dato"
+    },
+    "targetsPanel": {
+      "title": "Metas",
+      "description": "Define una meta mensual por KPI. Ingresos y Ganancia muestran el progreso sumado en el período seleccionado arriba; las demás métricas (razones, no sumas) se comparan mes a mes en el gráfico de evolución.",
+      "metric": "Métrica",
+      "month": "Mes",
+      "target": "Meta",
+      "save": "Guardar meta",
+      "saving": "Guardando...",
+      "loading": "Cargando metas...",
+      "empty": "Aún no hay metas definidas.",
+      "removeAriaLabel": "Quitar meta de {metric} de {period}",
+      "loadError": "No se pudieron cargar las metas.",
+      "invalidValue": "Ingresa un valor numérico para la meta.",
+      "saveError": "No se pudo guardar la meta.",
+      "deleteError": "No se pudo quitar la meta."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notApplicable": "no aplicable",
+    "baselineComparisonTitle": "Ingresos: baseline vs. período seleccionado",
+    "baseline": "Baseline",
+    "current": "Actual",
+    "variation": "Variación",
+    "noBaselineToCompare": "Aún no hay ningún baseline registrado para comparar.",
+    "variationDisclaimer": "Esta variación es solo observada — no afirma haber sido causada por las acciones de marketing realizadas (ver docs/product/user-journey.md).",
+    "metricLabels": {
+      "revenue": "Ingresos",
+      "profit": "Ganancia",
+      "margin": "Margen",
+      "cac": "CAC",
+      "conversionRate": "Conversión",
+      "averageTicket": "Ticket promedio",
+      "recurrenceRate": "Recurrencia"
+    }
+  },
+  "financials": {
+    "title": "Finanzas",
+    "saveGenericError": "No se pudo guardar el período.",
+    "emptyTitle": "Aún no hay ningún período financiero registrado.",
+    "emptyDescription": "Registra el primer período abajo.",
+    "period": "Período",
+    "revenue": "Ingresos",
+    "profit": "Ganancia",
+    "margin": "Margen",
+    "costs": "Costos",
+    "expenses": "Gastos",
+    "marketingInvestment": "Inversión en marketing",
+    "saving": "Guardando...",
+    "savePeriod": "Guardar período"
+  },
+  "funnel": {
+    "title": "Embudo",
+    "saveGenericError": "No se pudo guardar el embudo.",
+    "emptyTitle": "Aún no hay ningún snapshot de embudo registrado.",
+    "period": "Período",
+    "saving": "Guardando...",
+    "savePeriod": "Guardar período",
+    "fields": {
+      "impressions": "Impresiones",
+      "visits": "Visitas",
+      "leads": "Leads",
+      "mqls": "MQLs",
+      "sqls": "SQLs",
+      "opportunities": "Oportunidades",
+      "customers": "Clientes",
+      "repeat_purchases": "Recompras"
+    }
+  },
+  "products": {
+    "title": "Productos y servicios",
+    "createGenericError": "No se pudo crear el producto.",
+    "updateGenericError": "No se pudo actualizar el producto.",
+    "emptyTitle": "Aún no hay ningún producto registrado.",
+    "emptyDescription": "Agrega el primer producto o servicio abajo.",
+    "name": "Nombre",
+    "price": "Precio",
+    "cost": "Costo",
+    "margin": "Margen",
+    "status": "Estado",
+    "active": "activo",
+    "inactive": "inactivo",
+    "creating": "Creando...",
+    "add": "Agregar"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "createChannelGenericError": "No se pudo crear el canal.",
+    "createCampaignGenericError": "No se pudo crear la campaña.",
+    "channelsTitle": "Canales",
+    "noChannels": "Aún no hay ningún canal registrado.",
+    "newChannel": "Nuevo canal",
+    "newChannelPlaceholder": "Ej.: Google Ads",
+    "add": "Agregar",
+    "campaignsTitle": "Campañas",
+    "noCampaigns": "Aún no hay ninguna campaña registrada.",
+    "name": "Nombre",
+    "period": "Período",
+    "investment": "Inversión",
+    "attributedRevenue": "Ingresos atribuidos",
+    "channel": "Canal",
+    "selectPlaceholder": "Selecciona",
+    "campaignName": "Nombre de la campaña",
+    "startDate": "Inicio",
+    "endDate": "Fin",
+    "impressions": "Impresiones",
+    "clicks": "Clics",
+    "leads": "Leads",
+    "customers": "Clientes",
+    "creating": "Creando...",
+    "addCampaign": "Agregar campaña"
+  },
+  "reports": {
+    "title": "Informe ejecutivo",
+    "printOrSavePdf": "Imprimir / Guardar como PDF",
+    "generatedFor": "{name} — generado el {date}",
+    "vsBaseline": "Vs. baseline",
+    "revenueLabel": "Ingresos",
+    "na": "n/a",
+    "variationNotApplicable": "variación no aplicable",
+    "noBaselineYet": "Aún no hay ningún baseline registrado.",
+    "periodMarketing": "Marketing del período",
+    "noCampaignsThisPeriod": "Ninguna campaña con fecha registrada en este período.",
+    "vsPreviousMonth": "vs. mes anterior"
+  },
+  "orgSettings": {
+    "frozenBanner": {
+      "title": "Esta empresa está cerrada.",
+      "description": "Los datos siguen disponibles para consulta, pero los nuevos registros están bloqueados.",
+      "reasonPrefix": "Motivo"
+    },
+    "logo": {
+      "uploadGenericError": "No se pudo enviar la imagen.",
+      "removeGenericError": "No se pudo eliminar el logotipo.",
+      "previewAlt": "Vista previa del logotipo",
+      "formatHint": "PNG, JPEG o WEBP, hasta 2 MB.",
+      "uploading": "Enviando...",
+      "save": "Guardar logotipo",
+      "removing": "Eliminando...",
+      "remove": "Eliminar logotipo"
+    },
+    "title": "Configuración de la empresa",
+    "logoHeading": "Logotipo",
+    "loadError": "No se pudieron cargar los datos de esta empresa.",
+    "forbidden": "No tienes permiso para editar esta empresa.",
+    "companyData": "Datos de la empresa",
+    "name": "Nombre",
+    "tradeName": "Nombre comercial",
+    "segment": "Segmento",
+    "cnpj": "NIF",
+    "notes": "Observaciones",
+    "saveError": "No se pudieron guardar los cambios.",
+    "dataSaved": "Datos guardados.",
+    "saving": "Guardando...",
+    "saveData": "Guardar datos",
+    "lifecycle": "Ciclo de vida",
+    "frozenDescription": "Esta empresa está cerrada. Reactívala para volver a registrar datos.",
+    "activeDescription": "Cerrar no elimina ningún dato — la empresa queda congelada (solo lectura) y puede reactivarse en cualquier momento.",
+    "freezeError": "No se pudo cerrar la empresa.",
+    "reactivateError": "No se pudo reactivar la empresa.",
+    "reactivating": "Reactivando...",
+    "reactivate": "Reactivar empresa",
+    "freeze": "Cerrar empresa",
+    "freezeDialogTitle": "¿Cerrar esta empresa?",
+    "freezeDialogDescription": "Los datos no se eliminarán. La empresa quedará congelada (solo lectura) y podrá reactivarse más adelante.",
+    "freezeConfirmLabel": "Cerrar",
+    "freezeReasonLabel": "Motivo (opcional)",
+    "freezeReasonPlaceholder": "Ej.: contrato terminado, el cliente desistió..."
+  },
+  "authHero": {
+    "points": [
+      "Baselines y paneles por cliente, siempre aislados",
+      "Embudo completo: impresión hasta recompra",
+      "Experimentos de CRO con significancia estadística real"
+    ],
+    "kpiLabels": [
+      "Ingresos",
+      "Margen",
+      "Ganancia"
+    ],
+    "demoDataDisclaimer": "Datos ilustrativos — no reflejan una empresa real."
+  },
+  "auth": {
+    "login": {
+      "heroEyebrow": "Acceso a la plataforma",
+      "heroTitle": "Tus clientes. Tus números. Una sola visión.",
+      "heroDescription": "Baselines, embudo, campañas y experimentos de CRO — organizados por empresa, listos para orientar la próxima decisión.",
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Accede a tu entorno de inteligencia empresarial.",
+      "sessionRevokedSuffix": "Inicia sesión de nuevo para continuar.",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "forgotPassword": "Olvidé mi contraseña",
+      "submitting": "Iniciando sesión...",
+      "submit": "Entrar",
+      "sessionProtected": "Tu sesión permanece protegida y sigues conectado de forma segura.",
+      "noAccountPrefix": "¿Aún no tienes cuenta?",
+      "signUp": "Regístrate",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "register": {
+      "heroEyebrow": "Empieza ahora",
+      "heroTitle": "Sustituye las hojas de cálculo sueltas por una sola visión, actualizada y confiable.",
+      "heroDescription": "Registra tu primera empresa en segundos y empieza a registrar baselines, campañas y resultados hoy mismo.",
+      "title": "Crear cuenta en Lucratix",
+      "subtitle": "Empieza a transformar datos en decisiones en pocos minutos.",
+      "nameLabel": "Nombre",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeContinue": "Continuar para confirmar el correo →",
+      "submitting": "Enviando...",
+      "submit": "Registrarse",
+      "hasAccountPrefix": "¿Ya tienes cuenta?",
+      "signIn": "Entrar",
+      "learnMorePrefix": "¿Quieres saber más antes de registrarte?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "forgotPassword": {
+      "heroEyebrow": "Recuperación de acceso",
+      "heroTitle": "Pasa. Vamos a recuperar el acceso a tu cuenta.",
+      "heroDescription": "Indica el correo registrado y te enviaremos un enlace seguro para elegir una nueva contraseña.",
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Indica tu correo para recibir un enlace de restablecimiento.",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeContinue": "Continuar para restablecer la contraseña →",
+      "backToLogin": "Volver al inicio de sesión",
+      "emailLabel": "Correo electrónico",
+      "submitting": "Enviando...",
+      "submit": "Enviar enlace de restablecimiento",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "resetPassword": {
+      "heroEyebrow": "Recuperación de acceso",
+      "heroTitle": "Elige una nueva contraseña para continuar.",
+      "heroDescription": "Usa una contraseña fuerte y exclusiva para Lucratix — nunca reutilices contraseñas de otros servicios.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "invalidLinkTitle": "Enlace inválido",
+      "invalidLinkSubtitle": "Este enlace de restablecimiento está incompleto o ya fue usado.",
+      "requestNewLink": "Solicitar un nuevo enlace →",
+      "doneTitle": "Contraseña cambiada con éxito",
+      "doneSubtitle": "Tu contraseña fue restablecida. Inicia sesión de nuevo para continuar.",
+      "goToLogin": "Ir al inicio de sesión",
+      "title": "Nueva contraseña",
+      "subtitle": "Elige una nueva contraseña para tu cuenta.",
+      "newPasswordLabel": "Nueva contraseña",
+      "confirmPasswordLabel": "Confirmar nueva contraseña",
+      "submitting": "Guardando...",
+      "submit": "Restablecer contraseña",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    },
+    "confirmEmail": {
+      "heroEyebrow": "Confirmación de correo",
+      "heroTitle": "Confirmando tu acceso a Lucratix.",
+      "heroDescription": "Esto garantiza que solo tú puedas usar la cuenta registrada con este correo.",
+      "loadingTitle": "Confirmando...",
+      "successTitle": "Correo confirmado",
+      "successSubtitle": "Tu correo fue verificado con éxito.",
+      "goToOrganizations": "Ir a Tus empresas",
+      "errorTitle": "Enlace inválido",
+      "errorSubtitleWithToken": "Este enlace de confirmación está incompleto, caducado o ya fue usado.",
+      "errorSubtitleWithoutToken": "Este enlace de confirmación está incompleto o ya fue usado.",
+      "errorHintPrefix": "Puedes solicitar un nuevo correo de confirmación desde",
+      "errorHintLink": "Tus empresas",
+      "errorHintSuffix": "después de iniciar sesión.",
+      "learnMorePrefix": "¿Aún no conoces Lucratix?",
+      "learnMoreLink": "Conoce la aplicación"
+    }
+  },
+  "centralDeDados": {
+    "importWizard": {
+      "title": "Importar datos",
+      "domainLabel": "Dominio",
+      "acceptedFormats": "Formatos aceptados: CSV, Excel (.xlsx) o JSON, hasta 5 MB.",
+      "sending": "Enviando...",
+      "continueButton": "Continuar",
+      "sheetIntro": "{fileName} tiene más de una hoja. ¿Qué hoja corresponde a {domainLabel}?",
+      "sheetLabel": "Hoja",
+      "cancel": "Cancelar",
+      "uploadError": "No se pudo enviar el archivo.",
+      "previewLoadError": "No se pudo cargar la vista previa.",
+      "doNotMap": "— no mapear —",
+      "requiredSuffix": " (obligatorio)",
+      "confidenceHigh": "confianza alta",
+      "confidenceMedium": "confianza media",
+      "confidenceLow": "confianza baja",
+      "confidenceNone": "sin sugerencia",
+      "dateFormatLabel": "Formato de fecha (campo Período)",
+      "dateFormatDMY": "Día/Mes/Año (31/12/2026)",
+      "dateFormatMDY": "Mes/Día/Año (12/31/2026)",
+      "dateFormatISO": "Año-Mes-Día (2026-12-31)",
+      "validating": "Validando...",
+      "missingRequiredField": "Campo obligatorio sin mapear: {fields}.",
+      "incompleteMapping": "Mapeo incompleto — revisa los campos a continuación.",
+      "mappingSaveError": "No se pudo guardar el mapeo.",
+      "confirmError": "No se pudo confirmar la importación.",
+      "errorsLoadError": "No se pudieron cargar los errores.",
+      "rowsSuffix": "{count} fila(s)",
+      "validSuffix": "{count} válida(s)",
+      "duplicateSuffix": "{count} duplicada(s)",
+      "invalidSuffix": "{count} inválida(s)",
+      "statusValid": "válida",
+      "statusInvalid": "inválida",
+      "statusDuplicate": "duplicada",
+      "rowColumn": "Fila",
+      "statusColumn": "Estado",
+      "dataColumn": "Datos",
+      "loadMore": "Cargar más",
+      "loadingEllipsis": "Cargando...",
+      "duplicateRowsLabel": "Filas duplicadas",
+      "duplicateSkip": "Omitir (mantener el registro existente)",
+      "duplicateUpdate": "Actualizar el registro existente",
+      "confirming": "Confirmando...",
+      "confirmImport": "Confirmar importación",
+      "importCompleted": "Importación completada: {created} creado(s), {updated} actualizado(s), {skipped} omitido(s)",
+      "invalidPart": ", {count} inválido(s)",
+      "viewErrors": "Ver errores",
+      "fieldColumn": "Campo",
+      "errorColumn": "Error",
+      "newImport": "Nueva importación",
+      "mappingIntroRest": "{hasSheet, select, true { (hoja \"{sheetName}\")} other {}} — {rowCount} fila(s). Confirma a qué campo corresponde cada columna del archivo."
+    },
+    "title": "Centro de Datos",
+    "description": "Importa y exporta los datos de esta empresa.",
+    "historyTitle": "Historial de importaciones",
+    "emptyTitle": "Aún no se realizó ninguna importación.",
+    "emptyDescription": "El historial aparece aquí después de la primera importación de arriba.",
+    "writeRestricted": "Solo Analista o superior puede importar datos. Aún puedes exportar los datos de arriba.",
+    "status": {
+      "sent": "Enviado",
+      "awaitingMapping": "Esperando mapeo",
+      "readyToConfirm": "Listo para confirmar",
+      "completed": "Completado",
+      "completedWithErrors": "Completado con errores",
+      "failed": "Falló",
+      "cancelled": "Cancelado"
+    },
+    "history": {
+      "rowsSuffix": "{count} fila(s)",
+      "createdSuffix": "{count} creada(s)",
+      "updatedSuffix": "{count} actualizada(s)",
+      "skippedSuffix": "{count} omitida(s)",
+      "invalidSuffix": "{count} inválida(s)",
+      "rowError": "{hasField, select, true {Fila {number} ({field}): } other {Fila {number}: }}"
+    }
+  },
+  "audit": {
+    "title": "Auditoría",
+    "forbidden": "Solo los administradores de la organización pueden consultar la auditoría.",
+    "whenColumn": "Cuándo",
+    "actionColumn": "Acción",
+    "entityColumn": "Entidad",
+    "empty": "Aún no hay eventos registrados."
+  },
+  "glossario": {
+    "title": "Glosario",
+    "description": "Todas las métricas y siglas usadas en el sistema, explicadas en detalle.",
+    "searchLabel": "Buscar indicador",
+    "searchPlaceholder": "Buscar indicador...",
+    "alphabetNavLabel": "Navegación alfabética",
+    "emptyTitle": "Ningún indicador encontrado.",
+    "emptyDescription": "Prueba otro término de búsqueda o quita el filtro de categoría.",
+    "exampleLabel": "Ejemplo:",
+    "categories": {
+      "all": "Todos",
+      "financeiro": "Financiero",
+      "marketing": "Marketing",
+      "vendas": "Ventas",
+      "clientes": "Clientes",
+      "crescimento": "Crecimiento"
+    }
+  },
+  "admin": {
+    "layout": {
+      "title": "Panel Admin",
+      "superAdmin": "Super Admin",
+      "backToOrganizations": "Tus empresas",
+      "exitPanel": "Salir del panel",
+      "navOrganizations": "Empresas",
+      "navUsers": "Usuarios"
+    },
+    "organizations": {
+      "title": "Todas las empresas",
+      "description": "Toda empresa registrada en la plataforma, quién es el propietario y cuántos miembros tiene.",
+      "loadError": "No se pudo cargar.",
+      "empty": "Aún no hay empresas registradas.",
+      "ownerLine": "{hasOwner, select, true {Dueño: {ownerName} ({ownerEmail})} other {Sin propietario definido}} · {count} miembro(s)",
+      "manageMembers": "Gestionar miembros"
+    },
+    "members": {
+      "backToOrganizations": "Todas las empresas",
+      "title": "Miembros de la empresa",
+      "loadError": "No se pudieron cargar los miembros.",
+      "grantError": "No se pudo conceder el acceso.",
+      "roleChangeError": "No se pudo cambiar el rol.",
+      "revokeError": "No se pudo revocar el acceso.",
+      "empty": "Aún no hay miembros en esta empresa.",
+      "nameColumn": "Nombre",
+      "emailColumn": "Correo electrónico",
+      "roleColumn": "Rol",
+      "revoking": "Revocando...",
+      "revoke": "Revocar",
+      "grantAccess": "Conceder acceso",
+      "grantAccessHint": "Si el correo aún no tiene cuenta en la plataforma, indica el nombre — la cuenta se crea al instante.",
+      "nameIfNoAccount": "Nombre (si aún no tiene cuenta)",
+      "granting": "Concediendo...",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeAccountCreated": "Cuenta creada para {email}. Copia el enlace de abajo y envíalo manualmente — define la contraseña en el primer acceso."
+    },
+    "users": {
+      "title": "Todos los usuarios",
+      "description": "Toda cuenta registrada en la plataforma, activa o no, con o sin acceso a alguna empresa.",
+      "loadError": "No se pudieron cargar los usuarios.",
+      "createError": "No se pudo crear el usuario.",
+      "updateError": "No se pudo actualizar el usuario.",
+      "empty": "Aún no hay usuarios registrados.",
+      "nameColumn": "Nombre",
+      "emailColumn": "Correo electrónico",
+      "organizationsColumn": "Empresas",
+      "statusColumn": "Estado",
+      "superAdminColumn": "Super Admin",
+      "you": "(tú)",
+      "active": "activo",
+      "inactive": "inactivo",
+      "superAdminBadge": "super admin",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "removeSuperAdmin": "Quitar super admin",
+      "makeSuperAdmin": "Hacer super admin",
+      "createUser": "Crear usuario",
+      "createUserHint": "Crea la cuenta sin acceso a ninguna empresa todavía — concede acceso después desde la pantalla de la empresa.",
+      "creating": "Creando...",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeCopyLink": "Copia el enlace de abajo y envíalo manualmente — define la contraseña en el primer acceso."
+    }
+  },
+  "experiments": {
+    "title": "Experimentos (CRO)",
+    "createError": "No se pudo crear el experimento.",
+    "variantUpdateError": "No se pudo actualizar la variante.",
+    "emptyTitle": "Aún no se creó ningún experimento.",
+    "emptyDescription": "Crea la primera prueba A/B abajo — control y variante se crean automáticamente.",
+    "leadingVariant": "Variante con ventaja (indicativo): {name}",
+    "noLeadingVariant": "Ninguna variante con ventaja indicada.",
+    "newExperiment": "Nuevo experimento",
+    "hypothesisLabel": "Hipótesis",
+    "pageOrProcessLabel": "Página/proceso",
+    "primaryMetricLabel": "Métrica principal",
+    "metricConversionRate": "Tasa de conversión",
+    "metricAverageTicket": "Ticket promedio",
+    "metricCac": "CAC",
+    "creating": "Creando...",
+    "createButton": "Crear experimento (Control + Variante)",
+    "baseline": "base",
+    "test": "prueba",
+    "significant": "significativo",
+    "notSignificant": "no significativo",
+    "sampleSizePlaceholder": "Muestra",
+    "conversionsPlaceholder": "Conversiones"
+  }
+}

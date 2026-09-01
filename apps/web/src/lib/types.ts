@@ -6,6 +6,7 @@ export interface User {
   email: string;
   is_platform_admin: boolean;
   email_verified: boolean;
+  locale: string | null;
 }
 
 export interface Membership {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { getMetricById } from "@/domain/metrics/metric-utils";
 import { IconHelpCircle } from "@/components/icons";
 
@@ -31,6 +32,7 @@ const MOBILE_QUERY = "(max-width: 639px)"; // abaixo do breakpoint `sm` do Tailw
  * nao resolveria — o Portal tira o painel de qualquer stacking context local.
  */
 export function MetricHelp({ metric }: { metric: string }) {
+  const t = useTranslations("common.metricHelp");
   const definition = getMetricById(metric);
   const { id: organizationId } = useParams<{ id?: string }>();
   const panelId = useId();
@@ -134,7 +136,7 @@ export function MetricHelp({ metric }: { metric: string }) {
       </p>
       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{definition.shortDescription}</p>
       <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {definition.direction === "lower_is_better" ? "↓ Menor é melhor" : "↑ Maior é melhor"}
+        {definition.direction === "lower_is_better" ? `↓ ${t("lowerIsBetter")}` : `↑ ${t("higherIsBetter")}`}
       </p>
       {definition.formula && (
         <p className="mt-2 rounded-md bg-slate-50 px-2 py-1.5 font-mono text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -147,7 +149,7 @@ export function MetricHelp({ metric }: { metric: string }) {
           className="mt-2 inline-block text-xs font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
           onClick={() => setPinned(false)}
         >
-          Ver explicação completa →
+          {t("seeFullExplanation")}
         </Link>
       )}
     </div>
@@ -158,7 +160,7 @@ export function MetricHelp({ metric }: { metric: string }) {
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`Saiba mais sobre ${definition.name}`}
+        aria-label={t("learnMoreAbout", { name: definition.name })}
         aria-expanded={isOpen}
         aria-describedby={isOpen ? panelId : undefined}
         onClick={() => setPinned((p) => !p)}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, SESSION_REVOKED_MESSAGE } from "@/lib/api";
 import { buttonPrimary, input, label as labelClass, link as linkClass } from "@/lib/ui";
 import { Alert } from "@/components/ui";
@@ -29,6 +30,8 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [shake, setShake] = useState(false);
+  const t = useTranslations("auth.login");
+  const tCommon = useTranslations("common");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,7 +41,7 @@ function LoginContent() {
       await api.post<User>("/api/v1/auth/login", { email, password });
       router.push("/organizations");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       setShake(true);
       setTimeout(() => setShake(false), 500);
     } finally {
@@ -49,9 +52,9 @@ function LoginContent() {
   return (
     <div className="flex flex-1">
       <AuthHero
-        eyebrow="Acesso à plataforma"
-        title="Seus clientes. Seus números. Uma única visão."
-        description="Baselines, funil, campanhas e experimentos de CRO — organizados por empresa, prontos para orientar a próxima decisão."
+        eyebrow={t("heroEyebrow")}
+        title={t("heroTitle")}
+        description={t("heroDescription")}
       />
 
       <div className="flex flex-1 items-center justify-center px-4 py-16 sm:px-8">
@@ -62,15 +65,15 @@ function LoginContent() {
             className="mx-auto block h-auto w-auto max-w-[120px] object-contain sm:max-w-[150px] lg:hidden"
           />
           <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 lg:mt-0 dark:text-slate-50">
-            Bem-vindo de volta
+            {t("title")}
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-            Acesse seu ambiente de inteligência empresarial.
-          </p>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
           {sessionRevoked && !error && (
             <div className="mt-5">
-              <Alert>{SESSION_REVOKED_MESSAGE} Entre novamente para continuar.</Alert>
+              <Alert>
+                {SESSION_REVOKED_MESSAGE} {t("sessionRevokedSuffix")}
+              </Alert>
             </div>
           )}
 
@@ -79,7 +82,7 @@ function LoginContent() {
             className={`mt-7 flex flex-col gap-4 ${shake ? "animate-[shake_0.4s]" : ""}`}
           >
             <label className={labelClass}>
-              E-mail
+              {t("emailLabel")}
               <span className="relative">
                 <IconMail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -94,7 +97,7 @@ function LoginContent() {
               </span>
             </label>
             <PasswordInput
-              label="Senha"
+              label={t("passwordLabel")}
               value={password}
               onChange={setPassword}
               autoComplete="current-password"
@@ -103,31 +106,31 @@ function LoginContent() {
               href="/esqueci-senha"
               className={`-mt-2 self-end text-xs ${linkClass}`}
             >
-              Esqueci minha senha
+              {t("forgotPassword")}
             </Link>
 
             {error && <Alert>{error}</Alert>}
 
             <button type="submit" disabled={submitting} className={`${buttonPrimary} mt-1 w-full py-2.5`}>
-              {submitting ? "Entrando..." : "Entrar"}
+              {submitting ? t("submitting") : t("submit")}
             </button>
           </form>
 
           <p className="mt-4 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
             <IconShieldCheck className="h-3.5 w-3.5" />
-            Sua sessão fica protegida e você continua conectado com segurança.
+            {t("sessionProtected")}
           </p>
 
           <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
-            Ainda nao tem conta?{" "}
+            {t("noAccountPrefix")}{" "}
             <Link href="/register" className={linkClass}>
-              Cadastre-se
+              {t("signUp")}
             </Link>
           </p>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Ainda não conhece a Lucratix?{" "}
+            {t("learnMorePrefix")}{" "}
             <Link href="/sobre" className={linkClass}>
-              Conheça a aplicação
+              {t("learnMoreLink")}
             </Link>
           </p>
         </div>

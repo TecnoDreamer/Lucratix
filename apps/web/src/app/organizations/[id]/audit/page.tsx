@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonSecondary, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -33,6 +34,8 @@ function fetchAuditLogs(id: string, offset: number): Promise<AuditLogPage> {
 }
 
 export default function AuditPage() {
+  const t = useTranslations("audit");
+  const tCommon = useTranslations("common");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -49,11 +52,14 @@ export default function AuditPage() {
         return;
       }
       if (err instanceof ApiError && err.status === 403) {
-        setError("Apenas administradores da organização podem consultar a auditoria.");
+        setError(t("forbidden"));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
     },
+    // t/tCommon (tradutores) omitidos de propósito: nunca são referencialmente
+    // estáveis entre renders — ver nota em organizations/page.tsx.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [router]
   );
 
@@ -95,7 +101,7 @@ export default function AuditPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconShieldCheck className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Auditoria</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -114,9 +120,9 @@ export default function AuditPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className={tableHead}>
-                      <th className="px-4 py-2.5">Quando</th>
-                      <th className="px-4 py-2.5">Ação</th>
-                      <th className="px-4 py-2.5">Entidade</th>
+                      <th className="px-4 py-2.5">{t("whenColumn")}</th>
+                      <th className="px-4 py-2.5">{t("actionColumn")}</th>
+                      <th className="px-4 py-2.5">{t("entityColumn")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -134,7 +140,7 @@ export default function AuditPage() {
                     {logs.length === 0 && (
                       <tr>
                         <td colSpan={3} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                          Nenhum evento registrado ainda.
+                          {t("empty")}
                         </td>
                       </tr>
                     )}
@@ -144,9 +150,7 @@ export default function AuditPage() {
 
               {logs.length > 0 && (
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-                  <span>
-                    Mostrando {logs.length} de {total}
-                  </span>
+                  <span>{tCommon("showingCount", { shown: logs.length, total })}</span>
                   {hasMore && (
                     <button
                       type="button"
@@ -154,7 +158,7 @@ export default function AuditPage() {
                       disabled={loadingMore}
                       className={buttonSecondary}
                     >
-                      {loadingMore ? "Carregando..." : "Carregar mais"}
+                      {loadingMore ? tCommon("loading") : tCommon("loadMore")}
                     </button>
                   )}
                 </div>

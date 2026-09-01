@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 import { IconEye, IconEyeOff, IconLock } from "@/components/icons";
 import { input as inputClass } from "@/lib/ui";
 
@@ -37,6 +38,7 @@ export function PasswordInput({
   const [visible, setVisible] = useState(false);
   const [capsLockOn, setCapsLockOn] = useState(false);
   const inputId = useId();
+  const t = useTranslations("common.passwordInput");
 
   function trackCapsLock(event: KeyboardEvent<HTMLInputElement>) {
     if (typeof event.getModifierState === "function") {
@@ -71,7 +73,7 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+          aria-label={visible ? t("hide") : t("show")}
           className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-500 dark:hover:text-slate-300"
         >
           {visible ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
@@ -79,7 +81,7 @@ export function PasswordInput({
       </span>
       {capsLockOn && (
         <p role="status" className="text-xs text-amber-600 dark:text-amber-400">
-          Caps Lock está ativado.
+          {t("capsLockOn")}
         </p>
       )}
     </div>

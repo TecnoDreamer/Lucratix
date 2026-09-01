@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { buttonDanger, buttonPrimary, buttonSecondary } from "@/lib/ui";
 import { Alert } from "@/components/ui";
 
@@ -15,7 +16,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = "Cancelar",
+  cancelLabel,
   tone = "default",
   confirming = false,
   error,
@@ -35,9 +36,11 @@ export function ConfirmDialog({
   onCancel: () => void;
   children?: ReactNode;
 }) {
+  const t = useTranslations("common");
   const titleId = useId();
   const descriptionId = useId();
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const resolvedCancelLabel = cancelLabel ?? t("cancel");
 
   useEffect(() => {
     if (!open) return;
@@ -103,7 +106,7 @@ export function ConfirmDialog({
               disabled={confirming}
               className={buttonSecondary}
             >
-              {cancelLabel}
+              {resolvedCancelLabel}
             </button>
             <button
               type="button"
@@ -111,7 +114,7 @@ export function ConfirmDialog({
               disabled={confirming}
               className={tone === "danger" ? buttonDanger : buttonPrimary}
             >
-              {confirming ? "Aguarde..." : confirmLabel}
+              {confirming ? t("pleaseWait") : confirmLabel}
             </button>
           </div>
         </div>

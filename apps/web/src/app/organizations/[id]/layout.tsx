@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
-import { hasMinimumRole, roleLabel } from "@/lib/roles";
+import { hasMinimumRole, useRoleLabel } from "@/lib/roles";
 import { rememberActiveOrganizationId } from "@/lib/active-organization";
 import { OrganizationProvider } from "@/contexts/organization-context";
 import { OrganizationLogo } from "@/components/organization-logo";
@@ -41,37 +42,55 @@ import type { MembershipRole, Organization } from "@/lib/types";
 // verdade continua sendo decidida pelo backend.
 const NAV_ITEMS: {
   href: string | null;
-  label: string;
+  key: string;
   icon: typeof IconHome;
   minRole?: MembershipRole;
 }[] = [
-  { href: null, label: "Início", icon: IconHome },
-  { href: "dashboard", label: "Dashboard", icon: IconGrid },
-  { href: "analytics", label: "Analytics", icon: IconTrendingUp, minRole: "ANALYST" },
-  { href: "products", label: "Produtos", icon: IconPackage },
-  { href: "financials", label: "Financeiro", icon: IconDollar },
-  { href: "marketing", label: "Marketing", icon: IconMegaphone },
-  { href: "funnel", label: "Funil", icon: IconFunnel },
-  { href: "experiments", label: "Experimentos", icon: IconFlask },
-  { href: "reports", label: "Relatório", icon: IconFileText, minRole: "ANALYST" },
-  { href: "audit", label: "Auditoria", icon: IconShieldCheck, minRole: "ORGANIZATION_ADMIN" },
+  { href: null, key: "home", icon: IconHome },
+  { href: "dashboard", key: "dashboard", icon: IconGrid },
+  { href: "analytics", key: "analytics", icon: IconTrendingUp, minRole: "ANALYST" },
+  { href: "products", key: "products", icon: IconPackage },
+  { href: "financials", key: "financials", icon: IconDollar },
+  { href: "marketing", key: "marketing", icon: IconMegaphone },
+  { href: "funnel", key: "funnel", icon: IconFunnel },
+  { href: "experiments", key: "experiments", icon: IconFlask },
+  { href: "reports", key: "reports", icon: IconFileText, minRole: "ANALYST" },
+  { href: "audit", key: "audit", icon: IconShieldCheck, minRole: "ORGANIZATION_ADMIN" },
   // Sem minRole: exportar é leitura (mesmo nível de GET /financials, VIEWER
   // incluso — ver docs/data-import-export/ARCHITECTURE.md); só a etapa de
   // importação dentro da página exige ANALYST+, escondida ali dentro
   // (mesmo padrão de "Ações rápidas" da Início, ver page.tsx/lib/roles.ts).
-  { href: "central-de-dados", label: "Central de Dados", icon: IconDatabase },
-  { href: "glossario", label: "Glossário", icon: IconBookOpen },
+  { href: "central-de-dados", key: "centralDeDados", icon: IconDatabase },
+  { href: "glossario", key: "glossary", icon: IconBookOpen },
   // Dados cadastrais/logotipo/ciclo de vida da EMPRESA — distinto de "Conta →
   // Configurações" abaixo (que é preferência pessoal do usuário, sem escopo
   // de organização). Só quem pode editar a empresa (RN de PATCH
   // /organizations/{id}) vê esta entrada.
-  { href: "configuracoes", label: "Configurações da empresa", icon: IconSettings, minRole: "ORGANIZATION_ADMIN" },
+  { href: "configuracoes", key: "companySettings", icon: IconSettings, minRole: "ORGANIZATION_ADMIN" },
 ];
 
 export default function OrganizationLayout({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("organizationLayout");
+  const tCommon = useTranslations("common");
+  const roleLabel = useRoleLabel();
+  const navLabels: Record<string, string> = {
+    home: t("nav.home"),
+    dashboard: t("nav.dashboard"),
+    analytics: t("nav.analytics"),
+    products: t("nav.products"),
+    financials: t("nav.financials"),
+    marketing: t("nav.marketing"),
+    funnel: t("nav.funnel"),
+    experiments: t("nav.experiments"),
+    reports: t("nav.reports"),
+    audit: t("nav.audit"),
+    centralDeDados: t("nav.centralDeDados"),
+    glossary: t("nav.glossary"),
+    companySettings: t("nav.companySettings"),
+  };
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,10 +123,10 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
           return;
         }
         if (err instanceof ApiError && err.status === 404) {
-          setLoadError("Empresa nao encontrada ou voce nao tem acesso a ela.");
+          setLoadError(t("notFound"));
           return;
         }
-        setLoadError(err instanceof ApiError ? err.message : "Nao foi possivel conectar a API.");
+        setLoadError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -115,6 +134,9 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
     return () => {
       cancelled = true;
     };
+    // t/tCommon sao estaveis entre renders (mesma instancia do hook) —
+    // inclui-las recriaria o efeito sem necessidade.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, router]);
 
   // Fecha o drawer mobile automaticamente ao navegar para uma nova rota.
@@ -153,7 +175,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
         <p className="text-sm text-rose-600 dark:text-rose-400">{loadError}</p>
         <Link href="/organizations" className={`mt-4 inline-flex items-center gap-1 text-sm ${linkClass}`}>
-          <IconArrowLeft className="h-4 w-4" /> Suas empresas
+          <IconArrowLeft className="h-4 w-4" /> {t("yourCompanies")}
         </Link>
       </div>
     );
@@ -169,7 +191,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         href="/organizations"
         className="inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
       >
-        <IconArrowLeft className="h-4 w-4" /> Suas empresas
+        <IconArrowLeft className="h-4 w-4" /> {t("yourCompanies")}
       </Link>
 
       <div className="mt-4 flex items-center gap-3">
@@ -186,7 +208,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
             </h1>
             {organization?.my_role && (
               <p className="mt-0.5 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-                Seu papel: {roleLabel(organization.my_role)}
+                {t("yourRole", { role: roleLabel(organization.my_role) ?? "" })}
               </p>
             )}
           </div>
@@ -194,12 +216,12 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </div>
 
       <nav className="mt-6 flex flex-col gap-0.5">
-        {visibleNavItems.map(({ href, label, icon: Icon }) => {
+        {visibleNavItems.map(({ href, key, icon: Icon }) => {
           const target = href ? `/organizations/${id}/${href}` : `/organizations/${id}`;
           const active = pathname === target;
           return (
             <Link
-              key={href ?? "home"}
+              key={key}
               href={target}
               aria-current={active ? "page" : undefined}
               className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -215,7 +237,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
                     : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                 }`}
               />
-              {label}
+              {navLabels[key]}
             </Link>
           );
         })}
@@ -223,7 +245,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
 
       <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
-          Conta
+          {t("accountSectionTitle")}
         </p>
         <nav className="mt-2 flex flex-col gap-0.5">
           <Link
@@ -231,7 +253,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
             className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <IconSettings className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300" />
-            Configurações
+            {t("accountSettings")}
           </Link>
         </nav>
       </div>
@@ -251,13 +273,13 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            aria-label="Abrir menu"
+            aria-label={t("openMenu")}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <IconMenu className="h-5 w-5" />
           </button>
           <span className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
-            {loading ? "Carregando..." : organization?.name}
+            {loading ? tCommon("loading") : organization?.name}
           </span>
         </header>
 
@@ -271,13 +293,13 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
             <div
               role="dialog"
               aria-modal="true"
-              aria-label="Menu de navegação"
+              aria-label={t("navMenuLabel")}
               className="animate-slide-in-left absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-white px-4 py-5 shadow-xl dark:bg-slate-950"
             >
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(false)}
-                aria-label="Fechar menu"
+                aria-label={t("closeMenu")}
                 className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <IconX className="h-5 w-5" />

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import {
   formatMetric,
@@ -25,14 +26,23 @@ interface BasicReport {
   profit_vs_baseline: PeriodComparison | null;
 }
 
-const MARKETING_CARDS: { key: keyof MarketingAnalytics & string; label: string; percent?: boolean }[] = [
-  { key: "roas", label: "ROAS" },
-  { key: "roi", label: "ROI", percent: true },
-  { key: "ctr", label: "CTR", percent: true },
-  { key: "cpc", label: "CPC" },
-  { key: "cpm", label: "CPM" },
-  { key: "cpl", label: "CPL" },
-  { key: "cpa", label: "CPA" },
+const MARKETING_CARDS: { key: keyof MarketingAnalytics & string; labelKey: string; percent?: boolean }[] = [
+  { key: "roas", labelKey: "roas" },
+  { key: "roi", labelKey: "roi", percent: true },
+  { key: "ctr", labelKey: "ctr", percent: true },
+  { key: "cpc", labelKey: "cpc" },
+  { key: "cpm", labelKey: "cpm" },
+  { key: "cpl", labelKey: "cpl" },
+  { key: "cpa", labelKey: "cpa" },
+];
+
+const DASHBOARD_ROWS: { key: "revenue" | "profit" | "margin" | "cac" | "conversion_rate" | "average_ticket"; percent?: boolean }[] = [
+  { key: "revenue" },
+  { key: "profit" },
+  { key: "margin", percent: true },
+  { key: "cac" },
+  { key: "conversion_rate", percent: true },
+  { key: "average_ticket" },
 ];
 
 function currentMonthPeriod(): string {
@@ -60,6 +70,20 @@ async function fetchMarketing(id: string, period: string): Promise<MarketingAnal
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations("reports");
+  const tCommon = useTranslations("common");
+  // Reaproveita os rótulos já traduzidos de dashboard/analytics — mesmas
+  // métricas, mesmo texto, evita duplicar a tradução em um terceiro lugar.
+  const tDashboardLabels = useTranslations("dashboard.metricLabels");
+  const tMarketingLabels = useTranslations("analytics.metricLabels");
+  const dashboardLabelKeys: Record<string, string> = {
+    revenue: "revenue",
+    profit: "profit",
+    margin: "margin",
+    cac: "cac",
+    conversion_rate: "conversionRate",
+    average_ticket: "averageTicket",
+  };
 
   const [period, setPeriod] = useState(currentMonthPeriod());
   const [report, setReport] = useState<BasicReport | null>(null);
@@ -82,7 +106,7 @@ export default function ReportPage() {
         router.push(loginRedirectPath(err));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
     };
 
     Promise.all([
@@ -111,7 +135,7 @@ export default function ReportPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <IconFileText className="h-4 w-4 text-slate-400 print:hidden" />
-          <h2 className={sectionTitle}>Relatório executivo</h2>
+          <h2 className={sectionTitle}>{t("title")}</h2>
         </div>
         <div className="flex items-center gap-2 print:hidden">
           <input
@@ -126,7 +150,7 @@ export default function ReportPage() {
             disabled={loading || !report}
             className={buttonSecondary}
           >
-            Imprimir / Salvar como PDF
+            {t("printOrSavePdf")}
           </button>
         </div>
       </div>
@@ -147,28 +171,22 @@ export default function ReportPage() {
         report && (
           <>
             <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-              {report.organization.name} — gerado em{" "}
-              {new Date(report.generated_at).toLocaleString("pt-BR")}
+              {t("generatedFor", {
+                name: report.organization.name,
+                date: new Date(report.generated_at).toLocaleString("pt-BR"),
+              })}
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {(
-                [
-                  ["revenue", "Receita"],
-                  ["profit", "Lucro"],
-                  ["margin", "Margem"],
-                  ["cac", "CAC"],
-                  ["conversion_rate", "Conversão"],
-                  ["average_ticket", "Ticket médio"],
-                ] as const
-              ).map(([key, label]) => (
+              {DASHBOARD_ROWS.map(({ key, percent }) => (
                 <Card key={key} className="p-4 print:break-inside-avoid print:border-slate-300 print:shadow-none">
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    {label}
+                    {tDashboardLabels(dashboardLabelKeys[key])}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
                     {formatMetric(report.dashboard[key], {
-                      percent: key === "margin" || key === "conversion_rate",
+                      percent,
+                      notApplicableLabel: tCommon("notApplicable"),
                     })}
                   </p>
                 </Card>
@@ -176,30 +194,26 @@ export default function ReportPage() {
             </div>
 
             <Card className="mt-6 p-5 print:break-inside-avoid print:border-slate-300 print:shadow-none">
-              <h2 className={sectionTitle}>Vs. baseline</h2>
+              <h2 className={sectionTitle}>{t("vsBaseline")}</h2>
               {report.revenue_vs_baseline ? (
                 <p className="mt-2 text-sm text-slate-900 dark:text-slate-50">
-                  Receita: {report.revenue_vs_baseline.baseline_value ?? "n/a"} &rarr;{" "}
-                  {report.revenue_vs_baseline.current_value ?? "n/a"} (
-                  {formatPercentChange(report.revenue_vs_baseline)}
+                  {t("revenueLabel")}: {report.revenue_vs_baseline.baseline_value ?? t("na")} &rarr;{" "}
+                  {report.revenue_vs_baseline.current_value ?? t("na")} (
+                  {formatPercentChange(report.revenue_vs_baseline, t("variationNotApplicable"))}
                   )
                 </p>
               ) : (
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Nenhum baseline registrado ainda.
-                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("noBaselineYet")}</p>
               )}
             </Card>
 
-            <h2 className={`mt-8 ${sectionTitle}`}>Marketing do período</h2>
+            <h2 className={`mt-8 ${sectionTitle}`}>{t("periodMarketing")}</h2>
             {marketing && marketing.campaign_count === 0 ? (
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Nenhuma campanha com data cadastrada neste período.
-              </p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("noCampaignsThisPeriod")}</p>
             ) : (
               marketing && (
                 <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {MARKETING_CARDS.map(({ key, label, percent }) => {
+                  {MARKETING_CARDS.map(({ key, labelKey, percent }) => {
                     const metric = marketing[key] as MetricWithComparison;
                     return (
                       <Card
@@ -207,14 +221,14 @@ export default function ReportPage() {
                         className="p-4 print:break-inside-avoid print:border-slate-300 print:shadow-none"
                       >
                         <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                          {label}
+                          {tMarketingLabels(labelKey)}
                         </p>
                         <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                          {formatMetric(metric.current, { percent })}
+                          {formatMetric(metric.current, { percent, notApplicableLabel: tCommon("notApplicable") })}
                         </p>
                         {metric.current.is_applicable && (
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {formatPercentChange(metric.comparison)} vs. mês anterior
+                            {formatPercentChange(metric.comparison, tCommon("notApplicable"))} {t("vsPreviousMonth")}
                           </p>
                         )}
                       </Card>

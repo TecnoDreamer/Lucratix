@@ -98,6 +98,9 @@ export interface ExperimentResult {
   significance_alpha: number;
 }
 
-export function formatValue(value: number | null): string {
-  return value === null ? "não aplicável" : value.toLocaleString("pt-BR");
+// `notApplicableLabel` vem de fora (i18n, 2026-09-01) — mantém esta função
+// utilizável fora de componente React; o número em si nunca muda de
+// formato por idioma (ver lib/formatters.ts).
+export function formatValue(value: number | null, notApplicableLabel: string): string {
+  return value === null ? notApplicableLabel : value.toLocaleString("pt-BR");
 }

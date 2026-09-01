@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type FinancialPeriod } from "@/lib/business";
 import { formatPercentage } from "@/lib/formatters";
@@ -21,6 +22,8 @@ function currentMonth(): string {
 export default function FinancialsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations("financials");
+  const tCommon = useTranslations("common");
 
   const [periods, setPeriods] = useState<FinancialPeriod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +48,7 @@ export default function FinancialsPage() {
           router.push(loginRedirectPath(err));
           return;
         }
-        setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -73,7 +76,7 @@ export default function FinancialsPage() {
         return [...withoutSamePeriod, saved].sort((a, b) => (a.period < b.period ? 1 : -1));
       });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível salvar o período.");
+      setError(err instanceof ApiError ? err.message : t("saveGenericError"));
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +86,7 @@ export default function FinancialsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconDollar className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Financeiro</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -98,18 +101,18 @@ export default function FinancialsPage() {
         ) : periods.length === 0 ? (
           <EmptyState
             icon={<IconDollar className="h-5 w-5" />}
-            title="Nenhum período financeiro registrado ainda."
-            description="Registre o primeiro período abaixo."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         ) : (
           <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
-                  <th className="px-4 py-2.5">Período</th>
-                  <th className="px-4 py-2.5">Receita</th>
-                  <th className="px-4 py-2.5">Lucro</th>
-                  <th className="px-4 py-2.5">Margem</th>
+                  <th className="px-4 py-2.5">{t("period")}</th>
+                  <th className="px-4 py-2.5">{t("revenue")}</th>
+                  <th className="px-4 py-2.5">{t("profit")}</th>
+                  <th className="px-4 py-2.5">{t("margin")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,10 +121,10 @@ export default function FinancialsPage() {
                     <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
                       {p.period}
                     </td>
-                    <td className="px-4 py-2.5">{formatValue(p.revenue)}</td>
-                    <td className="px-4 py-2.5">{formatValue(p.profit)}</td>
+                    <td className="px-4 py-2.5">{formatValue(p.revenue, tCommon("notApplicable"))}</td>
+                    <td className="px-4 py-2.5">{formatValue(p.profit, tCommon("notApplicable"))}</td>
                     <td className="px-4 py-2.5">
-                      {p.margin === null ? "não aplicável" : formatPercentage(p.margin)}
+                      {p.margin === null ? tCommon("notApplicable") : formatPercentage(p.margin)}
                     </td>
                   </tr>
                 ))}
@@ -134,7 +137,7 @@ export default function FinancialsPage() {
       <Card className="mt-6 p-5">
         <form onSubmit={handleSave} className="flex flex-wrap items-end gap-3">
           <label className={label}>
-            Período
+            {t("period")}
             <input
               type="month"
               value={period.slice(0, 7)}
@@ -143,7 +146,7 @@ export default function FinancialsPage() {
             />
           </label>
           <label className={label}>
-            Receita
+            {t("revenue")}
             <input
               type="number"
               step="0.01"
@@ -153,7 +156,7 @@ export default function FinancialsPage() {
             />
           </label>
           <label className={label}>
-            Custos
+            {t("costs")}
             <input
               type="number"
               step="0.01"
@@ -163,7 +166,7 @@ export default function FinancialsPage() {
             />
           </label>
           <label className={label}>
-            Despesas
+            {t("expenses")}
             <input
               type="number"
               step="0.01"
@@ -173,7 +176,7 @@ export default function FinancialsPage() {
             />
           </label>
           <label className={label}>
-            Investimento em marketing
+            {t("marketingInvestment")}
             <input
               type="number"
               step="0.01"
@@ -183,7 +186,7 @@ export default function FinancialsPage() {
             />
           </label>
           <button type="submit" disabled={submitting} className={buttonPrimary}>
-            {submitting ? "Salvando..." : "Salvar período"}
+            {submitting ? t("saving") : t("savePeriod")}
           </button>
         </form>
       </Card>

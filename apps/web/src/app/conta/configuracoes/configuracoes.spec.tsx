@@ -6,6 +6,10 @@ import { AccountProvider, type AccountContextValue } from "@/contexts/account-co
 import type { Organization } from "@/lib/types";
 import AccountSettingsPage from "./page";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
   return { ...actual, api: { ...actual.api, get: vi.fn(), patch: vi.fn() } };
@@ -102,7 +106,7 @@ describe("AccountSettingsPage", () => {
   it("clicar em 'Escuro' marca a opcao, persiste e aplica a classe dark", async () => {
     mockPreferences();
     renderWithAccount();
-    await waitFor(() => screen.getByRole("radiogroup"));
+    await waitFor(() => screen.getByRole("radiogroup", { name: "Tema" }));
 
     fireEvent.click(screen.getByRole("radio", { name: "Escuro" }));
 
@@ -116,7 +120,7 @@ describe("AccountSettingsPage", () => {
     document.documentElement.classList.add("dark");
     mockPreferences();
     renderWithAccount();
-    await waitFor(() => screen.getByRole("radiogroup"));
+    await waitFor(() => screen.getByRole("radiogroup", { name: "Tema" }));
 
     fireEvent.click(screen.getByRole("radio", { name: "Claro" }));
 

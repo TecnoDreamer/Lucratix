@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { resolvePreset, type DateRange } from "@/lib/date-ranges";
 import {
@@ -42,30 +43,30 @@ import {
   IconTrendingUp,
 } from "@/components/icons";
 
-type CardConfig<T> = { key: keyof T & string; label: string; percent?: boolean; icon: typeof IconDollar };
+type CardConfig<T> = { key: keyof T & string; labelKey: string; percent?: boolean; icon: typeof IconDollar };
 
 // Os 7 KPIs comuns a ExecutiveDashboard (agregado) e MonthlyMetrics (um
 // ponto da série) — os únicos campos que fazem sentido virar gráfico.
 type DashboardMetricKey = keyof ExecutiveDashboard & keyof MonthlyMetrics;
 
 const CARDS: CardConfig<ExecutiveDashboard>[] = [
-  { key: "revenue", label: "Receita", icon: IconDollar },
-  { key: "profit", label: "Lucro", icon: IconTrendingUp },
-  { key: "margin", label: "Margem", percent: true, icon: IconGrid },
-  { key: "cac", label: "CAC", icon: IconPackage },
-  { key: "conversion_rate", label: "Conversão", percent: true, icon: IconFunnel },
-  { key: "average_ticket", label: "Ticket médio", icon: IconDollar },
-  { key: "recurrence_rate", label: "Recorrência", percent: true, icon: IconTrendingUp },
+  { key: "revenue", labelKey: "revenue", icon: IconDollar },
+  { key: "profit", labelKey: "profit", icon: IconTrendingUp },
+  { key: "margin", labelKey: "margin", percent: true, icon: IconGrid },
+  { key: "cac", labelKey: "cac", icon: IconPackage },
+  { key: "conversion_rate", labelKey: "conversionRate", percent: true, icon: IconFunnel },
+  { key: "average_ticket", labelKey: "averageTicket", icon: IconDollar },
+  { key: "recurrence_rate", labelKey: "recurrenceRate", percent: true, icon: IconTrendingUp },
 ];
 
 const MARKETING_CARDS: CardConfig<MarketingAnalytics>[] = [
-  { key: "roas", label: "ROAS", icon: IconMegaphone },
-  { key: "roi", label: "ROI", percent: true, icon: IconTrendingUp },
-  { key: "ctr", label: "CTR", percent: true, icon: IconFunnel },
-  { key: "cpc", label: "CPC", icon: IconDollar },
-  { key: "cpm", label: "CPM", icon: IconDollar },
-  { key: "cpl", label: "CPL", icon: IconDollar },
-  { key: "cpa", label: "CPA", icon: IconDollar },
+  { key: "roas", labelKey: "roas", icon: IconMegaphone },
+  { key: "roi", labelKey: "roi", percent: true, icon: IconTrendingUp },
+  { key: "ctr", labelKey: "ctr", percent: true, icon: IconFunnel },
+  { key: "cpc", labelKey: "cpc", icon: IconDollar },
+  { key: "cpm", labelKey: "cpm", icon: IconDollar },
+  { key: "cpl", labelKey: "cpl", icon: IconDollar },
+  { key: "cpa", labelKey: "cpa", icon: IconDollar },
 ];
 
 function ComparisonBadge({
@@ -75,8 +76,9 @@ function ComparisonBadge({
   comparison: MetricWithComparison["comparison"];
   metricId: string;
 }) {
+  const t = useTranslations("analytics");
   if (comparison.percent_change === null) {
-    return <p className="mt-1 text-xs text-slate-400 dark:text-slate-600">vs. período anterior: n/d</p>;
+    return <p className="mt-1 text-xs text-slate-400 dark:text-slate-600">{t("vsPreviousPeriodNa")}</p>;
   }
   // Direção desejável importa: para CAC/CPC/CPM/CPL/CPA (lower_is_better),
   // uma queda é a notícia boa — nunca pintar todo aumento de verde sem
@@ -94,13 +96,14 @@ function ComparisonBadge({
       }`}
     >
       <Icon className="h-3 w-3" />
-      {formatPercentChange(comparison)}
-      <span className="font-normal text-slate-400 dark:text-slate-600">vs. período anterior</span>
+      {formatPercentChange(comparison, t("notApplicable"))}
+      <span className="font-normal text-slate-400 dark:text-slate-600">{t("vsPreviousPeriod")}</span>
     </p>
   );
 }
 
 function TargetProgressLine({ progress }: { progress: TargetProgress }) {
+  const t = useTranslations("analytics");
   // Só receita/lucro têm progresso agregado (metas somáveis) — as outras 5
   // vêm com target_value null e um motivo em vez de "0% da meta" (ver
   // analytics/targets_service.py). Sem meta definida, não mostra nada.
@@ -109,8 +112,8 @@ function TargetProgressLine({ progress }: { progress: TargetProgress }) {
     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
       {progress.percent_of_target.is_applicable && progress.percent_of_target.value !== null
         ? formatPercentage(progress.percent_of_target.value)
-        : "não aplicável"}{" "}
-      da meta
+        : t("notApplicable")}{" "}
+      {t("ofTarget")}
     </p>
   );
 }
@@ -124,11 +127,14 @@ function MetricGrid<T extends object>({
   cards: CardConfig<T>[];
   targetProgress?: Partial<Record<string, TargetProgress>>;
 }) {
+  const t = useTranslations("analytics");
+  const tMetricLabels = useTranslations("analytics.metricLabels");
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {cards.map(({ key, label, percent, icon: Icon }, i) => {
+      {cards.map(({ key, labelKey, percent, icon: Icon }, i) => {
         const metric = data[key] as unknown as MetricWithComparison;
         const progress = targetProgress?.[key];
+        const label = tMetricLabels(labelKey);
         return (
           <Card key={key} hover className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
             <div className="flex items-center justify-between">
@@ -141,7 +147,7 @@ function MetricGrid<T extends object>({
               </span>
             </div>
             <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-              {formatMetric(metric.current, { percent })}
+              {formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
             </p>
             {!metric.current.is_applicable && metric.current.reason && (
               <p className="mt-1 text-xs text-slate-400">{metric.current.reason}</p>
@@ -156,37 +162,41 @@ function MetricGrid<T extends object>({
 }
 
 function SeriesGrid({ series, targets }: { series: ExecutiveSeries; targets?: ExecutiveTargets | null }) {
+  const tMetricLabels = useTranslations("analytics.metricLabels");
   // period -> valor da meta daquele mês, pra cruzar com series.points na
   // mesma ordem/tamanho (SeriesChart espera um array paralelo a `points`).
   const targetsByPeriod = new Map(targets?.monthly.map((m) => [m.period, m]) ?? []);
 
   return (
     <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {CARDS.map(({ key, label, percent, icon: Icon }, i) => (
-        <Card key={key} className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
-          <div className="flex items-center justify-between">
-            <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {label}
-              <MetricHelp metric={key} />
-            </p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
-              <Icon className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="mt-2">
-            <SeriesChart
-              points={series.points.map((p) => ({ period: p.period, metric: p[key as DashboardMetricKey] }))}
-              percent={percent}
-              label={label}
-              targets={
-                targets
-                  ? series.points.map((p) => targetsByPeriod.get(p.period)?.[key as DashboardMetricKey] ?? null)
-                  : undefined
-              }
-            />
-          </div>
-        </Card>
-      ))}
+      {CARDS.map(({ key, labelKey, percent, icon: Icon }, i) => {
+        const label = tMetricLabels(labelKey);
+        return (
+          <Card key={key} className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {label}
+                <MetricHelp metric={key} />
+              </p>
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+            </div>
+            <div className="mt-2">
+              <SeriesChart
+                points={series.points.map((p) => ({ period: p.period, metric: p[key as DashboardMetricKey] }))}
+                percent={percent}
+                label={label}
+                targets={
+                  targets
+                    ? series.points.map((p) => targetsByPeriod.get(p.period)?.[key as DashboardMetricKey] ?? null)
+                    : undefined
+                }
+              />
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -195,6 +205,8 @@ export default function AnalyticsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { organization } = useOrganization();
+  const t = useTranslations("analytics");
+  const tCommon = useTranslations("common");
 
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [data, setData] = useState<ExecutiveDashboard | null>(null);
@@ -220,7 +232,7 @@ export default function AnalyticsPage() {
         router.push(loginRedirectPath(err));
         return true;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       return true;
     };
 
@@ -332,7 +344,7 @@ export default function AnalyticsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconGrid className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Visão Executiva</h2>
+        <h2 className={sectionTitle}>{t("executiveViewTitle")}</h2>
       </div>
 
       <div className="mt-4">
@@ -348,9 +360,10 @@ export default function AnalyticsPage() {
       {incomplete && !loading && (
         <div className="mt-4">
           <Alert tone="warning">
-            Dados financeiros disponíveis para {data!.months_with_financial_data} de{" "}
-            {data!.months_in_range} meses do período selecionado — os totais refletem só os meses com
-            registro.
+            {t("incompleteDataWarning", {
+              available: data!.months_with_financial_data,
+              total: data!.months_in_range,
+            })}
           </Alert>
         </div>
       )}
@@ -378,12 +391,12 @@ export default function AnalyticsPage() {
       <div className="mt-10 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconTrendingUp className="h-4 w-4 text-slate-400" />
-          <h2 className={sectionTitle}>Evolução mensal</h2>
+          <h2 className={sectionTitle}>{t("monthlyEvolutionTitle")}</h2>
         </div>
         {series && (
           <button type="button" onClick={handleExportSeries} className={`${buttonSecondary} px-3 py-1.5 text-xs`}>
             <IconDownload className="h-3.5 w-3.5" />
-            Exportar CSV
+            {t("exportCsv")}
           </button>
         )}
       </div>
@@ -400,15 +413,12 @@ export default function AnalyticsPage() {
 
       <div className="mt-10 flex items-center gap-2">
         <IconMegaphone className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Marketing</h2>
+        <h2 className={sectionTitle}>{t("marketingTitle")}</h2>
       </div>
 
       {marketing && !loading && marketing.campaign_count === 0 && (
         <div className="mt-4">
-          <Alert tone="warning">
-            Nenhuma campanha com data cadastrada no período selecionado — as métricas de marketing não
-            puderam ser calculadas.
-          </Alert>
+          <Alert tone="warning">{t("noCampaignsWarning")}</Alert>
         </div>
       )}
 
@@ -425,7 +435,7 @@ export default function AnalyticsPage() {
       {!loading && marketingByChannel && marketingByChannel.channels.length > 0 && (
         <div className="mt-6">
           <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Por canal
+            {t("byChannel")}
           </h3>
           <div className="mt-2">
             <MarketingByChannelTable channels={marketingByChannel.channels} />

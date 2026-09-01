@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type Product } from "@/lib/business";
 import { formatPercentage } from "@/lib/formatters";
@@ -16,6 +17,8 @@ async function fetchProducts(id: string): Promise<Product[]> {
 export default function ProductsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations("products");
+  const tCommon = useTranslations("common");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +41,7 @@ export default function ProductsPage() {
           router.push(loginRedirectPath(err));
           return;
         }
-        setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -64,7 +67,7 @@ export default function ProductsPage() {
       setPrice("");
       setCost("");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível criar o produto.");
+      setError(err instanceof ApiError ? err.message : t("createGenericError"));
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +81,7 @@ export default function ProductsPage() {
       );
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível atualizar o produto.");
+      setError(err instanceof ApiError ? err.message : t("updateGenericError"));
     }
   }
 
@@ -86,7 +89,7 @@ export default function ProductsPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconPackage className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Produtos e serviços</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -101,19 +104,19 @@ export default function ProductsPage() {
         ) : products.length === 0 ? (
           <EmptyState
             icon={<IconPackage className="h-5 w-5" />}
-            title="Nenhum produto cadastrado ainda."
-            description="Adicione o primeiro produto ou serviço abaixo."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         ) : (
           <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
-                  <th className="px-4 py-2.5">Nome</th>
-                  <th className="px-4 py-2.5">Preço</th>
-                  <th className="px-4 py-2.5">Custo</th>
-                  <th className="px-4 py-2.5">Margem</th>
-                  <th className="px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5">{t("name")}</th>
+                  <th className="px-4 py-2.5">{t("price")}</th>
+                  <th className="px-4 py-2.5">{t("cost")}</th>
+                  <th className="px-4 py-2.5">{t("margin")}</th>
+                  <th className="px-4 py-2.5">{t("status")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,10 +125,10 @@ export default function ProductsPage() {
                     <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-slate-50">
                       {p.name}
                     </td>
-                    <td className="px-4 py-2.5">{formatValue(p.price)}</td>
-                    <td className="px-4 py-2.5">{formatValue(p.cost)}</td>
+                    <td className="px-4 py-2.5">{formatValue(p.price, tCommon("notApplicable"))}</td>
+                    <td className="px-4 py-2.5">{formatValue(p.cost, tCommon("notApplicable"))}</td>
                     <td className="px-4 py-2.5">
-                      {p.margin === null ? "não aplicável" : formatPercentage(p.margin)}
+                      {p.margin === null ? tCommon("notApplicable") : formatPercentage(p.margin)}
                     </td>
                     <td className="px-4 py-2.5">
                       <button
@@ -136,7 +139,7 @@ export default function ProductsPage() {
                             : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
                         }`}
                       >
-                        {p.active ? "ativo" : "inativo"}
+                        {p.active ? t("active") : t("inactive")}
                       </button>
                     </td>
                   </tr>
@@ -150,11 +153,11 @@ export default function ProductsPage() {
       <Card className="mt-6 p-5">
         <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
           <label className={label}>
-            Nome
+            {t("name")}
             <input required value={name} onChange={(e) => setName(e.target.value)} className={input} />
           </label>
           <label className={label}>
-            Preço
+            {t("price")}
             <input
               type="number"
               step="0.01"
@@ -164,7 +167,7 @@ export default function ProductsPage() {
             />
           </label>
           <label className={label}>
-            Custo
+            {t("cost")}
             <input
               type="number"
               step="0.01"
@@ -174,7 +177,7 @@ export default function ProductsPage() {
             />
           </label>
           <button type="submit" disabled={submitting} className={buttonPrimary}>
-            {submitting ? "Criando..." : "Adicionar"}
+            {submitting ? t("creating") : t("add")}
           </button>
         </form>
       </Card>

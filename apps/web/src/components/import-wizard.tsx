@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
-import { DATA_DOMAINS } from "@/lib/data-domains";
+import { useDataDomains } from "@/lib/data-domains";
 import { buttonPrimary, buttonSecondary, select as selectClass, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Badge, Card } from "@/components/ui";
 import { IconUpload } from "@/components/icons";
@@ -93,11 +94,14 @@ interface ImportRowError {
   message: string;
 }
 
-const CONFIDENCE_LABEL: Record<MappingSuggestion["confidence"], string> = {
-  alta: "confiança alta",
-  media: "confiança média",
-  baixa: "confiança baixa",
-  sem_correspondencia: "sem sugestão",
+// Chave de messages/*.json (camelCase) para cada valor de confiança/status —
+// os rótulos ficam no componente (via useTranslations), aqui só o mapeamento
+// de chave, mesmo padrão de `METRIC_LABEL_KEY` em lib/metrics.ts.
+const CONFIDENCE_LABEL_KEY: Record<MappingSuggestion["confidence"], string> = {
+  alta: "confidenceHigh",
+  media: "confidenceMedium",
+  baixa: "confidenceLow",
+  sem_correspondencia: "confidenceNone",
 };
 
 const CONFIDENCE_TONE: Record<MappingSuggestion["confidence"], "blue" | "slate"> = {
@@ -107,10 +111,10 @@ const CONFIDENCE_TONE: Record<MappingSuggestion["confidence"], "blue" | "slate">
   sem_correspondencia: "slate",
 };
 
-const STATUS_LABEL: Record<PreviewRow["status"], string> = {
-  valid: "válida",
-  invalid: "inválida",
-  duplicate: "duplicada",
+const STATUS_LABEL_KEY: Record<PreviewRow["status"], string> = {
+  valid: "statusValid",
+  invalid: "statusInvalid",
+  duplicate: "statusDuplicate",
 };
 
 const PREVIEW_PAGE_SIZE = 50;
@@ -129,10 +133,12 @@ export function ImportWizard({
   organizationId: string;
   onImportCompleted?: () => void;
 }) {
+  const t = useTranslations("centralDeDados.importWizard");
+  const dataDomains = useDataDomains();
   const [step, setStep] = useState<Step>("upload");
   const [error, setError] = useState<string | null>(null);
 
-  const [domain, setDomain] = useState(DATA_DOMAINS[0].key);
+  const [domain, setDomain] = useState(dataDomains[0].key);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sheetOptions, setSheetOptions] = useState<string[]>([]);
@@ -187,7 +193,7 @@ export function ImportWizard({
       setPreviewRows((prev) => (offset === 0 ? page.items : [...prev, ...page.items]));
       setPreviewTotal(page.total);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível carregar o preview.");
+      setError(err instanceof ApiError ? err.message : t("previewLoadError"));
     } finally {
       setPreviewLoading(false);
     }
@@ -234,7 +240,7 @@ export function ImportWizard({
       setMapping(initialMapping);
       setStep("mapping");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível enviar o arquivo.");
+      setError(err instanceof ApiError ? err.message : t("uploadError"));
     } finally {
       setUploading(false);
     }
@@ -278,12 +284,12 @@ export function ImportWizard({
         );
         setError(
           missing.length > 0
-            ? `Campo obrigatório não mapeado: ${missing.map((f) => f.display_name).join(", ")}.`
-            : "Mapeamento incompleto — revise os campos abaixo."
+            ? t("missingRequiredField", { fields: missing.map((f) => f.display_name).join(", ") })
+            : t("incompleteMapping")
         );
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível salvar o mapeamento.");
+      setError(err instanceof ApiError ? err.message : t("mappingSaveError"));
     } finally {
       setSavingMapping(false);
     }
@@ -302,7 +308,7 @@ export function ImportWizard({
       setStep("done");
       onImportCompleted?.();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível confirmar a importação.");
+      setError(err instanceof ApiError ? err.message : t("confirmError"));
     } finally {
       setConfirming(false);
     }
@@ -334,7 +340,7 @@ export function ImportWizard({
       );
       setRowErrors(page.items);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível carregar os erros.");
+      setError(err instanceof ApiError ? err.message : t("errorsLoadError"));
     } finally {
       setLoadingErrors(false);
     }
@@ -344,7 +350,7 @@ export function ImportWizard({
     <Card className="p-5">
       <div className="flex items-center gap-2">
         <IconUpload className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Importar dados</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
 
       {error && (
@@ -356,22 +362,20 @@ export function ImportWizard({
       {step === "upload" && (
         <form onSubmit={(e) => void handleUpload(e)} className="mt-4 flex flex-col gap-3">
           <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-            Domínio
+            {t("domainLabel")}
             <select
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               className={`${selectClass} w-auto`}
             >
-              {DATA_DOMAINS.map(({ key, label: domainLabel }) => (
+              {dataDomains.map(({ key, label: domainLabel }) => (
                 <option key={key} value={key}>
                   {domainLabel}
                 </option>
               ))}
             </select>
           </label>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Formatos aceitos: CSV, Excel (.xlsx) ou JSON, até 5&nbsp;MB.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("acceptedFormats")}</p>
           <input
             type="file"
             accept=".csv,.xlsx,.json"
@@ -379,7 +383,7 @@ export function ImportWizard({
             className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:text-slate-300 dark:file:bg-blue-500/10 dark:file:text-blue-300"
           />
           <button type="submit" disabled={!file || uploading} className={`${buttonPrimary} self-start`}>
-            {uploading ? "Enviando..." : "Continuar"}
+            {uploading ? t("sending") : t("continueButton")}
           </button>
         </form>
       )}
@@ -387,11 +391,13 @@ export function ImportWizard({
       {step === "sheet" && (
         <div className="mt-4 flex flex-col gap-3">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            <span className="font-medium text-slate-700 dark:text-slate-300">{file?.name}</span> tem mais
-            de uma aba. Qual aba corresponde a <strong>{DATA_DOMAINS.find((d) => d.key === domain)?.label}</strong>?
+            {t("sheetIntro", {
+              fileName: file?.name ?? "",
+              domainLabel: dataDomains.find((d) => d.key === domain)?.label ?? "",
+            })}
           </p>
           <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-            Aba
+            {t("sheetLabel")}
             <select
               value={selectedSheet}
               onChange={(e) => setSelectedSheet(e.target.value)}
@@ -406,7 +412,7 @@ export function ImportWizard({
           </label>
           <div className="flex gap-2">
             <button type="button" onClick={resetWizard} className={buttonSecondary}>
-              Cancelar
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -414,7 +420,7 @@ export function ImportWizard({
               disabled={!selectedSheet || uploading}
               className={buttonPrimary}
             >
-              {uploading ? "Enviando..." : "Continuar"}
+              {uploading ? t("sending") : t("continueButton")}
             </button>
           </div>
         </div>
@@ -423,9 +429,15 @@ export function ImportWizard({
       {step === "mapping" && job && (
         <div className="mt-4 flex flex-col gap-4">
           <p className="text-sm text-slate-500 dark:text-slate-400">
+            {/* Nome do arquivo num <span> próprio (não dentro da mensagem
+                traduzida) — o teste verifica o texto exato do arquivo
+                isoladamente (screen.getByText("financeiro.csv")). */}
             <span className="font-medium text-slate-700 dark:text-slate-300">{job.source_filename}</span>
-            {job.sheet_name ? ` (aba "${job.sheet_name}")` : ""} —{" "}
-            {job.total_rows ?? 0} linha(s). Confirme para qual campo cada coluna do arquivo corresponde.
+            {t("mappingIntroRest", {
+              hasSheet: job.sheet_name ? "true" : "other",
+              sheetName: job.sheet_name ?? "",
+              rowCount: job.total_rows ?? 0,
+            })}
           </p>
 
           <div className="flex flex-col gap-2">
@@ -441,17 +453,17 @@ export function ImportWizard({
                     onChange={(e) => handleMappingChange(header, e.target.value)}
                     className={`${selectClass} w-auto min-w-48`}
                   >
-                    <option value="">— não mapear —</option>
+                    <option value="">{t("doNotMap")}</option>
                     {domainFields.map((field) => (
                       <option key={field.canonical_name} value={field.canonical_name}>
                         {field.display_name}
-                        {field.required ? " (obrigatório)" : ""}
+                        {field.required ? t("requiredSuffix") : ""}
                       </option>
                     ))}
                   </select>
                   {suggestion && suggestion.confidence !== "sem_correspondencia" && (
                     <Badge tone={CONFIDENCE_TONE[suggestion.confidence]}>
-                      {CONFIDENCE_LABEL[suggestion.confidence]}
+                      {t(CONFIDENCE_LABEL_KEY[suggestion.confidence])}
                     </Badge>
                   )}
                 </div>
@@ -461,15 +473,15 @@ export function ImportWizard({
 
           {domainFields.some((f) => f.data_type === "date") && (
             <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-              Formato de data (campo Período)
+              {t("dateFormatLabel")}
               <select
                 value={dateFormat}
                 onChange={(e) => setDateFormat(e.target.value as DateFormat)}
                 className={`${selectClass} w-auto`}
               >
-                <option value="DMY">Dia/Mês/Ano (31/12/2026)</option>
-                <option value="MDY">Mês/Dia/Ano (12/31/2026)</option>
-                <option value="ISO">Ano-Mês-Dia (2026-12-31)</option>
+                <option value="DMY">{t("dateFormatDMY")}</option>
+                <option value="MDY">{t("dateFormatMDY")}</option>
+                <option value="ISO">{t("dateFormatISO")}</option>
               </select>
             </label>
           )}
@@ -481,7 +493,7 @@ export function ImportWizard({
               disabled={cancelling}
               className={buttonSecondary}
             >
-              Cancelar
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -489,7 +501,7 @@ export function ImportWizard({
               disabled={savingMapping}
               className={buttonPrimary}
             >
-              {savingMapping ? "Validando..." : "Continuar"}
+              {savingMapping ? t("validating") : t("continueButton")}
             </button>
           </div>
         </div>
@@ -498,19 +510,19 @@ export function ImportWizard({
       {step === "preview" && job && summary && (
         <div className="mt-4 flex flex-col gap-4">
           <div className="flex flex-wrap gap-2 text-xs">
-            <Badge tone="slate">{summary.total} linha(s)</Badge>
-            <Badge tone="blue">{summary.valid} válida(s)</Badge>
-            {summary.duplicate > 0 && <Badge tone="slate">{summary.duplicate} duplicada(s)</Badge>}
-            {summary.invalid > 0 && <Badge tone="slate">{summary.invalid} inválida(s)</Badge>}
+            <Badge tone="slate">{t("rowsSuffix", { count: summary.total })}</Badge>
+            <Badge tone="blue">{t("validSuffix", { count: summary.valid })}</Badge>
+            {summary.duplicate > 0 && <Badge tone="slate">{t("duplicateSuffix", { count: summary.duplicate })}</Badge>}
+            {summary.invalid > 0 && <Badge tone="slate">{t("invalidSuffix", { count: summary.invalid })}</Badge>}
           </div>
 
           <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
-                  <th className="px-3 py-2">Linha</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Dados</th>
+                  <th className="px-3 py-2">{t("rowColumn")}</th>
+                  <th className="px-3 py-2">{t("statusColumn")}</th>
+                  <th className="px-3 py-2">{t("dataColumn")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -518,7 +530,7 @@ export function ImportWizard({
                   <tr key={row.row_number} className={tableRow}>
                     <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{row.row_number}</td>
                     <td className="px-3 py-2">
-                      <Badge tone={row.status === "valid" ? "blue" : "slate"}>{STATUS_LABEL[row.status]}</Badge>
+                      <Badge tone={row.status === "valid" ? "blue" : "slate"}>{t(STATUS_LABEL_KEY[row.status])}</Badge>
                     </td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                       {row.status === "invalid"
@@ -540,20 +552,20 @@ export function ImportWizard({
               disabled={previewLoading}
               className={`${buttonSecondary} self-start`}
             >
-              {previewLoading ? "Carregando..." : "Carregar mais"}
+              {previewLoading ? t("loadingEllipsis") : t("loadMore")}
             </button>
           )}
 
           {summary.duplicate > 0 && (
             <label className="flex flex-wrap items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-              Linhas duplicadas
+              {t("duplicateRowsLabel")}
               <select
                 value={duplicateStrategy}
                 onChange={(e) => setDuplicateStrategy(e.target.value as DuplicateStrategy)}
                 className={`${selectClass} w-auto`}
               >
-                <option value="skip">Ignorar (manter o registro já existente)</option>
-                <option value="update">Atualizar o registro já existente</option>
+                <option value="skip">{t("duplicateSkip")}</option>
+                <option value="update">{t("duplicateUpdate")}</option>
               </select>
             </label>
           )}
@@ -565,7 +577,7 @@ export function ImportWizard({
               disabled={cancelling}
               className={buttonSecondary}
             >
-              Cancelar
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -573,7 +585,7 @@ export function ImportWizard({
               disabled={confirming}
               className={buttonPrimary}
             >
-              {confirming ? "Confirmando..." : "Confirmar importação"}
+              {confirming ? t("confirming") : t("confirmImport")}
             </button>
           </div>
         </div>
@@ -582,9 +594,12 @@ export function ImportWizard({
       {step === "done" && confirmResult && (
         <div className="mt-4 flex flex-col gap-4">
           <Alert tone={confirmResult.invalid_rows > 0 ? "warning" : "success"}>
-            Importação concluída: {confirmResult.created_rows} criado(s), {confirmResult.updated_rows}{" "}
-            atualizado(s), {confirmResult.skipped_rows} ignorado(s)
-            {confirmResult.invalid_rows > 0 ? `, ${confirmResult.invalid_rows} inválido(s)` : ""}.
+            {t("importCompleted", {
+              created: confirmResult.created_rows,
+              updated: confirmResult.updated_rows,
+              skipped: confirmResult.skipped_rows,
+            })}
+            {confirmResult.invalid_rows > 0 ? t("invalidPart", { count: confirmResult.invalid_rows }) : ""}.
           </Alert>
 
           {confirmResult.invalid_rows > 0 && !rowErrors && (
@@ -594,7 +609,7 @@ export function ImportWizard({
               disabled={loadingErrors}
               className={`${buttonSecondary} self-start`}
             >
-              {loadingErrors ? "Carregando..." : "Ver erros"}
+              {loadingErrors ? t("loadingEllipsis") : t("viewErrors")}
             </button>
           )}
 
@@ -603,9 +618,9 @@ export function ImportWizard({
               <table className="w-full text-sm">
                 <thead>
                   <tr className={tableHead}>
-                    <th className="px-3 py-2">Linha</th>
-                    <th className="px-3 py-2">Campo</th>
-                    <th className="px-3 py-2">Erro</th>
+                    <th className="px-3 py-2">{t("rowColumn")}</th>
+                    <th className="px-3 py-2">{t("fieldColumn")}</th>
+                    <th className="px-3 py-2">{t("errorColumn")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -622,7 +637,7 @@ export function ImportWizard({
           )}
 
           <button type="button" onClick={resetWizard} className={`${buttonPrimary} self-start`}>
-            Nova importação
+            {t("newImport")}
           </button>
         </div>
       )}

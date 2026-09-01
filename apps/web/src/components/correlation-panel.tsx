@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
-import { EXECUTIVE_METRIC_OPTIONS, type ExecutiveCorrelation, type TargetMetricKey } from "@/lib/metrics";
-import { describeCorrelation } from "@/lib/correlation";
+import { useExecutiveMetricOptions, type ExecutiveCorrelation, type TargetMetricKey } from "@/lib/metrics";
+import { describeCorrelation, type CorrelationStrength } from "@/lib/correlation";
 import { sectionTitle, label as labelClass, input as inputClass } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { CorrelationChart } from "@/components/correlation-chart";
 import { IconScatter } from "@/components/icons";
 
-function metricLabel(key: TargetMetricKey): string {
-  return EXECUTIVE_METRIC_OPTIONS.find((m) => m.key === key)?.label ?? key;
-}
-
-function isPercentMetric(key: TargetMetricKey): boolean {
-  return EXECUTIVE_METRIC_OPTIONS.find((m) => m.key === key)?.percent ?? false;
-}
+// describeCorrelation (lib/correlation.ts) é puro/testado em pt-BR (ver
+// correlation.spec.ts) — mapeia sua força para a chave de tradução em vez
+// de usar `.label` diretamente, sem alterar a função nem o teste existente.
+const STRENGTH_KEY: Record<CorrelationStrength, string> = {
+  forte: "strong",
+  moderada: "moderate",
+  fraca: "weak",
+  "muito fraca": "veryWeak",
+};
 
 /** Correlação de Pearson entre duas métricas mensais da Visão Executiva —
  * não depende de dado novo, reaproveita a mesma série mensal do gráfico de
@@ -31,6 +34,12 @@ export function CorrelationPanel({
   dateFrom: string;
   dateTo: string;
 }) {
+  const t = useTranslations("analytics.correlationPanel");
+  const tCommon = useTranslations("common");
+  const metricOptions = useExecutiveMetricOptions();
+  const metricLabel = (key: TargetMetricKey) => metricOptions.find((m) => m.key === key)?.label ?? key;
+  const isPercentMetric = (key: TargetMetricKey) => metricOptions.find((m) => m.key === key)?.percent ?? false;
+
   const [metricX, setMetricX] = useState<TargetMetricKey>("revenue");
   const [metricY, setMetricY] = useState<TargetMetricKey>("cac");
   const [data, setData] = useState<ExecutiveCorrelation | null>(null);
@@ -53,7 +62,7 @@ export function CorrelationPanel({
         if (!cancelled) setData(result);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : "Não foi possível calcular a correlação.");
+        if (!cancelled) setError(err instanceof ApiError ? err.message : t("genericError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -61,6 +70,9 @@ export function CorrelationPanel({
     return () => {
       cancelled = true;
     };
+    // t (tradutor) omitido de propósito: nunca é referencialmente estável
+    // entre renders, incluí-lo aqui quebraria a memoização deste efeito.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, dateFrom, dateTo, metricX, metricY]);
 
   const description = data?.correlation.is_applicable && data.correlation.value !== null
@@ -71,22 +83,19 @@ export function CorrelationPanel({
     <Card className="p-5">
       <div className="flex items-center gap-2">
         <IconScatter className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Correlação entre métricas</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Compara duas métricas mês a mês no período selecionado acima. Correlação mostra que duas métricas se
-        movem juntas — nunca que uma causa a outra.
-      </p>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <label className={labelClass}>
-          Métrica X
+          {t("metricX")}
           <select
             value={metricX}
             onChange={(e) => setMetricX(e.target.value as TargetMetricKey)}
             className={`${inputClass} w-auto`}
           >
-            {EXECUTIVE_METRIC_OPTIONS.map((m) => (
+            {metricOptions.map((m) => (
               <option key={m.key} value={m.key} disabled={m.key === metricY}>
                 {m.label}
               </option>
@@ -94,13 +103,13 @@ export function CorrelationPanel({
           </select>
         </label>
         <label className={labelClass}>
-          Métrica Y
+          {t("metricY")}
           <select
             value={metricY}
             onChange={(e) => setMetricY(e.target.value as TargetMetricKey)}
             className={`${inputClass} w-auto`}
           >
-            {EXECUTIVE_METRIC_OPTIONS.map((m) => (
+            {metricOptions.map((m) => (
               <option key={m.key} value={m.key} disabled={m.key === metricX}>
                 {m.label}
               </option>
@@ -132,14 +141,20 @@ export function CorrelationPanel({
             <div className="mt-3 text-sm">
               {description ? (
                 <p className="font-medium text-slate-700 dark:text-slate-300">
-                  {description.label} (r = {data.correlation.value!.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})
+                  {description.direction
+                    ? t("correlationLabel", {
+                        strength: t(`strength.${STRENGTH_KEY[description.strength]}`),
+                        direction: t(`direction.${description.direction === "positiva" ? "positive" : "negative"}`),
+                      })
+                    : t("noCorrelation")}{" "}
+                  (r = {data.correlation.value!.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})
                 </p>
               ) : (
-                <p className="text-slate-400">{data.correlation.reason ?? "não aplicável"}</p>
+                // reason vem do backend (fora do escopo de tradução desta PR — ver ADR-0009);
+                // só o fallback "não aplicável" é cópia autoral do frontend.
+                <p className="text-slate-400">{data.correlation.reason ?? tCommon("notApplicable")}</p>
               )}
-              <p className="mt-1 text-xs text-slate-400">
-                {data.months_used} {data.months_used === 1 ? "mês" : "meses"} com as duas métricas no período.
-              </p>
+              <p className="mt-1 text-xs text-slate-400">{t("monthsUsed", { count: data.months_used })}</p>
             </div>
           </>
         )

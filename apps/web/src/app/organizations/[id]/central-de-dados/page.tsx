@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonSecondary, sectionTitle } from "@/lib/ui";
 import { Alert, Badge, EmptyState, Skeleton } from "@/components/ui";
@@ -40,14 +41,16 @@ interface ImportRowErrorEntry {
   message: string;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  UPLOADED: "Enviado",
-  MAPPING_REQUIRED: "Aguardando mapeamento",
-  READY: "Pronto para confirmar",
-  COMPLETED: "Concluído",
-  COMPLETED_WITH_ERRORS: "Concluído com erros",
-  FAILED: "Falhou",
-  CANCELLED: "Cancelado",
+// Rótulo traduzido no componente (useTranslations) — aqui só o mapeamento de
+// status para a chave de messages/*.json, mesmo padrão de import-wizard.tsx.
+const STATUS_LABEL_KEY: Record<string, string> = {
+  UPLOADED: "sent",
+  MAPPING_REQUIRED: "awaitingMapping",
+  READY: "readyToConfirm",
+  COMPLETED: "completed",
+  COMPLETED_WITH_ERRORS: "completedWithErrors",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
 };
 
 const HISTORY_PAGE_SIZE = 20;
@@ -59,6 +62,8 @@ function fetchImportHistory(organizationId: string, offset: number): Promise<Imp
 }
 
 export default function CentralDeDadosPage() {
+  const t = useTranslations("centralDeDados");
+  const tCommon = useTranslations("common");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { organization, loading: orgLoading } = useOrganization();
@@ -78,8 +83,11 @@ export default function CentralDeDadosPage() {
         router.push(loginRedirectPath(err));
         return;
       }
-      setError(err instanceof ApiError ? err.message : "Não foi possível conectar à API.");
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
     },
+    // tCommon (tradutor) omitido de propósito: nunca é referencialmente
+    // estável entre renders — ver nota em organizations/page.tsx.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [router]
   );
 
@@ -140,11 +148,9 @@ export default function CentralDeDadosPage() {
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
         <IconDatabase className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>Central de Dados</h2>
+        <h2 className={sectionTitle}>{t("title")}</h2>
       </div>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Importe e exporte os dados desta empresa.
-      </p>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 
       <div className="mt-6">
         <ExportPanel organizationId={id} />
@@ -163,7 +169,7 @@ export default function CentralDeDadosPage() {
           <section className="mt-8">
             <div className="flex items-center gap-2">
               <IconClock className="h-4 w-4 text-slate-400" />
-              <h2 className={sectionTitle}>Histórico de importações</h2>
+              <h2 className={sectionTitle}>{t("historyTitle")}</h2>
             </div>
 
             {error && (
@@ -179,8 +185,8 @@ export default function CentralDeDadosPage() {
                 ) : jobs.length === 0 ? (
                   <EmptyState
                     icon={<IconClock className="h-5 w-5" />}
-                    title="Nenhuma importação realizada ainda."
-                    description="O histórico aparece aqui depois da primeira importação acima."
+                    title={t("emptyTitle")}
+                    description={t("emptyDescription")}
                   />
                 ) : (
                   <>
@@ -189,21 +195,21 @@ export default function CentralDeDadosPage() {
                         <AccordionItem
                           key={job.id}
                           title={job.source_filename}
-                          subtitle={`${STATUS_LABEL[job.status] ?? job.status} · ${new Date(job.created_at).toLocaleString("pt-BR")}`}
+                          subtitle={`${STATUS_LABEL_KEY[job.status] ? t(`status.${STATUS_LABEL_KEY[job.status]}`) : job.status} · ${new Date(job.created_at).toLocaleString("pt-BR")}`}
                         >
                           <div className="flex flex-wrap gap-1.5 text-xs">
-                            <Badge tone="slate">{job.total_rows ?? 0} linha(s)</Badge>
+                            <Badge tone="slate">{t("history.rowsSuffix", { count: job.total_rows ?? 0 })}</Badge>
                             {job.created_rows !== null && job.created_rows > 0 && (
-                              <Badge tone="blue">{job.created_rows} criada(s)</Badge>
+                              <Badge tone="blue">{t("history.createdSuffix", { count: job.created_rows })}</Badge>
                             )}
                             {job.updated_rows !== null && job.updated_rows > 0 && (
-                              <Badge tone="blue">{job.updated_rows} atualizada(s)</Badge>
+                              <Badge tone="blue">{t("history.updatedSuffix", { count: job.updated_rows })}</Badge>
                             )}
                             {job.skipped_rows !== null && job.skipped_rows > 0 && (
-                              <Badge tone="slate">{job.skipped_rows} ignorada(s)</Badge>
+                              <Badge tone="slate">{t("history.skippedSuffix", { count: job.skipped_rows })}</Badge>
                             )}
                             {job.invalid_rows !== null && job.invalid_rows > 0 && (
-                              <Badge tone="slate">{job.invalid_rows} inválida(s)</Badge>
+                              <Badge tone="slate">{t("history.invalidSuffix", { count: job.invalid_rows })}</Badge>
                             )}
                           </div>
 
@@ -216,14 +222,18 @@ export default function CentralDeDadosPage() {
                                   disabled={loadingErrorsFor === job.id}
                                   className={buttonSecondary}
                                 >
-                                  {loadingErrorsFor === job.id ? "Carregando..." : "Ver erros"}
+                                  {loadingErrorsFor === job.id ? tCommon("loading") : t("importWizard.viewErrors")}
                                 </button>
                               ) : (
                                 <ul className="flex flex-col gap-1 text-xs text-slate-600 dark:text-slate-300">
                                   {rowErrorsByJob[job.id].map((e, i) => (
                                     <li key={i}>
-                                      Linha {e.row_number}
-                                      {e.field ? ` (${e.field})` : ""}: {e.message}
+                                      {t("history.rowError", {
+                                        hasField: e.field ? "true" : "other",
+                                        number: e.row_number,
+                                        field: e.field ?? "",
+                                      })}
+                                      {e.message}
                                     </li>
                                   ))}
                                 </ul>
@@ -235,9 +245,7 @@ export default function CentralDeDadosPage() {
                     </div>
 
                     <div className="mt-3 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-                      <span>
-                        Mostrando {jobs.length} de {total}
-                      </span>
+                      <span>{tCommon("showingCount", { shown: jobs.length, total })}</span>
                       {hasMore && (
                         <button
                           type="button"
@@ -245,7 +253,7 @@ export default function CentralDeDadosPage() {
                           disabled={loadingMore}
                           className={buttonSecondary}
                         >
-                          {loadingMore ? "Carregando..." : "Carregar mais"}
+                          {loadingMore ? tCommon("loading") : tCommon("loadMore")}
                         </button>
                       )}
                     </div>
@@ -257,9 +265,7 @@ export default function CentralDeDadosPage() {
         </>
       ) : (
         <div className="mt-6">
-          <Alert tone="warning">
-            Apenas Analista ou superior pode importar dados. Você ainda pode exportar os dados acima.
-          </Alert>
+          <Alert tone="warning">{t("writeRestricted")}</Alert>
         </div>
       )}
     </div>

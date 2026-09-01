@@ -26,6 +26,7 @@ const FAKE_USER: User = {
   email: "teste@example.com",
   is_platform_admin: false,
   email_verified: true,
+  locale: null,
 };
 
 function fakeOrg(overrides: Partial<Organization> = {}): Organization {
