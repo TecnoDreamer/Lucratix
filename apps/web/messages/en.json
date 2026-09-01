@@ -940,5 +940,69 @@
       "clientes": "Customers",
       "crescimento": "Growth"
     }
+  },
+  "admin": {
+    "layout": {
+      "title": "Admin Panel",
+      "superAdmin": "Super Admin",
+      "backToOrganizations": "Your companies",
+      "exitPanel": "Exit panel",
+      "navOrganizations": "Companies",
+      "navUsers": "Users"
+    },
+    "organizations": {
+      "title": "All companies",
+      "description": "Every company registered on the platform, who owns it, and how many members it has.",
+      "loadError": "Could not load.",
+      "empty": "No companies registered yet.",
+      "ownerLine": "{hasOwner, select, true {Owner: {ownerName} ({ownerEmail})} other {No owner set}} · {count} member(s)",
+      "manageMembers": "Manage members"
+    },
+    "members": {
+      "backToOrganizations": "All companies",
+      "title": "Company members",
+      "loadError": "Could not load the members.",
+      "grantError": "Could not grant access.",
+      "roleChangeError": "Could not change the role.",
+      "revokeError": "Could not revoke access.",
+      "empty": "No members in this company yet.",
+      "nameColumn": "Name",
+      "emailColumn": "Email",
+      "roleColumn": "Role",
+      "revoking": "Revoking...",
+      "revoke": "Revoke",
+      "grantAccess": "Grant access",
+      "grantAccessHint": "If the email doesn't have an account on the platform yet, enter the name — the account is created right away.",
+      "nameIfNoAccount": "Name (if there's no account yet)",
+      "granting": "Granting...",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeAccountCreated": "Account created for {email}. Copy the link below and send it manually — it sets the password on first access."
+    },
+    "users": {
+      "title": "All users",
+      "description": "Every account registered on the platform, active or not, with or without access to any company.",
+      "loadError": "Could not load the users.",
+      "createError": "Could not create the user.",
+      "updateError": "Could not update the user.",
+      "empty": "No users registered yet.",
+      "nameColumn": "Name",
+      "emailColumn": "Email",
+      "organizationsColumn": "Companies",
+      "statusColumn": "Status",
+      "superAdminColumn": "Super Admin",
+      "you": "(you)",
+      "active": "active",
+      "inactive": "inactive",
+      "superAdminBadge": "super admin",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "removeSuperAdmin": "Remove super admin",
+      "makeSuperAdmin": "Make super admin",
+      "createUser": "Create user",
+      "createUserHint": "Creates the account with no access to any company yet — grant access later from the company screen.",
+      "creating": "Creating...",
+      "devModeTitle": "Development mode — no email sending configured",
+      "devModeCopyLink": "Copy the link below and send it manually — it sets the password on first access."
+    }
   }
 }

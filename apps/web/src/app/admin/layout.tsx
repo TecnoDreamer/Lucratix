@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { link as linkClass } from "@/lib/ui";
 import { Skeleton } from "@/components/ui";
@@ -10,9 +11,9 @@ import { IconArrowLeft, IconBuilding, IconShieldCheck, IconUser } from "@/compon
 import type { User } from "@/lib/types";
 
 const NAV_ITEMS = [
-  { href: "/admin/organizations", label: "Empresas", icon: IconBuilding },
-  { href: "/admin/users", label: "Usuários", icon: IconUser },
-];
+  { href: "/admin/organizations", key: "organizations", icon: IconBuilding },
+  { href: "/admin/users", key: "users", icon: IconUser },
+] as const;
 
 /** Painel exclusivo de Super Admin (`is_platform_admin`) — RF-001, RF-012.
  * A autorização de verdade é sempre do backend (`require_platform_admin`,
@@ -21,6 +22,11 @@ const NAV_ITEMS = [
  * `organizations/[id]/layout.tsx` (esconder um link/tela que terminaria em
  * 403, nunca a fonte de autorização). */
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const t = useTranslations("admin.layout");
+  const navLabels: Record<(typeof NAV_ITEMS)[number]["key"], string> = {
+    organizations: t("navOrganizations"),
+    users: t("navUsers"),
+  };
   const pathname = usePathname();
   const router = useRouter();
   const [me, setMe] = useState<User | null>(null);
@@ -73,7 +79,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           href="/organizations"
           className="inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
         >
-          <IconArrowLeft className="h-4 w-4" /> Suas empresas
+          <IconArrowLeft className="h-4 w-4" /> {t("backToOrganizations")}
         </Link>
 
         <div className="mt-4 flex items-center gap-3">
@@ -82,16 +88,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-              Painel Admin
+              {t("title")}
             </h1>
             <p className="mt-0.5 inline-flex items-center rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
-              Super Admin
+              {t("superAdmin")}
             </p>
           </div>
         </div>
 
         <nav className="mt-6 flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, key, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
@@ -105,7 +111,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                {navLabels[key]}
               </Link>
             );
           })}
@@ -115,13 +121,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <div className="min-w-0 flex-1">
         <div className="lg:hidden">
           <div className="flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80">
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">Painel Admin</span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("title")}</span>
             <Link href="/organizations" className={`text-xs ${linkClass}`}>
-              Sair do painel
+              {t("exitPanel")}
             </Link>
           </div>
           <nav className="flex gap-1 border-b border-slate-200 px-4 py-2 dark:border-slate-800">
-            {NAV_ITEMS.map(({ href, label }) => (
+            {NAV_ITEMS.map(({ href, key }) => (
               <Link
                 key={href}
                 href={href}
@@ -131,7 +137,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     : "text-slate-600 dark:text-slate-400"
                 }`}
               >
-                {label}
+                {navLabels[key]}
               </Link>
             ))}
           </nav>

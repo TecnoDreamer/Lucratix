@@ -940,5 +940,69 @@
       "clientes": "Clientes",
       "crescimento": "Crescimento"
     }
+  },
+  "admin": {
+    "layout": {
+      "title": "Painel Admin",
+      "superAdmin": "Super Admin",
+      "backToOrganizations": "Suas empresas",
+      "exitPanel": "Sair do painel",
+      "navOrganizations": "Empresas",
+      "navUsers": "Usuários"
+    },
+    "organizations": {
+      "title": "Todas as empresas",
+      "description": "Toda empresa cadastrada na plataforma, quem é o proprietário e quantos membros tem.",
+      "loadError": "Não foi possível carregar.",
+      "empty": "Nenhuma empresa cadastrada ainda.",
+      "ownerLine": "{hasOwner, select, true {Dono: {ownerName} ({ownerEmail})} other {Sem proprietário definido}} · {count} membro(s)",
+      "manageMembers": "Gerenciar membros"
+    },
+    "members": {
+      "backToOrganizations": "Todas as empresas",
+      "title": "Membros da empresa",
+      "loadError": "Não foi possível carregar os membros.",
+      "grantError": "Não foi possível conceder acesso.",
+      "roleChangeError": "Não foi possível alterar o papel.",
+      "revokeError": "Não foi possível revogar o acesso.",
+      "empty": "Nenhum membro nesta empresa ainda.",
+      "nameColumn": "Nome",
+      "emailColumn": "E-mail",
+      "roleColumn": "Papel",
+      "revoking": "Revogando...",
+      "revoke": "Revogar",
+      "grantAccess": "Conceder acesso",
+      "grantAccessHint": "Se o e-mail ainda não tiver conta na plataforma, informe o nome — a conta é criada na hora.",
+      "nameIfNoAccount": "Nome (se ainda não tiver conta)",
+      "granting": "Concedendo...",
+      "devModeTitle": "Modo desenvolvimento — sem envio de e-mail configurado",
+      "devModeAccountCreated": "Conta criada para {email}. Copie o link abaixo e envie manualmente — ele define a senha no primeiro acesso."
+    },
+    "users": {
+      "title": "Todos os usuários",
+      "description": "Toda conta cadastrada na plataforma, ativa ou não, com ou sem acesso a alguma empresa.",
+      "loadError": "Não foi possível carregar os usuários.",
+      "createError": "Não foi possível criar o usuário.",
+      "updateError": "Não foi possível atualizar o usuário.",
+      "empty": "Nenhum usuário cadastrado ainda.",
+      "nameColumn": "Nome",
+      "emailColumn": "E-mail",
+      "organizationsColumn": "Empresas",
+      "statusColumn": "Status",
+      "superAdminColumn": "Super Admin",
+      "you": "(você)",
+      "active": "ativo",
+      "inactive": "inativo",
+      "superAdminBadge": "super admin",
+      "deactivate": "Desativar",
+      "activate": "Ativar",
+      "removeSuperAdmin": "Remover super admin",
+      "makeSuperAdmin": "Tornar super admin",
+      "createUser": "Criar usuário",
+      "createUserHint": "Cria a conta sem acesso a nenhuma empresa ainda — conceda acesso depois pela tela da empresa.",
+      "creating": "Criando...",
+      "devModeTitle": "Modo desenvolvimento — sem envio de e-mail configurado",
+      "devModeCopyLink": "Copie o link abaixo e envie manualmente — ele define a senha no primeiro acesso."
+    }
   }
 }

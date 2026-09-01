@@ -940,5 +940,69 @@
       "clientes": "Clientes",
       "crescimento": "Crecimiento"
     }
+  },
+  "admin": {
+    "layout": {
+      "title": "Panel Admin",
+      "superAdmin": "Super Admin",
+      "backToOrganizations": "Tus empresas",
+      "exitPanel": "Salir del panel",
+      "navOrganizations": "Empresas",
+      "navUsers": "Usuarios"
+    },
+    "organizations": {
+      "title": "Todas las empresas",
+      "description": "Toda empresa registrada en la plataforma, quién es el propietario y cuántos miembros tiene.",
+      "loadError": "No se pudo cargar.",
+      "empty": "Aún no hay empresas registradas.",
+      "ownerLine": "{hasOwner, select, true {Dueño: {ownerName} ({ownerEmail})} other {Sin propietario definido}} · {count} miembro(s)",
+      "manageMembers": "Gestionar miembros"
+    },
+    "members": {
+      "backToOrganizations": "Todas las empresas",
+      "title": "Miembros de la empresa",
+      "loadError": "No se pudieron cargar los miembros.",
+      "grantError": "No se pudo conceder el acceso.",
+      "roleChangeError": "No se pudo cambiar el rol.",
+      "revokeError": "No se pudo revocar el acceso.",
+      "empty": "Aún no hay miembros en esta empresa.",
+      "nameColumn": "Nombre",
+      "emailColumn": "Correo electrónico",
+      "roleColumn": "Rol",
+      "revoking": "Revocando...",
+      "revoke": "Revocar",
+      "grantAccess": "Conceder acceso",
+      "grantAccessHint": "Si el correo aún no tiene cuenta en la plataforma, indica el nombre — la cuenta se crea al instante.",
+      "nameIfNoAccount": "Nombre (si aún no tiene cuenta)",
+      "granting": "Concediendo...",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeAccountCreated": "Cuenta creada para {email}. Copia el enlace de abajo y envíalo manualmente — define la contraseña en el primer acceso."
+    },
+    "users": {
+      "title": "Todos los usuarios",
+      "description": "Toda cuenta registrada en la plataforma, activa o no, con o sin acceso a alguna empresa.",
+      "loadError": "No se pudieron cargar los usuarios.",
+      "createError": "No se pudo crear el usuario.",
+      "updateError": "No se pudo actualizar el usuario.",
+      "empty": "Aún no hay usuarios registrados.",
+      "nameColumn": "Nombre",
+      "emailColumn": "Correo electrónico",
+      "organizationsColumn": "Empresas",
+      "statusColumn": "Estado",
+      "superAdminColumn": "Super Admin",
+      "you": "(tú)",
+      "active": "activo",
+      "inactive": "inactivo",
+      "superAdminBadge": "super admin",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "removeSuperAdmin": "Quitar super admin",
+      "makeSuperAdmin": "Hacer super admin",
+      "createUser": "Crear usuario",
+      "createUserHint": "Crea la cuenta sin acceso a ninguna empresa todavía — concede acceso después desde la pantalla de la empresa.",
+      "creating": "Creando...",
+      "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+      "devModeCopyLink": "Copia el enlace de abajo y envíalo manualmente — define la contraseña en el primer acceso."
+    }
   }
 }
