@@ -83,6 +83,21 @@ reautenticar antes de trocar) **nunca** passa por esta validação — só a sen
 NOVA precisa atender a política. Login (`POST /auth/login`) também nunca
 valida a política: só confere a senha contra o hash já salvo.
 
+## Por que o `min_length` não fica no schema Pydantic
+
+Os 3 campos de senha nova (`UserRegister.password`, `PasswordResetConfirm.
+new_password`, `PasswordChange.new_password`) usam `Field(max_length=255)`,
+**sem** `min_length`. Isso é deliberado: o FastAPI valida o corpo da
+requisição contra o schema Pydantic **antes** de a rota rodar — se o
+`min_length=8` estivesse no `Field`, uma senha de 5 caracteres seria
+rejeitada ali, com o 422 genérico do Pydantic (`"String should have at least
+8 characters"`) **sem nunca chegar** em `_enforce_password_policy`, mascarando
+os outros requisitos que também podem estar faltando (maiúscula, especial,
+números) — violando a regra de "mostrar todos os requisitos que faltam de
+uma vez". `max_length` continua no schema porque é uma defesa de payload
+grande (rejeitar antes de gastar CPU rodando qualquer validação), não parte
+do feedback de UX.
+
 ## Contrato de erro
 
 Uma violação de política responde **400 Bad Request** com um `detail` em
