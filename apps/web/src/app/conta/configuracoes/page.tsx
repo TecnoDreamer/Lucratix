@@ -57,7 +57,14 @@ export default function AccountSettingsPage() {
       </div>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
-      <div className={`${card} mt-6 p-5`}>
+      {/* Agrupamento visual em 3 categorias (Preferências/Workspace/
+          Segurança) — a página cresceu de 1 card pra 4, um rótulo por grupo
+          deixa claro o que é pessoal/global (Preferências), por empresa
+          (Workspace) e sensível (Segurança), sem precisar de abas/nav
+          própria enquanto a lista não crescer muito mais. */}
+      <h3 className={`${sectionTitle} mt-8`}>{t("groups.preferences")}</h3>
+
+      <div className={`${card} mt-3 p-5`}>
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("appearance.title")}</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("appearance.description")}</p>
 
@@ -89,7 +96,11 @@ export default function AccountSettingsPage() {
 
       <LocaleSwitcher />
 
+      <h3 className={`${sectionTitle} mt-8`}>{t("groups.workspace")}</h3>
+
       <QuickAccessSettingsCard />
+
+      <h3 className={`${sectionTitle} mt-8`}>{t("groups.security")}</h3>
 
       <ChangePasswordCard />
     </div>

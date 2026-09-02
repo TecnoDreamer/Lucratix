@@ -165,6 +165,11 @@
       "submitting": "Guardando...",
       "submit": "Guardar nueva contraseña",
       "successMessage": "Contraseña cambiada con éxito."
+    },
+    "groups": {
+      "preferences": "Preferencias",
+      "workspace": "Workspace",
+      "security": "Seguridad"
     }
   },
   "home": {
