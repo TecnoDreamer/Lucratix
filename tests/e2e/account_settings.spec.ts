@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { createOrganization, registerAndLogin } from "./helpers";
+import { createOrganization, registerAndLogin, TEST_PASSWORD } from "./helpers";
+
+const NEW_PASSWORD = "OutraSenhaForte789!";
 
 test("sidebar leva a Configurações com ?from=, e 'Voltar para <empresa>' retorna à mesma Home", async ({
   page,
@@ -73,6 +75,50 @@ test("deep link direto em /conta/configuracoes (sem ?from) resolve pela última 
   await expect(page.getByRole("link", { name: new RegExp(`Voltar para ${orgName}`) })).toBeVisible({
     timeout: 15000,
   });
+});
+
+test("alterar senha em Configurações: senha fraca é rejeitada, senha forte funciona e a antiga para de funcionar", async ({
+  page,
+}) => {
+  const email = await registerAndLogin(page, "change-password-e2e");
+
+  await page.goto("/conta/configuracoes");
+  await expect(page.getByRole("heading", { name: "Senha", exact: true })).toBeVisible();
+
+  // Senha atual errada e rejeitada pelo backend.
+  await page.getByLabel("Senha atual").fill("senha-errada");
+  await page.getByLabel("Nova senha", { exact: true }).fill(NEW_PASSWORD);
+  await page.getByLabel("Confirmar nova senha").fill(NEW_PASSWORD);
+  await page.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(page.getByText("Senha atual incorreta")).toBeVisible();
+
+  // Senha nova fraca: checklist mostra os requisitos, backend rejeita.
+  await page.getByLabel("Senha atual").fill(TEST_PASSWORD);
+  await page.getByLabel("Nova senha", { exact: true }).fill("fraquinha");
+  await expect(page.getByText("Um caractere especial")).toBeVisible();
+  await page.getByLabel("Confirmar nova senha").fill("fraquinha");
+  await page.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(page.getByText(/A senha deve ter/)).toBeVisible();
+
+  // Corrige para uma senha forte — sucesso, campos limpos.
+  await page.getByLabel("Nova senha", { exact: true }).fill(NEW_PASSWORD);
+  await page.getByLabel("Confirmar nova senha").fill(NEW_PASSWORD);
+  await page.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(page.getByText("Senha alterada com sucesso.")).toBeVisible();
+
+  // A senha antiga para de funcionar; a nova funciona.
+  await page.getByRole("link", { name: "Suas empresas" }).click();
+  await page.getByRole("button", { name: "Sair" }).click();
+  await page.waitForURL("**/login");
+
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("Credenciais invalidas")).toBeVisible();
+
+  await page.getByLabel("Senha", { exact: true }).fill(NEW_PASSWORD);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForURL("**/organizations");
 });
 
 test("sem sessão, 'Voltar' cai para 'Suas empresas' (que por sua vez redireciona pro login)", async ({

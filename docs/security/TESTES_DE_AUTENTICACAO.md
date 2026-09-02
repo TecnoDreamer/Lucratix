@@ -51,7 +51,15 @@ passando sem alteração — já usavam senhas que atendem à nova política
 implementação (nenhum outro valor de senha fixo em todo `tests/` deixou de
 ser válido).
 
-## E2E — `tests/e2e/auth.spec.ts` e `tests/e2e/password_reset.spec.ts`
+## Componente — `apps/web/src/components/change-password-card.spec.tsx`
+
+Cobre a seção "Senha" da Central de Configurações isoladamente: checklist em
+tempo real na senha nova; confirmação divergente bloqueia o envio sem chamar
+a API; sucesso envia `{current_password, new_password}` e limpa os campos;
+senha atual incorreta e senha nova fraca mostram o erro exato devolvido pelo
+backend.
+
+## E2E — `tests/e2e/auth.spec.ts`, `tests/e2e/password_reset.spec.ts` e `tests/e2e/account_settings.spec.ts`
 
 - **Cadastro**: preencher senha fraca (`abcdefgh`) → checklist mostra os 4
   requisitos com o estado atual de cada um → tentar enviar → erro do backend
@@ -60,6 +68,10 @@ ser válido).
 - **Esqueci minha senha → redefinir**: fluxo completo já existente
   (`OutraSenhaForte456!`) continua cobrindo redefinição com senha forte,
   login com a senha antiga falhando e com a nova funcionando.
+- **Alterar senha em Configurações**: senha atual errada é rejeitada →
+  senha nova fraca é rejeitada (checklist visível) → senha forte é aceita,
+  mensagem de sucesso aparece → a senha antiga para de funcionar no login e a
+  nova funciona.
 
 ## Auditoria de senhas fixas em teste (antes da implementação)
 

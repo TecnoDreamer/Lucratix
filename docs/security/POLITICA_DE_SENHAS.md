@@ -154,11 +154,15 @@ rodada.
   (`components/password-requirements-checklist.tsx`, novo): cada requisito
   mostra ícone (✓/✗) + texto — nunca só cor — e um resumo em `aria-live`
   ("X de 4 requisitos atendidos") para leitor de tela, sem precisar reler a
-  lista inteira a cada tecla digitada. Usado em `/register` e
-  `/redefinir-senha` (as duas únicas telas que hoje definem uma senha nova
-  via UI — `/change-password` não tem tela própria ainda, é só endpoint).
-- Confirmação de senha (`/redefinir-senha`): validada separadamente
-  ("As senhas não coincidem"), antes mesmo de chamar a API.
+  lista inteira a cada tecla digitada. Usado nas três telas que definem uma
+  senha nova via UI: `/register`, `/redefinir-senha` e a seção "Senha" da
+  Central de Configurações (`components/change-password-card.tsx`, que
+  chama `POST /change-password` — o endpoint já existia, só não tinha tela).
+- Confirmação de senha (`/redefinir-senha` e a seção "Senha" de
+  Configurações): validada separadamente ("As senhas não coincidem"), antes
+  mesmo de chamar a API. Na seção "Senha", o campo de senha ATUAL não usa
+  `minLength` do HTML nem passa pelo checklist — é uma senha já existente
+  (possivelmente legado), só a senha NOVA precisa atender a política.
 
 ## Internacionalização
 
@@ -175,6 +179,3 @@ independente do idioma da UI — mesmo tratamento de qualquer outro
 
 - Sem detecção de senha comprometida/comum (ver "Proteções complementares").
 - Sem campanha de força de atualização de senhas legadas.
-- `/change-password` não tem tela própria no frontend — o endpoint existe e é
-  coberto por teste de integração, mas ninguém o chama pela UI hoje. Construir
-  essa tela é uma feature separada, fora do escopo desta política.

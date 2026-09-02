@@ -2,7 +2,32 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-09-02
+
+### Added (tela de alteração de senha)
+- Nova seção "Senha" na Central de Configurações (`components/change-password-card.tsx`),
+  front-end para `POST /api/v1/auth/change-password` — o endpoint já existia e já era
+  testado desde a política de senha forte (2026-09-01), mas não tinha nenhuma tela.
+  Mesmo checklist de requisitos em tempo real de `/register`/`/redefinir-senha`; campo
+  de senha atual não exige a política (é senha já existente, possivelmente legado).
+  Ver `docs/security/POLITICA_DE_SENHAS.md`.
+
 ## 2026-09-01
+
+### Fixed (formatação de percentual)
+- Margem em Financeiro/Produtos e variação em Dashboard/Relatórios usavam `.toFixed()`
+  (sempre ponto decimal) em vez do formatador pt-BR do app — corrigido para usar
+  `formatPercentage`/`formatPercentChange` (vírgula), com teste novo
+  (`financials.spec.tsx`). [#106](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/106)
+
+### Added (política de senha forte)
+- Toda senha nova (cadastro, alteração, redefinição, convite/criação administrativa)
+  passa a exigir 8+ caracteres, 1+ maiúscula, 1+ caractere especial, 3+ números —
+  validado no backend (`app/core/password_policy.py`, autoridade) e espelhado no
+  frontend só para feedback em tempo real (`lib/password-policy.ts` +
+  `components/password-requirements-checklist.tsx`). Nenhuma conta existente é
+  invalidada. Ver `docs/security/POLITICA_DE_SENHAS.md`.
+  [#107](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/107)
 
 ### Added (organizações: busca/paginação, ciclo de vida, logotipo)
 - "Suas empresas" agora busca e pagina no servidor (`GET /api/v1/organizations?search=&status=&limit=&offset=`,

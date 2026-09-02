@@ -17,6 +17,7 @@ import {
 } from "@/components/icons";
 import { useAccount } from "@/contexts/account-context";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { ChangePasswordCard } from "@/components/change-password-card";
 import { useWorkspacePreferences } from "@/hooks/use-workspace-preferences";
 import { QUICK_ACCESS_CARDS, resolveQuickAccess, useQuickAccessLabels } from "@/lib/quick-access";
 import { saveQuickAccess, restoreQuickAccessDefaults, type QuickAccessPreferenceItem } from "@/lib/workspace-preferences";
@@ -89,6 +90,8 @@ export default function AccountSettingsPage() {
       <LocaleSwitcher />
 
       <QuickAccessSettingsCard />
+
+      <ChangePasswordCard />
     </div>
   );
 }

@@ -154,6 +154,17 @@
       "title": "Conta",
       "backTo": "Voltar para {name}",
       "yourCompanies": "Suas empresas"
+    },
+    "changePassword": {
+      "title": "Senha",
+      "description": "Altere a senha usada para entrar na sua conta.",
+      "currentPasswordLabel": "Senha atual",
+      "newPasswordLabel": "Nova senha",
+      "confirmPasswordLabel": "Confirmar nova senha",
+      "passwordMismatch": "As senhas não coincidem.",
+      "submitting": "Salvando...",
+      "submit": "Salvar nova senha",
+      "successMessage": "Senha alterada com sucesso."
     }
   },
   "home": {
