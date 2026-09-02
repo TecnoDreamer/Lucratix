@@ -72,7 +72,9 @@ def test_funnel_analytics_compares_conversion_rate_to_previous_period(client):
         params={"date_from": "2026-06-01", "date_to": "2026-06-30"},
     )
     body = resp.json()
-    leads_to_mqls = next(c for c in body["conversions"] if c["from_stage"] == "leads" and c["to_stage"] == "mqls")
+    leads_to_mqls = next(
+        c for c in body["conversions"] if c["from_stage"] == "leads" and c["to_stage"] == "mqls"
+    )
     comparison = leads_to_mqls["conversion_rate_comparison"]
     assert comparison["baseline_value"] == 0.2
     assert comparison["current_value"] == 0.4
