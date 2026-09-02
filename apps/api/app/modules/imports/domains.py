@@ -133,7 +133,11 @@ FINANCIAL_PERIODS = DomainSpec(
 FUNNEL_SNAPSHOTS = DomainSpec(
     key="funnel_snapshots",
     display_name="Funil",
-    natural_key=("period",),
+    # "channel" entra na chave natural (igual a Campanhas) para que uma
+    # linha por canal nunca colida com a linha agregada do mesmo período
+    # nem com a de outro canal — em branco (aggregate) normaliza pra None
+    # em todas as linhas agregadas, que colidem entre si normalmente.
+    natural_key=("period", "channel"),
     fields=(
         FieldSpec(
             "period",
@@ -150,6 +154,19 @@ FUNNEL_SNAPSHOTS = DomainSpec(
             ),
             "date",
             required=True,
+        ),
+        # Opcional (ao contrário de Campanhas, onde "channel" é obrigatório):
+        # em branco = linha agregada (o funil da organização como um todo),
+        # o comportamento que já existia antes desta coluna existir. Quando
+        # preenchido, precisa bater com um canal já cadastrado na
+        # organização (mesma regra de Campanhas — nunca cria canal por
+        # adivinhança a partir de erro de digitação).
+        FieldSpec(
+            "channel",
+            "Canal",
+            ("channel", "canal", "canal de marketing", "marketing channel"),
+            "string",
+            max_length=255,
         ),
         # Ordem espelha a etapa do funil (RN-006: ordem fixa das etapas),
         # mesma ordem de app/models/funnel_snapshot.py.

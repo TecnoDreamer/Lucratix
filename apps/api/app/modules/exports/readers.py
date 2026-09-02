@@ -55,18 +55,26 @@ def read_financial_period_rows(
 def read_funnel_snapshot_rows(
     db: Session, organization_id: uuid.UUID, date_from: date | None, date_to: date | None
 ) -> list[dict[str, object]]:
+    """Inclui a linha agregada de cada período (channel_id None -> "channel"
+    None) e as linhas por canal ("channel" = nome do canal) — usa
+    `list_all_funnel_snapshots*`, não as variantes usadas pelo dashboard/tela
+    manual, que só veem a linha agregada."""
     if date_from is not None and date_to is not None:
-        snapshots = funnels_repository.list_funnel_snapshots_in_range(
+        snapshots = funnels_repository.list_all_funnel_snapshots_in_range(
             db, organization_id, date_from, date_to
         )
     else:
-        snapshots = funnels_repository.list_funnel_snapshots(db, organization_id)
+        snapshots = funnels_repository.list_all_funnel_snapshots(db, organization_id)
+
+    channel_ids = {s.channel_id for s in snapshots if s.channel_id is not None}
+    channels_by_id = marketing_repository.get_channels_by_ids(db, organization_id, channel_ids)
 
     # Colunas Integer do SQLAlchemy ja vem como `int`/`None` (ao contrario de
     # Numeric -> Decimal do financeiro), entao nao precisa de conversao aqui.
     rows = [
         {
             "period": s.period,
+            "channel": channels_by_id[s.channel_id].name if s.channel_id in channels_by_id else None,
             "impressions": s.impressions,
             "visits": s.visits,
             "leads": s.leads,
