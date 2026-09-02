@@ -31,6 +31,35 @@ test("cadastro sem RESEND_API_KEY mostra o link de confirmar e-mail, e confirmar
   await expect(page.getByText(/Confirme seu e-mail/)).not.toBeVisible();
 });
 
+test("cadastro com senha fraca mostra o checklist e o erro do backend; corrigir a senha completa o cadastro", async ({
+  page,
+}) => {
+  const email = uniqueEmail("weakpass-e2e");
+
+  await page.goto("/register");
+  await page.getByLabel("Nome").fill("Usuário E2E");
+  await page.getByLabel("E-mail").fill(email);
+  const senha = page.getByLabel("Senha", { exact: true });
+  await senha.fill("abcdefgh");
+
+  // Checklist em tempo real: comprimento ok, os outros 3 requisitos não.
+  await expect(page.getByText("8 ou mais caracteres")).toBeVisible();
+  await expect(page.getByText("Uma letra maiúscula")).toBeVisible();
+  await expect(page.getByText("Um caractere especial")).toBeVisible();
+  await expect(page.getByText("Pelo menos 3 números")).toBeVisible();
+
+  // Uma chamada direta (bypassando qualquer bloqueio de UI) tambem e
+  // rejeitada pelo backend — RN: o backend e sempre a autoridade.
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+  await expect(page.getByText(/A senha deve ter/)).toBeVisible();
+  await expect(page.getByText(/Cadastro recebido/i)).not.toBeVisible();
+
+  // Corrige a senha para uma que atende os 4 requisitos e reenvia.
+  await senha.fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+  await expect(page.getByText(/Cadastro recebido/i)).toBeVisible();
+});
+
 test("usuario consegue se cadastrar, entrar e sair", async ({ page }) => {
   await registerAndLogin(page, "auth-e2e");
 

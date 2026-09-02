@@ -11,6 +11,17 @@ def test_register_creates_user_without_leaking_password(client):
     assert "SenhaForte123!" not in resp.text
 
 
+def test_register_rejects_weak_password(client):
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "senhafraca@example.com", "password": "abcdefgh"},
+    )
+    assert resp.status_code == 400
+    assert "maiúscula" in resp.json()["detail"]
+    assert "caractere especial" in resp.json()["detail"]
+    assert "números" in resp.json()["detail"]
+
+
 def test_register_duplicate_email_returns_generic_message(client):
     payload = {"name": "Ana", "email": "duplicada@example.com", "password": "SenhaForte123!"}
     first = client.post("/api/v1/auth/register", json=payload)

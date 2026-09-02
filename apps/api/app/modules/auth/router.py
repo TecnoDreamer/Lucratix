@@ -15,6 +15,7 @@ from app.core.audit import record_audit
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.password_policy import describe_missing_requirements, missing_requirements
 from app.core.rate_limit import (
     email_verification_rate_limiter,
     login_rate_limiter,
@@ -64,6 +65,21 @@ _ACCESS_COOKIE = "access_token"
 _REFRESH_COOKIE = "refresh_token"
 
 
+def _enforce_password_policy(password: str) -> None:
+    """Backend é a autoridade da política de senha (validação do frontend é
+    só UX) — chamado em toda rota que define uma senha nova: `/register`,
+    `/password-reset/confirm`, `/change-password`. `current_password`
+    (senha atual, em `/change-password`) NUNCA passa por aqui — só a senha
+    NOVA precisa atender a política (legado não é invalidado retroativamente,
+    ver docs/security/POLITICA_DE_SENHAS.md)."""
+    missing = missing_requirements(password)
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=describe_missing_requirements(missing),
+        )
+
+
 def _set_cookie(response: Response, name: str, value: str, max_age: int) -> None:
     response.set_cookie(
         name,
@@ -96,6 +112,7 @@ def _set_auth_cookies(response: Response, db: Session, user: User) -> None:
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(data: UserRegister, db: Session = Depends(get_db)) -> dict[str, str]:
+    _enforce_password_policy(data.password)
     created, raw_token = register_user(db, data)
     if created:
         db.commit()
@@ -270,6 +287,7 @@ def request_password_reset_route(
 def confirm_password_reset_route(
     data: PasswordResetConfirm, db: Session = Depends(get_db)
 ) -> dict[str, str]:
+    _enforce_password_policy(data.new_password)
     success = confirm_password_reset(db, data.token, data.new_password)
     if not success:
         raise HTTPException(
@@ -285,6 +303,7 @@ def change_password_route(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
+    _enforce_password_policy(data.new_password)
     success = change_password(db, current_user, data.current_password, data.new_password)
     if not success:
         raise HTTPException(

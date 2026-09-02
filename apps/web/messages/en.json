@@ -73,7 +73,14 @@
       "learnMoreAbout": "Learn more about {name}"
     },
     "showingCount": "Showing {shown} of {total}",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "passwordRequirements": {
+      "minLength": "8 or more characters",
+      "uppercase": "One uppercase letter",
+      "specialCharacter": "One special character",
+      "minNumbers": "At least 3 numbers",
+      "metCount": "{met} of {total} password requirements met"
+    }
   },
   "workspace": {
     "quickAccessCards": {
