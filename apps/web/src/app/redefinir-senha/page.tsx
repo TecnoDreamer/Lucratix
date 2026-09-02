@@ -10,6 +10,7 @@ import { Alert } from "@/components/ui";
 import { AuthHero } from "@/components/auth-hero";
 import { BrandLogo } from "@/components/brand-logo";
 import { PasswordInput } from "@/components/password-input";
+import { PasswordRequirementsChecklist } from "@/components/password-requirements-checklist";
 
 export default function ResetPasswordPage() {
   return (
@@ -108,6 +109,7 @@ function ResetPasswordContent() {
                   minLength={8}
                   autoFocus
                 />
+                <PasswordRequirementsChecklist password={newPassword} />
                 <PasswordInput
                   label={t("confirmPasswordLabel")}
                   value={confirmPassword}

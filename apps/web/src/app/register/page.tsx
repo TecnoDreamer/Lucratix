@@ -11,6 +11,7 @@ import { IconMail, IconUser } from "@/components/icons";
 import { AuthHero } from "@/components/auth-hero";
 import { BrandLogo } from "@/components/brand-logo";
 import { PasswordInput } from "@/components/password-input";
+import { PasswordRequirementsChecklist } from "@/components/password-requirements-checklist";
 
 type RegisterResponse = { message: string; dev_token?: string };
 
@@ -108,6 +109,7 @@ export default function RegisterPage() {
               autoComplete="new-password"
               minLength={8}
             />
+            <PasswordRequirementsChecklist password={password} />
 
             {error && <Alert>{error}</Alert>}
             {message && <Alert tone="success">{message}</Alert>}
