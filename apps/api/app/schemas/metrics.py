@@ -3,6 +3,7 @@ from datetime import date
 
 from pydantic import BaseModel
 
+from app.modules.analytics.funnel_analytics import FUNNEL_STAGES, StageConversion
 from app.modules.metrics.engine import MetricResult, PeriodComparison
 
 
@@ -215,3 +216,85 @@ class ExecutiveCorrelationRead(BaseModel):
     months_used: int
     correlation: MetricResultRead
     points: list[CorrelationPointRead]
+
+
+class FunnelStagesRead(BaseModel):
+    """Um MetricResult por etapa do funil (RN-006: ordem fixa de
+    FUNNEL_STAGES). Etapa sem dado vem com `is_applicable=False`, nunca 0
+    (RN-003)."""
+
+    impressions: MetricResultRead
+    visits: MetricResultRead
+    leads: MetricResultRead
+    mqls: MetricResultRead
+    sqls: MetricResultRead
+    opportunities: MetricResultRead
+    customers: MetricResultRead
+    repeat_purchases: MetricResultRead
+
+    @classmethod
+    def from_stage_values(cls, values: dict[str, MetricResult]) -> "FunnelStagesRead":
+        return cls(**{stage: MetricResultRead.from_result(values[stage]) for stage in FUNNEL_STAGES})
+
+
+class StageConversionRead(BaseModel):
+    """Conversao e abandono de uma etapa para a proxima, sem comparacao com
+    periodo anterior — usado no drill-down por canal (o eixo ali e "canal A
+    vs. canal B", nao "antes vs. depois")."""
+
+    from_stage: str
+    to_stage: str
+    conversion_rate: MetricResultRead
+    drop_off_rate: MetricResultRead
+
+    @classmethod
+    def from_stage_conversion(cls, conversion: StageConversion) -> "StageConversionRead":
+        return cls(
+            from_stage=conversion.from_stage,
+            to_stage=conversion.to_stage,
+            conversion_rate=MetricResultRead.from_result(conversion.conversion_rate),
+            drop_off_rate=MetricResultRead.from_result(conversion.drop_off_rate),
+        )
+
+
+class StageConversionWithComparisonRead(BaseModel):
+    """Igual a StageConversionRead, mas com a taxa de conversao comparada
+    contra o periodo anterior equivalente (RN-003: nunca "0% de variacao"
+    quando falta dado num dos dois lados). A contagem bruta de cada etapa
+    nao e comparada aqui — o KPI e a taxa, nao o volume absoluto."""
+
+    from_stage: str
+    to_stage: str
+    conversion_rate: MetricResultRead
+    drop_off_rate: MetricResultRead
+    conversion_rate_comparison: PeriodComparisonRead
+
+
+class FunnelAnalyticsRead(BaseModel):
+    """GET /analytics/funnel — funil agregado (todos os canais juntos) num
+    intervalo de datas, com conversao/abandono etapa-a-etapa e comparacao
+    periodo-a-periodo de cada taxa de conversao."""
+
+    date_from: date
+    date_to: date
+    previous_date_from: date
+    previous_date_to: date
+    stages: FunnelStagesRead
+    conversions: list[StageConversionWithComparisonRead]
+
+
+class ChannelFunnelRead(BaseModel):
+    """Drill-down de FunnelAnalyticsRead por canal — mesmo criterio de
+    `MarketingByChannelRead`/`ChannelMarketingRead`: sem comparacao de
+    periodo, o eixo aqui e canal A vs. canal B."""
+
+    channel_id: uuid.UUID
+    channel_name: str
+    stages: FunnelStagesRead
+    conversions: list[StageConversionRead]
+
+
+class FunnelByChannelRead(BaseModel):
+    date_from: date
+    date_to: date
+    channels: list[ChannelFunnelRead]
