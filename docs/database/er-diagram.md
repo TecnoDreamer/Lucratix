@@ -13,6 +13,7 @@ erDiagram
     ORGANIZATIONS ||--o{ EXPERIMENTS : has
     ORGANIZATIONS ||--o{ AUDIT_LOGS : has
     MARKETING_CHANNELS ||--o{ CAMPAIGNS : classifies
+    MARKETING_CHANNELS ||--o{ FUNNEL_SNAPSHOTS : classifies
     EXPERIMENTS ||--o{ EXPERIMENT_VARIANTS : has
     USERS ||--o{ PASSWORD_RESET_TOKENS : requests
     USERS ||--o{ SESSIONS : has
@@ -107,6 +108,7 @@ erDiagram
     FUNNEL_SNAPSHOTS {
         uuid id PK
         uuid organization_id FK
+        uuid channel_id FK "nullable — NULL = funil agregado"
         date period
         int impressions
         int visits

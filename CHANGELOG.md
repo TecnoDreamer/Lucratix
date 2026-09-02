@@ -4,6 +4,18 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-02
 
+### Added (Funil multicanal — modelagem e KPIs, PR1 de 4)
+- `funnel_snapshots.channel_id` (nullable, migration `0016_funnel_snapshot_channel`) —
+  o funil passa a poder ser segmentado por canal, sem alterar o comportamento do
+  funil agregado que já existia (`channel_id IS NULL`). `GET /analytics/funnel`
+  (conversão e abandono etapa-a-etapa, com comparação período-a-período) e
+  `GET /analytics/funnel/by-channel` (drill-down por canal, mesmo padrão de
+  `/analytics/marketing/by-channel`). Segmentação por canal também na
+  importação/exportação de Funil (Central de Dados). Novo verbete no Glossário:
+  "Taxa de Abandono". Primeira de 4 PRs — UX/Glossário completo/Recharts (PR2),
+  PDF (PR3) e adoção em outras telas (PR4) ficam para rodadas seguintes. Ver
+  `docs/funnel/README.md`.
+
 ### Added (tela de alteração de senha)
 - Nova seção "Senha" na Central de Configurações (`components/change-password-card.tsx`),
   front-end para `POST /api/v1/auth/change-password` — o endpoint já existia e já era
