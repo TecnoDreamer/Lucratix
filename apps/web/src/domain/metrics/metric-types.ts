@@ -3,7 +3,8 @@ export type MetricCategory =
   | "marketing"
   | "vendas"
   | "clientes"
-  | "crescimento";
+  | "crescimento"
+  | "funil";
 
 export type MetricUnit = "currency" | "percent" | "ratio" | "count" | "currency_per_1000";
 
@@ -23,11 +24,18 @@ export interface MetricDefinition {
   description: string;
   formula?: string;
   example?: string;
-  unit: MetricUnit;
-  direction: MetricDirection;
+  /** `unit`/`direction` ficam ausentes para conceitos categóricos (ex.:
+   * Canal, Campanha — categoria "funil") que não são um número com direção
+   * desejável, só um rótulo. Toda métrica numérica de verdade continua
+   * preenchendo os dois (ver `metric-catalog.spec.ts`). */
+  unit?: MetricUnit;
+  direction?: MetricDirection;
   aliases: string[];
   /** Preenchido quando a metrica e educacional mas ainda nao aparece em
-   * nenhum card calculado pelo backend hoje (ver auditoria, secao 4). */
+   * nenhum card calculado pelo backend hoje (ver auditoria, secao 4), ou
+   * quando o conceito (ex.: Fonte, Plataforma) ainda nao e modelado como
+   * campo proprio no sistema — nunca inventar um campo so pra "completar"
+   * o glossario. */
   note?: string;
 }
 
@@ -37,4 +45,5 @@ export const METRIC_CATEGORY_LABELS: Record<MetricCategory, string> = {
   vendas: "Vendas",
   clientes: "Clientes",
   crescimento: "Crescimento",
+  funil: "Funil",
 };

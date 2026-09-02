@@ -22,7 +22,19 @@ describe("catalogo de metricas — integridade dos dados", () => {
       expect(metric.shortDescription.length).toBeGreaterThan(0);
       expect(metric.description.length).toBeGreaterThan(0);
       expect(metric.aliases.length).toBeGreaterThanOrEqual(1);
-      expect(["higher_is_better", "lower_is_better"]).toContain(metric.direction);
+      // Categoria "funil" cobre conceitos categoricos (Canal, Campanha...),
+      // sem unit/direction — ver proxima asserção. Toda metrica numerica de
+      // verdade continua exigindo os dois.
+      if (metric.category !== "funil") {
+        expect(["higher_is_better", "lower_is_better"]).toContain(metric.direction);
+      }
+    }
+  });
+
+  it("categoria 'funil' nunca tem unit/direction — sao conceitos, nao metricas numericas", () => {
+    for (const metric of METRIC_DEFINITIONS.filter((m) => m.category === "funil")) {
+      expect(metric.unit).toBeUndefined();
+      expect(metric.direction).toBeUndefined();
     }
   });
 

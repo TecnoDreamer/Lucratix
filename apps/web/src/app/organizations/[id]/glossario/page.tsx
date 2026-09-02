@@ -16,7 +16,15 @@ import { card, input, sectionTitle } from "@/lib/ui";
 import { EmptyState } from "@/components/ui";
 import { IconBookOpen, IconChevronDown, IconSearch } from "@/components/icons";
 
-const CATEGORY_VALUES: (MetricCategory | "all")[] = ["all", "financeiro", "marketing", "vendas", "clientes", "crescimento"];
+const CATEGORY_VALUES: (MetricCategory | "all")[] = [
+  "all",
+  "financeiro",
+  "marketing",
+  "vendas",
+  "clientes",
+  "crescimento",
+  "funil",
+];
 
 export default function GlossaryPage() {
   return (

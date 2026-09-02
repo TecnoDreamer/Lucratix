@@ -967,7 +967,8 @@
       "marketing": "Marketing",
       "vendas": "Vendas",
       "clientes": "Clientes",
-      "crescimento": "Crescimento"
+      "crescimento": "Crescimento",
+      "funil": "Funil"
     }
   },
   "admin": {
