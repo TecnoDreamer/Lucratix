@@ -15,6 +15,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
   "Taxa de Abandono". Primeira de 4 PRs — UX/Glossário completo/Recharts (PR2),
   PDF (PR3) e adoção em outras telas (PR4) ficam para rodadas seguintes. Ver
   `docs/funnel/README.md`.
+  [#110](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/110)
 
 ### Added (tela de alteração de senha)
 - Nova seção "Senha" na Central de Configurações (`components/change-password-card.tsx`),
