@@ -51,6 +51,10 @@ export interface FunnelSnapshot {
   id: string;
   organization_id: string;
   period: string;
+  // null = linha agregada (o funil da organizacao como um todo); um id
+  // segmenta por canal (ver docs/funnel/MODELAGEM.md). A tela de entrada
+  // manual so mostra/edita linhas agregadas hoje.
+  channel_id: string | null;
   impressions: number | null;
   visits: number | null;
   leads: number | null;
