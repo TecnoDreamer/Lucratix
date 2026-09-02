@@ -81,14 +81,37 @@ def test_aggregate_financials_sums_only_present_values_never_treats_missing_as_z
 
 
 def test_aggregate_funnels_sums_multiple_snapshots():
+    # As 8 colunas, nao so leads/customers/repeat_purchases — antes desta
+    # correcao, impressions/visits/mqls/sqls/opportunities eram descartados
+    # silenciosamente ao agregar varios meses (ver AggregatedFunnel).
     snapshots = [
-        FunnelSnapshot(leads=50, customers=10, repeat_purchases=2),
-        FunnelSnapshot(leads=60, customers=15, repeat_purchases=3),
+        FunnelSnapshot(
+            impressions=1000, visits=400, leads=50, mqls=30, sqls=20, opportunities=15,
+            customers=10, repeat_purchases=2,
+        ),
+        FunnelSnapshot(
+            impressions=1200, visits=500, leads=60, mqls=35, sqls=25, opportunities=18,
+            customers=15, repeat_purchases=3,
+        ),
     ]
     aggregated = aggregate_funnels(snapshots)
+    assert aggregated.impressions == 2200
+    assert aggregated.visits == 900
     assert aggregated.leads == 110
+    assert aggregated.mqls == 65
+    assert aggregated.sqls == 45
+    assert aggregated.opportunities == 33
     assert aggregated.customers == 25
     assert aggregated.repeat_purchases == 5
+
+
+def test_aggregate_funnels_ignores_absence_never_treats_as_zero():
+    # RN-003: mes sem dado numa etapa nunca vira 0 na soma — so soma o que
+    # existe; None so quando NENHUM snapshot tem aquela etapa.
+    snapshots = [FunnelSnapshot(impressions=1000, visits=None), FunnelSnapshot(impressions=None, visits=None)]
+    aggregated = aggregate_funnels(snapshots)
+    assert aggregated.impressions == 1000
+    assert aggregated.visits is None
 
 
 def test_compute_dashboard_metrics_accepts_aggregated_dataclasses():

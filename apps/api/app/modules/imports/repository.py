@@ -87,12 +87,19 @@ def get_existing_financial_periods(db: Session, organization_id: uuid.UUID) -> s
 def get_existing_funnel_snapshot_periods(
     db: Session, organization_id: uuid.UUID
 ) -> set[tuple[object, ...]]:
+    """Chave (período, nome do canal) — None de canal = linha agregada.
+    LEFT JOIN porque `channel_id` é opcional (ao contrário de
+    Campaign.channel_id, usado em `get_existing_campaign_keys`)."""
     rows = (
-        db.query(FunnelSnapshot.period)
+        db.query(FunnelSnapshot.period, MarketingChannel.name)
+        .outerjoin(MarketingChannel, MarketingChannel.id == FunnelSnapshot.channel_id)
         .filter(FunnelSnapshot.organization_id == organization_id)
         .all()
     )
-    return {(row.period,) for row in rows}
+    return {
+        (period, normalize_natural_key_value(channel_name) if channel_name is not None else None)
+        for period, channel_name in rows
+    }
 
 
 def get_existing_product_names(db: Session, organization_id: uuid.UUID) -> set[tuple[object, ...]]:

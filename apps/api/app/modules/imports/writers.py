@@ -55,11 +55,24 @@ def write_funnel_snapshot_row(
         return "skipped"
 
     period = cast(date, transformed["period"])
-    existing = funnels_repository.get_funnel_snapshot(db, organization_id, period)
+
+    channel_id: uuid.UUID | None = None
+    channel_name = transformed.get("channel")
+    if channel_name:
+        channel = marketing_repository.get_channel_by_name(db, organization_id, cast(str, channel_name))
+        if channel is None:
+            # Defensivo, mesmo raciocinio de write_campaign_row: validation.py
+            # (service.py::_channel_foreign_key_values) ja garantiu que o
+            # canal existe no momento da validacao.
+            return "skipped"
+        channel_id = channel.id
+
+    existing = funnels_repository.get_funnel_snapshot(db, organization_id, period, channel_id=channel_id)
     funnels_repository.upsert_funnel_snapshot(
         db,
         organization_id=organization_id,
         period=period,
+        channel_id=channel_id,
         impressions=transformed.get("impressions"),
         visits=transformed.get("visits"),
         leads=transformed.get("leads"),

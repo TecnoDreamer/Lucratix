@@ -70,16 +70,20 @@ def _existing_natural_keys(
     return lookup(db, organization_id)
 
 
-def _campaign_foreign_key_values(db: Session, organization_id: uuid.UUID) -> dict[str, set[object]]:
+def _channel_foreign_key_values(db: Session, organization_id: uuid.UUID) -> dict[str, set[object]]:
     return {"channel": repository.get_valid_channel_names(db, organization_id)}
 
 
-# Mesmo padrão dos dois dicionários acima — só Campanhas precisa disso hoje
-# (campo de texto que precisa apontar pra um registro que já existe em
-# OUTRA tabela; ver validation.py::validate_rows, parâmetro
-# `foreign_key_values`, e a decisão de nunca criar canal por adivinhação).
+# Mesmo padrão dos dois dicionários acima — Campanhas (obrigatório) e Funil
+# (opcional — em branco = linha agregada, ver domains.py::FUNNEL_SNAPSHOTS)
+# têm um campo de texto "channel" que precisa apontar pra um registro que já
+# existe em OUTRA tabela quando preenchido (ver validation.py::validate_rows,
+# parâmetro `foreign_key_values` — string em branco nunca é checada contra
+# esta lista, só valores presentes; e a decisão de nunca criar canal por
+# adivinhação).
 _FOREIGN_KEY_LOOKUPS: dict[str, Callable[[Session, uuid.UUID], dict[str, set[object]]]] = {
-    "campaigns": _campaign_foreign_key_values,
+    "funnel_snapshots": _channel_foreign_key_values,
+    "campaigns": _channel_foreign_key_values,
 }
 
 

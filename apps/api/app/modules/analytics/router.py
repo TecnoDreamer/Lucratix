@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context, require_role
 from app.models.campaign import Campaign
+from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.membership import MembershipRole
 from app.models.target import TargetMetric
 from app.modules.analytics.correlation_service import compute_correlation
 from app.modules.analytics.date_ranges import months_between, months_in_range, previous_equivalent_range
+from app.modules.analytics.funnel_analytics import compute_stage_conversions, stage_values
 from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import (
     aggregate_financials,
@@ -28,6 +30,7 @@ from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
 from app.modules.targets import repository as targets_repository
 from app.schemas.metrics import (
+    ChannelFunnelRead,
     ChannelMarketingRead,
     CorrelationPointRead,
     DashboardRead,
@@ -35,6 +38,9 @@ from app.schemas.metrics import (
     ExecutiveDashboardRead,
     ExecutiveSeriesRead,
     ExecutiveTargetsRead,
+    FunnelAnalyticsRead,
+    FunnelByChannelRead,
+    FunnelStagesRead,
     MarketingAnalyticsRead,
     MarketingByChannelRead,
     MetricResultRead,
@@ -42,6 +48,8 @@ from app.schemas.metrics import (
     MonthlyMetricsRead,
     MonthlyTargetRead,
     PeriodComparisonRead,
+    StageConversionRead,
+    StageConversionWithComparisonRead,
     TargetProgressRead,
 )
 
@@ -405,3 +413,108 @@ def get_marketing_by_channel(
     channels.sort(key=lambda c: c.channel_name)
 
     return MarketingByChannelRead(date_from=date_from, date_to=date_to, channels=channels)
+
+
+@router.get("/analytics/funnel")
+def get_funnel_analytics(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> FunnelAnalyticsRead:
+    """Funil agregado (todos os canais juntos) num intervalo de datas: as 8
+    etapas e as 7 conversoes/abandonos etapa-a-etapa, com a taxa de
+    conversao de cada etapa comparada ao periodo anterior equivalente.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    snapshots = funnels_repository.list_funnel_snapshots_in_range(db, ctx.organization_id, date_from, date_to)
+    current_funnel = aggregate_funnels(snapshots)
+    current_conversions = compute_stage_conversions(current_funnel)
+
+    previous_date_from, previous_date_to = previous_equivalent_range(date_from, date_to)
+    previous_snapshots = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_conversions = compute_stage_conversions(aggregate_funnels(previous_snapshots))
+
+    conversions = [
+        StageConversionWithComparisonRead(
+            from_stage=current.from_stage,
+            to_stage=current.to_stage,
+            conversion_rate=MetricResultRead.from_result(current.conversion_rate),
+            drop_off_rate=MetricResultRead.from_result(current.drop_off_rate),
+            conversion_rate_comparison=PeriodComparisonRead.from_comparison(
+                compare_periods(previous.conversion_rate.value, current.conversion_rate.value)
+            ),
+        )
+        for current, previous in zip(current_conversions, previous_conversions, strict=True)
+    ]
+
+    return FunnelAnalyticsRead(
+        date_from=date_from,
+        date_to=date_to,
+        previous_date_from=previous_date_from,
+        previous_date_to=previous_date_to,
+        stages=FunnelStagesRead.from_stage_values(stage_values(current_funnel)),
+        conversions=conversions,
+    )
+
+
+@router.get("/analytics/funnel/by-channel")
+def get_funnel_by_channel(
+    date_from: date,
+    date_to: date,
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> FunnelByChannelRead:
+    """Drill-down de /analytics/funnel por canal — mesmas etapas/conversoes,
+    cada uma calculada so com os snapshots daquele canal. Sem comparacao com
+    periodo anterior nesta primeira versao (o eixo aqui e "canal A vs. canal
+    B", igual a /analytics/marketing/by-channel). channel_id (RESTRICT na
+    FK) garante que todo canal referenciado por um snapshot continua
+    existindo, entao a resolucao de nome nunca falha.
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    snapshots = funnels_repository.list_channel_funnel_snapshots_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+
+    snapshots_by_channel: dict[uuid.UUID, list[FunnelSnapshot]] = defaultdict(list)
+    for snapshot in snapshots:
+        # list_channel_funnel_snapshots_in_range ja filtra channel_id IS NOT
+        # NULL — o assert so satisfaz o tipo (Mapped[uuid.UUID | None]) sem
+        # reintroduzir a checagem em runtime de verdade.
+        assert snapshot.channel_id is not None
+        snapshots_by_channel[snapshot.channel_id].append(snapshot)
+
+    channels_by_id = marketing_repository.get_channels_by_ids(
+        db, ctx.organization_id, set(snapshots_by_channel.keys())
+    )
+
+    channels = []
+    for channel_id, channel_snapshots in snapshots_by_channel.items():
+        funnel = aggregate_funnels(channel_snapshots)
+        channel = channels_by_id.get(channel_id)
+        channels.append(
+            ChannelFunnelRead(
+                channel_id=channel_id,
+                channel_name=channel.name if channel else "Canal removido",
+                stages=FunnelStagesRead.from_stage_values(stage_values(funnel)),
+                conversions=[
+                    StageConversionRead.from_stage_conversion(c) for c in compute_stage_conversions(funnel)
+                ],
+            )
+        )
+    channels.sort(key=lambda c: c.channel_name)
+
+    return FunnelByChannelRead(date_from=date_from, date_to=date_to, channels=channels)
