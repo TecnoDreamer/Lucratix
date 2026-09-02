@@ -80,6 +80,34 @@
       "specialCharacter": "Un carácter especial",
       "minNumbers": "Al menos 3 números",
       "metCount": "{met} de {total} requisitos de contraseña cumplidos"
+    },
+    "funnelStagesChart": {
+      "defaultLabel": "Embudo",
+      "labelWithChannel": "{label} — embudo",
+      "labelNoData": "{chartLabel}: sin datos suficientes en el período",
+      "noData": "Sin datos suficientes en el período.",
+      "tableCaption": "{chartLabel}, por etapa",
+      "stage": "Etapa",
+      "value": "Valor"
+    },
+    "stageConversionChart": {
+      "chartLabel": "Conversión por etapa",
+      "labelNoData": "Conversión por etapa: sin datos suficientes en el período",
+      "noData": "Sin datos suficientes en el período.",
+      "bottleneckNote": "Menor conversión observada: de {from} a {to} ({value}).",
+      "transition": "Transición",
+      "conversionRate": "Tasa de conversión",
+      "dropOffRate": "Tasa de abandono",
+      "vsPreviousPeriod": "Vs. período anterior"
+    },
+    "funnelEvolutionChart": {
+      "labelWithStage": "Evolución de {stage}",
+      "labelNoData": "{chartLabel}: sin datos suficientes en el período",
+      "noData": "Sin datos suficientes en el período.",
+      "tableCaption": "{chartLabel}, por mes",
+      "month": "Mes",
+      "value": "Valor",
+      "noDataCell": "sin dato"
     }
   },
   "workspace": {
@@ -662,6 +690,19 @@
       "opportunities": "Oportunidades",
       "customers": "Clientes",
       "repeat_purchases": "Recompras"
+    },
+    "manualEntryTitle": "Registro manual",
+    "analytics": {
+      "title": "Análisis del Embudo",
+      "viewToggleLabel": "Vista",
+      "viewAggregated": "Agregado",
+      "viewByChannel": "Por canal",
+      "funnelChartTitle": "Embudo",
+      "conversionChartTitle": "Conversión por etapa",
+      "evolutionChartTitle": "Evolución temporal",
+      "evolutionStageLabel": "Etapa:",
+      "emptyByChannelTitle": "Ningún canal tiene datos de embudo en este período.",
+      "channelSummary": "Leads: {leads} · Clientes: {customers}"
     }
   },
   "products": {
