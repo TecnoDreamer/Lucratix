@@ -170,6 +170,19 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     aliases: ["taxa de conversao", "conversao"],
   },
   {
+    id: "drop_off_rate",
+    name: "Taxa de Abandono",
+    category: "marketing",
+    shortDescription: "Percentual de pessoas que não avançaram para a próxima etapa do funil.",
+    description:
+      "O complemento da taxa de conversão: de todos que estavam numa etapa do funil, quantos não avançaram para a próxima. Calculada por etapa (ex.: Lead → MQL), nunca como um único número para o funil inteiro.",
+    formula: "Taxa de Abandono = 1 − Taxa de Conversão da etapa",
+    example: "Taxa de conversão de Lead → MQL de 30% → taxa de abandono dessa etapa ≈ 70%",
+    unit: "percent",
+    direction: "lower_is_better",
+    aliases: ["taxa de abandono", "abandono", "drop-off", "drop off"],
+  },
+  {
     id: "mrr",
     name: "Receita Recorrente Mensal",
     acronym: "MRR",
