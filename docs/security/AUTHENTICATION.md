@@ -8,6 +8,13 @@ JWT stateless quanto a assinatura/expiração, mas com sessão única validada n
 
 **Login revoga qualquer sessão ativa anterior do mesmo usuário**, com atomicidade garantida por um índice único parcial no banco (`uq_sessions_one_active_per_user`, migration `0007_sessions`), não apenas pela ordem das instruções da aplicação — ver `app/core/sessions.py`. Login em um novo dispositivo desconecta qualquer outro dispositivo já autenticado; a UX correspondente (mensagem "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo.") está em `apps/web/src/lib/api.ts` (`loginRedirectPath`) e na página de login (`?reason=session_revoked`).
 
+## Política de senha forte (2026-09-02)
+
+Toda senha nova (cadastro, alteração, redefinição, convite/criação
+administrativa) precisa atender 4 requisitos simultâneos — ver
+[POLITICA_DE_SENHAS.md](POLITICA_DE_SENHAS.md) para os detalhes completos
+(requisitos, definição de caractere especial, contrato de erro, legado).
+
 ## Recuperação de senha
 
 Fluxo de link único, sem etapa de código/OTP separada: `POST /password-reset/request` (e-mail) → token opaco de 256 bits, hash SHA-256 armazenado (`app/models/password_reset_token.py`), TTL de 1 hora, uso único → `POST /password-reset/confirm` (token + nova senha). Resposta de `/request` é **sempre idêntica** independente de o e-mail existir (RN-012, evita enumeração de contas).
