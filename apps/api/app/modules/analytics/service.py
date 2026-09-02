@@ -32,9 +32,18 @@ class AggregatedFinancials:
 class AggregatedFunnel:
     # float, nao int: e soma de varios meses (`_sum_optional`), consumido
     # apenas pelo motor de metricas (Number | None) — nunca serializado
-    # como contagem exata de um unico periodo.
-    customers: float | None
+    # como contagem exata de um unico periodo. As 8 colunas espelham
+    # FunnelSnapshot (mesmos nomes, duck typing deliberado — ver
+    # compute_dashboard_metrics) porque GET /analytics/funnel precisa das
+    # 8 etapas agregadas para calcular conversao etapa-a-etapa sobre um
+    # intervalo de datas, nao so customers/leads/repeat_purchases.
+    impressions: float | None
+    visits: float | None
     leads: float | None
+    mqls: float | None
+    sqls: float | None
+    opportunities: float | None
+    customers: float | None
     repeat_purchases: float | None
 
 
@@ -64,8 +73,13 @@ def aggregate_financials(periods: list[FinancialPeriod]) -> AggregatedFinancials
 
 def aggregate_funnels(snapshots: list[FunnelSnapshot]) -> AggregatedFunnel:
     return AggregatedFunnel(
-        customers=_sum_optional([s.customers for s in snapshots]),
+        impressions=_sum_optional([s.impressions for s in snapshots]),
+        visits=_sum_optional([s.visits for s in snapshots]),
         leads=_sum_optional([s.leads for s in snapshots]),
+        mqls=_sum_optional([s.mqls for s in snapshots]),
+        sqls=_sum_optional([s.sqls for s in snapshots]),
+        opportunities=_sum_optional([s.opportunities for s in snapshots]),
+        customers=_sum_optional([s.customers for s in snapshots]),
         repeat_purchases=_sum_optional([s.repeat_purchases for s in snapshots]),
     )
 
