@@ -33,8 +33,10 @@ test("desmarcar e reordenar acessos rápidos em Configurações reflete na Home,
   const moveMarketingUp = page.getByRole("button", { name: "Mover Marketing para cima" });
   await moveMarketingUp.click();
   await moveMarketingUp.click();
-  await page.getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByRole("button", { name: "Salvar" })).toBeDisabled();
+  // exact: true — a página de Configurações também tem o botão "Salvar nova
+  // senha" (seção Senha), que "Salvar" sem exact também casaria por substring.
+  await page.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Salvar", exact: true })).toBeDisabled();
 
   await page.getByRole("link", { name: new RegExp(`Voltar para ${orgName}`) }).click();
   await page.waitForURL("**/organizations/**");

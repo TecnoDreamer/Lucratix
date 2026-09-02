@@ -154,6 +154,17 @@
       "title": "Account",
       "backTo": "Back to {name}",
       "yourCompanies": "Your companies"
+    },
+    "changePassword": {
+      "title": "Password",
+      "description": "Change the password used to sign in to your account.",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "passwordMismatch": "Passwords do not match.",
+      "submitting": "Saving...",
+      "submit": "Save new password",
+      "successMessage": "Password changed successfully."
     }
   },
   "home": {
