@@ -20,6 +20,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
   `MetricDefinition.unit`/`direction` viram opcionais para suportar esse tipo de
   verbete categórico. O ícone `?` reutilizável (`MetricHelp`) já existia.
   Ver `docs/funnel/README.md`.
+  [#111](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/111)
 
 ### Added (Funil multicanal — modelagem e KPIs, PR1 de 4)
 - `funnel_snapshots.channel_id` (nullable, migration `0016_funnel_snapshot_channel`) —
