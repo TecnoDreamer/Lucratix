@@ -4,10 +4,13 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { currentMonthPeriod, formatMetric, formatPercentChange, type Dashboard } from "@/lib/metrics";
+import { hasMinimumRole } from "@/lib/roles";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { MetricHelp } from "@/components/metric-help";
+import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { useOrganization } from "@/contexts/organization-context";
 import {
   IconDollar,
   IconFunnel,
@@ -30,8 +33,14 @@ export default function DashboardPage() {
   const { id } = useParams<{ id: string }>();
   const [period, setPeriod] = useState(currentMonthPeriod());
   const { dashboard, revenueComparison, loading, error } = useDashboard(id, period);
+  const { organization } = useOrganization();
   const t = useTranslations("dashboard");
   const tMetricLabels = useTranslations("dashboard.metricLabels");
+  // /reports/basic/pdf exige ANALYST+ (mesmo nivel de /reports/basic) mas o
+  // Dashboard continua visivel a VIEWER (RN-010) — sem essa checagem, VIEWER
+  // veria um botao que sempre resulta em 403. Mesmo helper de lib/roles.ts
+  // ja usado em layout.tsx pra esconder o item de nav "Relatório" de VIEWER.
+  const canGeneratePdf = hasMinimumRole(organization?.my_role, "ANALYST");
 
   return (
     <div className="animate-fade-in-up py-8">
@@ -40,12 +49,20 @@ export default function DashboardPage() {
           <IconGrid className="h-4 w-4 text-slate-400" />
           <h2 className={sectionTitle}>{t("title")}</h2>
         </div>
-        <input
-          type="month"
-          value={period.slice(0, 7)}
-          onChange={(e) => setPeriod(`${e.target.value}-01`)}
-          className={`${input} w-auto`}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="month"
+            value={period.slice(0, 7)}
+            onChange={(e) => setPeriod(`${e.target.value}-01`)}
+            className={`${input} w-auto`}
+          />
+          {canGeneratePdf && (
+            <GeneratePdfReportButton
+              path={`/api/v1/organizations/${id}/reports/basic/pdf?period=${period}`}
+              label={t("generatePdfReport")}
+            />
+          )}
+        </div>
       </div>
 
       {error && (

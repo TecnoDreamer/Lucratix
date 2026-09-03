@@ -5,6 +5,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type Campaign, type MarketingChannel } from "@/lib/business";
+import { resolvePreset, type DateRange } from "@/lib/date-ranges";
+import { formatDecimal } from "@/lib/formatters";
+import type { ChannelMarketing, MarketingByChannel } from "@/lib/metrics";
 import {
   buttonPrimary,
   buttonSecondary,
@@ -17,6 +20,16 @@ import {
 } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconMegaphone, IconPlus } from "@/components/icons";
+import { DateRangeFilter } from "@/components/date-range-filter";
+import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
+import { ChannelBarChart, type ChannelBarChartDatum } from "@/components/channel-bar-chart";
+
+async function fetchChannelPerformance(id: string, range: DateRange): Promise<ChannelMarketing[]> {
+  const result = await api.get<MarketingByChannel>(
+    `/api/v1/organizations/${id}/analytics/marketing/by-channel?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+  );
+  return result.channels;
+}
 
 async function fetchData(
   id: string
@@ -39,6 +52,20 @@ export default function MarketingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Desempenho por canal (PR4) — endpoint ja existente (GET
+  // /analytics/marketing/by-channel), so nao consumido por esta tela ate
+  // agora (a Analytics ja o usava para MarketingByChannelTable). Estado
+  // proprio, independente do CRUD de canais/campanhas acima.
+  const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
+  const [channelPerformance, setChannelPerformance] = useState<ChannelMarketing[]>([]);
+  const [channelPerformanceLoading, setChannelPerformanceLoading] = useState(true);
+  const [channelPerformanceError, setChannelPerformanceError] = useState<string | null>(null);
+  // Incrementado apos criar campanha/canal, pra re-buscar o desempenho por
+  // canal sem esperar o usuario trocar o filtro de periodo — sem isso, uma
+  // campanha recem-criada dentro do periodo selecionado nao aparece ate um
+  // reload manual da pagina.
+  const [channelPerformanceReloadToken, setChannelPerformanceReloadToken] = useState(0);
 
   const [channelName, setChannelName] = useState("");
   const [campaignName, setCampaignName] = useState("");
@@ -78,6 +105,35 @@ export default function MarketingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) {
+        setChannelPerformanceLoading(true);
+        setChannelPerformanceError(null);
+      }
+    });
+    fetchChannelPerformance(id, range)
+      .then((result) => {
+        if (!cancelled) setChannelPerformance(result);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 401) {
+          router.push(loginRedirectPath(err));
+          return;
+        }
+        setChannelPerformanceError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
+      })
+      .finally(() => {
+        if (!cancelled) setChannelPerformanceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, range.dateFrom, range.dateTo, channelPerformanceReloadToken]);
+
   async function handleCreateChannel(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -111,6 +167,7 @@ export default function MarketingPage() {
         customers: customers ? Number(customers) : null,
       });
       setCampaigns((prev) => [...prev, campaign]);
+      setChannelPerformanceReloadToken((t) => t + 1);
       setCampaignName("");
       setStartDate("");
       setEndDate("");
@@ -331,6 +388,51 @@ export default function MarketingPage() {
             </button>
           </form>
         </Card>
+      </section>
+
+      <section className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          {t("channelPerformanceTitle")}
+        </h3>
+        <div className="mt-3">
+          <DateRangeFilter value={range} onChange={setRange} />
+        </div>
+
+        {channelPerformanceError && (
+          <div className="mt-3">
+            <Alert>{channelPerformanceError}</Alert>
+          </div>
+        )}
+
+        <div className="mt-4">
+          {channelPerformanceLoading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : channelPerformance.length === 0 ? (
+            <EmptyState title={t("noChannelPerformanceData")} />
+          ) : (
+            (() => {
+              const chartData: ChannelBarChartDatum[] = channelPerformance.map((c) => ({
+                key: c.channel_id,
+                label: c.channel_name,
+                value: c.roas.is_applicable ? c.roas.value : null,
+              }));
+              const best = channelPerformance
+                .filter((c) => c.roas.is_applicable && c.roas.value !== null)
+                .sort((a, b) => b.roas.value! - a.roas.value!)[0];
+              return (
+                <>
+                  <ChannelBarChart data={chartData} valueFormatter={formatDecimal} label={t("roasByChannel")} />
+                  {best && (
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                      {t("bestChannelNote", { channel: best.channel_name, value: formatDecimal(best.roas.value!) })}
+                    </p>
+                  )}
+                  <MarketingByChannelTable channels={channelPerformance} />
+                </>
+              );
+            })()
+          )}
+        </div>
       </section>
     </div>
   );

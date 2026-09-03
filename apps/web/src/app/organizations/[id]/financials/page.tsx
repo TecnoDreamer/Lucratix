@@ -9,6 +9,20 @@ import { formatPercentage } from "@/lib/formatters";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconDollar } from "@/components/icons";
+import { SeriesChart, type SeriesPoint } from "@/components/series-chart";
+
+/** `FinancialPeriod[]` (já buscado por `fetchPeriods`) → `SeriesPoint[]`
+ * para `SeriesChart` — nenhuma chamada de API nova: a série mensal já está
+ * inteira na resposta de `GET /financials`, só falta ordenar e converter
+ * pro formato `MetricResult` que o gráfico espera. */
+function toSeries(periods: FinancialPeriod[], key: "revenue" | "profit" | "margin"): SeriesPoint[] {
+  return [...periods]
+    .sort((a, b) => (a.period < b.period ? -1 : 1))
+    .map((p) => ({
+      period: p.period,
+      metric: { value: p[key], is_applicable: p[key] !== null, reason: null },
+    }));
+}
 
 async function fetchPeriods(id: string): Promise<FinancialPeriod[]> {
   return api.get<FinancialPeriod[]>(`/api/v1/organizations/${id}/financials`);
@@ -92,6 +106,29 @@ export default function FinancialsPage() {
       {error && (
         <div className="mt-4">
           <Alert>{error}</Alert>
+        </div>
+      )}
+
+      {!loading && periods.length > 0 && (
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Card className="p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {t("revenue")}
+            </p>
+            <SeriesChart points={toSeries(periods, "revenue")} label={t("revenue")} />
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {t("profit")}
+            </p>
+            <SeriesChart points={toSeries(periods, "profit")} label={t("profit")} />
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {t("margin")}
+            </p>
+            <SeriesChart points={toSeries(periods, "margin")} percent label={t("margin")} />
+          </Card>
         </div>
       )}
 

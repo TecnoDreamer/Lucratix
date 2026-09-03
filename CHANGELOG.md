@@ -4,6 +4,24 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Funil multicanal — inventário e adoção nas demais telas, PR4 de 4)
+- `GET /api/v1/organizations/{id}/reports/basic/pdf?period=` — Relatório Básico (RF-026)
+  em PDF server-side, mesmo padrão de `pdf_builder.py` da PR3 (KPIs do período,
+  comparação com o baseline, marketing do período — omitido sem campanha no período).
+  Mesma permissão (`ANALYST+`) de `/reports/basic`; nenhuma regra de negócio nova.
+- Botão "Baixar relatório em PDF" na tela de Relatório (ao lado do "Imprimir/Salvar PDF"
+  existente, mantido) e no Dashboard (só para ANALYST+, já que o endpoint exige esse
+  papel mas o Dashboard continua visível a VIEWER).
+- Gráfico de evolução (receita/lucro/margem) em Financeiro, reaproveitando `SeriesChart`
+  sobre o dado já buscado — nenhum endpoint novo.
+- Seção "Desempenho por Canal" em Marketing: filtro de período + `ChannelBarChart`
+  (componente novo, **genérico** — ao contrário dos gráficos Recharts do Funil) + a
+  tabela `MarketingByChannelTable` já existente, sobre `GET /analytics/marketing/by-channel`
+  (endpoint já existente, não consumido por nenhuma tela até agora).
+- `docs/reports/PR4_INVENTARIO.md` (novo) — decisão tela a tela (adotar/adiar/não
+  aplicável) para Dashboard, Analytics, Produtos, Financeiro, Marketing, Experimentos,
+  Relatório, Central de Dados e Auditoria. Fecha a série de 4 PRs do Funil Multicanal.
+
 ### Added (Funil multicanal — relatório em PDF server-side, PR3 de 4)
 - Infraestrutura reutilizável de relatório em PDF (`app/modules/reports/pdf_builder.py`,
   ReportLab — decisão confirmada com o usuário, sem nenhuma biblioteca de sistema, ao

@@ -29,6 +29,19 @@ def months_in_range(date_from: date, date_to: date) -> int:
     return (date_to.year - date_from.year) * 12 + (date_to.month - date_from.month) + 1
 
 
+def month_end(period: date) -> date:
+    """Ultimo dia do mes de calendario de `period` (ex.: 2026-09-01 ->
+    2026-09-30) — mesma logica hoje duplicada so no frontend (`monthEnd()`
+    em app/organizations/[id]/reports/page.tsx), agora tambem no backend
+    para o relatorio em PDF (PR4) buscar o intervalo de campanhas de um mes
+    sem repetir esse calculo."""
+    if period.month == 12:
+        next_month_first_day = period.replace(year=period.year + 1, month=1, day=1)
+    else:
+        next_month_first_day = period.replace(month=period.month + 1, day=1)
+    return next_month_first_day - timedelta(days=1)
+
+
 def months_between(date_from: date, date_to: date) -> list[date]:
     """Lista o dia 1 de cada mes de calendario tocado pelo intervalo, em
     ordem cronologica (ex.: 15/08 a 03/09 -> [2026-08-01, 2026-09-01]).

@@ -112,6 +112,10 @@
     "generatePdfReportButton": {
       "generating": "Generando PDF...",
       "error": "No fue posible generar el informe en PDF."
+    },
+    "channelBarChart": {
+      "noData": "No hay datos suficientes en el período para este gráfico",
+      "noDataPoint": "No aplicable"
     }
   },
   "workspace": {
@@ -661,7 +665,8 @@
       "conversionRate": "Conversión",
       "averageTicket": "Ticket promedio",
       "recurrenceRate": "Recurrencia"
-    }
+    },
+    "generatePdfReport": "Descargar informe en PDF"
   },
   "financials": {
     "title": "Finanzas",
@@ -751,7 +756,11 @@
     "leads": "Leads",
     "customers": "Clientes",
     "creating": "Creando...",
-    "addCampaign": "Agregar campaña"
+    "addCampaign": "Agregar campaña",
+    "channelPerformanceTitle": "Desempeño por Canal",
+    "noChannelPerformanceData": "Ningún canal con campaña en este período",
+    "roasByChannel": "ROAS por Canal",
+    "bestChannelNote": "Mayor ROAS observado en el período: {channel} ({value})"
   },
   "reports": {
     "title": "Informe ejecutivo",
@@ -764,7 +773,8 @@
     "noBaselineYet": "Aún no hay ningún baseline registrado.",
     "periodMarketing": "Marketing del período",
     "noCampaignsThisPeriod": "Ninguna campaña con fecha registrada en este período.",
-    "vsPreviousMonth": "vs. mes anterior"
+    "vsPreviousMonth": "vs. mes anterior",
+    "generatePdfReport": "Descargar informe en PDF"
   },
   "orgSettings": {
     "frozenBanner": {

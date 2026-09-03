@@ -2,7 +2,12 @@
 
 from datetime import date
 
-from app.modules.analytics.date_ranges import months_between, months_in_range, previous_equivalent_range
+from app.modules.analytics.date_ranges import (
+    month_end,
+    months_between,
+    months_in_range,
+    previous_equivalent_range,
+)
 
 
 def test_previous_equivalent_range_full_month():
@@ -64,3 +69,19 @@ def test_months_between_spans_year_boundary():
 def test_months_between_length_matches_months_in_range():
     date_from, date_to = date(2025, 6, 10), date(2026, 3, 2)
     assert len(months_between(date_from, date_to)) == months_in_range(date_from, date_to)
+
+
+def test_month_end_regular_month():
+    assert month_end(date(2026, 9, 1)) == date(2026, 9, 30)
+
+
+def test_month_end_december_crosses_year_boundary():
+    assert month_end(date(2026, 12, 1)) == date(2026, 12, 31)
+
+
+def test_month_end_february_leap_year():
+    assert month_end(date(2028, 2, 1)) == date(2028, 2, 29)
+
+
+def test_month_end_february_non_leap_year():
+    assert month_end(date(2026, 2, 1)) == date(2026, 2, 28)
