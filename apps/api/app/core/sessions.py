@@ -65,3 +65,19 @@ def revoke_session(db: DBSession, session_id: uuid.UUID) -> None:
     session = db.get(UserSession, session_id)
     if session is not None and session.revoked_at is None:
         session.revoked_at = datetime.now(UTC)
+
+
+def revoke_active_session_for_user(db: DBSession, user_id: uuid.UUID) -> None:
+    """Revoga a sessao ativa do usuario, se houver (no maximo uma, RN-013) —
+    usado apos reset de senha bem-sucedido (auditoria de hardening, 2026-09):
+    se a conta estava comprometida (sessao ativa de um atacante), o reset por
+    e-mail deve encerra-la na hora, forcando um novo login com a senha nova,
+    em vez de deixa-la valer ate expirar sozinha (ate 7 dias). Mesmo padrao
+    de UPDATE usado dentro de `create_session`, isolado aqui porque um reset
+    nao cria sessao nova, so encerra a existente. Sem efeito (UPDATE de 0
+    linhas, nunca erro) se nao houver sessao ativa."""
+    db.execute(
+        update(UserSession)
+        .where(UserSession.user_id == user_id, UserSession.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )

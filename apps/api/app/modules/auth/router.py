@@ -347,11 +347,14 @@ def confirm_password_reset_route(
         action="auth.rate_limited.password_reset_confirm",
     )
     _enforce_password_policy(data.new_password)
-    success = confirm_password_reset(db, data.token, data.new_password)
-    if not success:
+    user = confirm_password_reset(db, data.token, data.new_password)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalido ou expirado"
         )
+    record_audit(
+        db, action="user.password_reset_completed", entity="user", entity_id=user.id, user_id=user.id
+    )
     db.commit()
     return {"message": "Senha redefinida com sucesso."}
 
@@ -400,11 +403,12 @@ def verify_email_route(
         db=db,
         action="auth.rate_limited.verify_email",
     )
-    success = confirm_email_verification(db, data.token)
-    if not success:
+    user = confirm_email_verification(db, data.token)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalido ou expirado"
         )
+    record_audit(db, action="user.email_verified", entity="user", entity_id=user.id, user_id=user.id)
     db.commit()
     return {"message": "E-mail confirmado com sucesso."}
 

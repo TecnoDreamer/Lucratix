@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.email import send_email
 from app.core.security import generate_opaque_token, hash_opaque_token, hash_password, verify_password
+from app.core.sessions import revoke_active_session_for_user
 from app.models.email_verification_token import EmailVerificationToken
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
@@ -86,6 +87,14 @@ def _password_link_email_html(raw_token: str, intro: str) -> str:
     )
 
 
+def _password_changed_email_html(intro: str) -> str:
+    return (
+        f"<p>{intro}</p>"
+        "<p>Se você não fez essa alteração, ela pode ter sido feita por outra pessoa com acesso "
+        "à sua conta.</p>"
+    )
+
+
 def _issue_password_reset_token(db: Session, user: User) -> str:
     """Gera e persiste um token de definicao/redefinicao de senha para um
     usuario ja resolvido — extraido de `request_password_reset` para ser
@@ -148,36 +157,61 @@ def create_user_with_reset_token(
     return user, (None if sent else raw_token)
 
 
-def confirm_password_reset(db: Session, raw_token: str, new_password: str) -> bool:
-    """RF-004. Retorna False se o token for invalido, expirado ou ja usado."""
+def confirm_password_reset(db: Session, raw_token: str, new_password: str) -> User | None:
+    """RF-004. Retorna None se o token for invalido, expirado ou ja usado —
+    ou o usuario cuja senha foi trocada, em caso de sucesso (o router usa
+    isso para auditar com entity_id/user_id corretos).
+
+    RN-013 + auditoria de hardening (2026-09): reset revoga qualquer sessao
+    ativa do usuario (`revoke_active_session_for_user`) — se a conta estava
+    comprometida, a sessao do atacante nao sobrevive ao reset, em vez de
+    valer ate expirar sozinha. Tambem notifica por e-mail que a senha
+    mudou, pro dono legitimo perceber se nao foi ele."""
     token_hash = hash_opaque_token(raw_token)
     record = (
         db.query(PasswordResetToken).filter(PasswordResetToken.token_hash == token_hash).one_or_none()
     )
     if record is None or record.used_at is not None:
-        return False
+        return None
     if record.expires_at < datetime.now(UTC):
-        return False
+        return None
 
     user = db.get(User, record.user_id)
     if user is None:
-        return False
+        return None
 
     user.password_hash = hash_password(new_password)
     record.used_at = datetime.now(UTC)
-    return True
+    revoke_active_session_for_user(db, user.id)
+    send_email(
+        to=user.email,
+        subject="Sua senha foi redefinida na Lucratix",
+        html=_password_changed_email_html("Sua senha foi redefinida com sucesso via link de recuperação."),
+    )
+    return user
 
 
 def change_password(db: Session, user: User, current_password: str, new_password: str) -> bool:
-    """RF-005. Retorna False se a senha atual informada estiver incorreta."""
+    """RF-005. Retorna False se a senha atual informada estiver incorreta.
+
+    Nao revoga a sessao atual (ao contrario de `confirm_password_reset`) —
+    e a propria sessao do ator legitimo fazendo a troca; revoga-la deslogaria
+    a pessoa certa por uma acao que ela mesma causou, sem ganho de seguranca."""
     if not verify_password(current_password, user.password_hash):
         return False
     user.password_hash = hash_password(new_password)
+    send_email(
+        to=user.email,
+        subject="Sua senha foi alterada na Lucratix",
+        html=_password_changed_email_html("Sua senha foi alterada com sucesso."),
+    )
     return True
 
 
-def confirm_email_verification(db: Session, raw_token: str) -> bool:
-    """RF-001. Retorna False se o token for invalido, expirado ou ja usado."""
+def confirm_email_verification(db: Session, raw_token: str) -> User | None:
+    """RF-001. Retorna None se o token for invalido, expirado ou ja usado —
+    ou o usuario verificado, em caso de sucesso (o router usa isso para
+    auditar com entity_id/user_id corretos)."""
     token_hash = hash_opaque_token(raw_token)
     record = (
         db.query(EmailVerificationToken)
@@ -185,17 +219,17 @@ def confirm_email_verification(db: Session, raw_token: str) -> bool:
         .one_or_none()
     )
     if record is None or record.used_at is not None:
-        return False
+        return None
     if record.expires_at < datetime.now(UTC):
-        return False
+        return None
 
     user = db.get(User, record.user_id)
     if user is None:
-        return False
+        return None
 
     user.email_verified_at = datetime.now(UTC)
     record.used_at = datetime.now(UTC)
-    return True
+    return user
 
 
 def resend_verification_email(db: Session, email: str) -> str | None:

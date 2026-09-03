@@ -1,5 +1,9 @@
 """RF-004, RF-005, RN-012 — recuperacao e alteracao de senha."""
 
+from app.core.security import SESSION_REVOKED_DETAIL
+from app.models.audit_log import AuditLog
+from app.models.user import User
+
 
 def test_request_reset_for_existing_email_returns_dev_token(client):
     client.post(
@@ -78,6 +82,57 @@ def test_confirm_reset_rejects_weak_password_and_does_not_consume_the_token(clie
         json={"token": token, "new_password": "SenhaForte123!"},
     )
     assert strong.status_code == 200
+
+
+def test_confirm_reset_revokes_any_active_session(client_factory):
+    # Auditoria de hardening (2026-09): se a conta estava comprometida
+    # (sessao ativa de um atacante), o reset por e-mail deve encerra-la na
+    # hora, em vez de deixa-la valer ate expirar sozinha. `device_a` e a
+    # sessao que existia antes do reset (poderia ser o atacante ou so outro
+    # dispositivo do proprio dono); `device_b` simula abrir o link de reset
+    # (mesmo criterio de "dispositivo diferente" de test_single_active_session.py).
+    device_a = client_factory()
+    device_b = client_factory()
+    email = "reset.revoke@example.com"
+
+    device_a.post(
+        "/api/v1/auth/register", json={"name": "Ana", "email": email, "password": "SenhaAntiga123!"}
+    )
+    device_a.post("/api/v1/auth/login", json={"email": email, "password": "SenhaAntiga123!"})
+    assert device_a.get("/api/v1/auth/me").status_code == 200
+
+    token = device_b.post("/api/v1/auth/password-reset/request", json={"email": email}).json()[
+        "dev_token"
+    ]
+    confirm = device_b.post(
+        "/api/v1/auth/password-reset/confirm",
+        json={"token": token, "new_password": "SenhaNova123!"},
+    )
+    assert confirm.status_code == 200
+
+    resp = device_a.get("/api/v1/auth/me")
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == SESSION_REVOKED_DETAIL
+
+
+def test_confirm_reset_records_audit_event_with_the_users_id(client, db_session):
+    email = "reset.audit@example.com"
+    client.post(
+        "/api/v1/auth/register", json={"name": "Ana", "email": email, "password": "SenhaAntiga123!"}
+    )
+    token = client.post("/api/v1/auth/password-reset/request", json={"email": email}).json()[
+        "dev_token"
+    ]
+    client.post(
+        "/api/v1/auth/password-reset/confirm",
+        json={"token": token, "new_password": "SenhaNova123!"},
+    )
+
+    user = db_session.query(User).filter(User.email == email).one()
+    events = db_session.query(AuditLog).filter(AuditLog.action == "user.password_reset_completed").all()
+    assert len(events) == 1
+    assert events[0].entity_id == user.id
+    assert events[0].user_id == user.id
 
 
 def test_confirm_reset_with_invalid_token_is_rejected(client):
