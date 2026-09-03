@@ -27,6 +27,7 @@ import { StageConversionChart } from "@/components/stage-conversion-chart";
 import { FunnelEvolutionChart } from "@/components/funnel-evolution-chart";
 import { FunnelByChannelTable } from "@/components/funnel-by-channel-table";
 import { InsightsPanel } from "@/components/insights-panel";
+import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
 
 async function fetchSnapshots(id: string): Promise<FunnelSnapshot[]> {
   return api.get<FunnelSnapshot[]>(`/api/v1/organizations/${id}/funnel-snapshots`);
@@ -184,15 +185,21 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <DateRangeFilter value={range} onChange={setRange} />
-        <SegmentedControl
-          value={view}
-          onChange={setView}
-          ariaLabel={t("viewToggleLabel")}
-          options={[
-            { value: "aggregated", label: t("viewAggregated") },
-            { value: "by_channel", label: t("viewByChannel") },
-          ]}
-        />
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          <SegmentedControl
+            value={view}
+            onChange={setView}
+            ariaLabel={t("viewToggleLabel")}
+            options={[
+              { value: "aggregated", label: t("viewAggregated") },
+              { value: "by_channel", label: t("viewByChannel") },
+            ]}
+          />
+          <GeneratePdfReportButton
+            path={`/api/v1/organizations/${organizationId}/reports/funnel/pdf?date_from=${range.dateFrom}&date_to=${range.dateTo}`}
+            label={t("generatePdfReport")}
+          />
+        </div>
       </div>
 
       {error && (
