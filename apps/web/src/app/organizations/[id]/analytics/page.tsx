@@ -29,6 +29,7 @@ import { InsightsPanel } from "@/components/insights-panel";
 import { TargetsPanel } from "@/components/targets-panel";
 import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
 import { CorrelationPanel } from "@/components/correlation-panel";
+import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
 import { computeExecutiveInsights } from "@/lib/insights";
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
@@ -393,12 +394,22 @@ export default function AnalyticsPage() {
           <IconTrendingUp className="h-4 w-4 text-slate-400" />
           <h2 className={sectionTitle}>{t("monthlyEvolutionTitle")}</h2>
         </div>
-        {series && (
-          <button type="button" onClick={handleExportSeries} className={`${buttonSecondary} px-3 py-1.5 text-xs`}>
-            <IconDownload className="h-3.5 w-3.5" />
-            {t("exportCsv")}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {series && (
+            <button
+              type="button"
+              onClick={handleExportSeries}
+              className={`${buttonSecondary} px-3 py-1.5 text-xs`}
+            >
+              <IconDownload className="h-3.5 w-3.5" />
+              {t("exportCsv")}
+            </button>
+          )}
+          <GeneratePdfReportButton
+            path={`/api/v1/organizations/${id}/reports/executive/pdf?date_from=${range.dateFrom}&date_to=${range.dateTo}`}
+            label={t("generatePdfReport")}
+          />
+        </div>
       </div>
 
       {loading ? (

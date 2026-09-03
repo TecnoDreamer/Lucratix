@@ -13,12 +13,24 @@ from sqlalchemy.orm import Session
 from app.core.audit import record_audit
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, require_role
+from app.models.campaign import Campaign
 from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.membership import MembershipRole
-from app.modules.analytics.date_ranges import month_end, months_between, previous_equivalent_range
+from app.models.target import TargetMetric
+from app.modules.analytics.date_ranges import (
+    month_end,
+    months_between,
+    previous_equivalent_range,
+)
 from app.modules.analytics.funnel_analytics import compute_stage_conversions, stage_values
 from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
-from app.modules.analytics.service import aggregate_funnels, compute_dashboard_metrics
+from app.modules.analytics.service import (
+    aggregate_financials,
+    aggregate_funnels,
+    compute_dashboard_metrics,
+    compute_monthly_series,
+)
+from app.modules.analytics.targets_service import aggregate_target_progress
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
@@ -26,7 +38,9 @@ from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
 from app.modules.organizations import repository as organizations_repository
 from app.modules.reports.basic_pdf import build_basic_report
+from app.modules.reports.executive_pdf import ChannelMarketingReportData, build_executive_report
 from app.modules.reports.funnel_pdf import ChannelReportData, build_funnel_report
+from app.modules.targets import repository as targets_repository
 from app.schemas.metrics import DashboardRead, MetricResultRead, PeriodComparisonRead
 from app.schemas.organization import OrganizationRead
 from app.schemas.report import BasicReportRead
@@ -129,6 +143,111 @@ def get_basic_report_pdf(
     db.commit()
 
     filename = f"relatorio_{period.isoformat()}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/executive/pdf")
+def get_executive_report_pdf(
+    date_from: date,
+    date_to: date,
+    # Mesma permissao de /analytics/executive — e o mesmo dado, so que em
+    # PDF, nao um nivel de acesso novo (backlog da PR4, mesmo criterio de
+    # /reports/basic/pdf e /reports/funnel/pdf).
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Relatorio da Visao Executiva (Analytics) em PDF, gerado no servidor —
+    backlog da PR4 (ver docs/reports/PR4_INVENTARIO.md). So compoe dado ja
+    calculado pelas mesmas funcoes de /analytics/executive, /executive/series,
+    /executive/targets, /marketing e /marketing/by-channel — nenhuma regra de
+    negocio nova aqui. Correlacao e Funil ficam de fora (ver executive_pdf.py).
+    """
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from nao pode ser posterior a date_to",
+        )
+
+    organization = organizations_repository.get_organization(db, ctx.organization_id)
+    assert organization is not None
+
+    financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, date_from, date_to
+    )
+    funnels = funnels_repository.list_funnel_snapshots_in_range(db, ctx.organization_id, date_from, date_to)
+    current_metrics = compute_dashboard_metrics(aggregate_financials(financials), aggregate_funnels(funnels))
+
+    previous_date_from, previous_date_to = previous_equivalent_range(date_from, date_to)
+    previous_financials = financials_repository.list_financial_periods_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_funnels = funnels_repository.list_funnel_snapshots_in_range(
+        db, ctx.organization_id, previous_date_from, previous_date_to
+    )
+    previous_metrics = compute_dashboard_metrics(
+        aggregate_financials(previous_financials), aggregate_funnels(previous_funnels)
+    )
+
+    monthly = compute_monthly_series(date_from, date_to, financials, funnels)
+    monthly_series = [(point.period, point.metrics) for point in monthly]
+
+    targets = targets_repository.list_targets_in_range(db, ctx.organization_id, date_from, date_to)
+    revenue_target_progress = aggregate_target_progress(
+        TargetMetric.REVENUE, targets, current_metrics["revenue"].value
+    ).percent_of_target
+    profit_target_progress = aggregate_target_progress(
+        TargetMetric.PROFIT, targets, current_metrics["profit"].value
+    ).percent_of_target
+
+    campaigns = marketing_repository.list_campaigns_in_range(db, ctx.organization_id, date_from, date_to)
+    marketing = compute_marketing_metrics(aggregate_campaigns(campaigns))
+
+    campaigns_by_channel: dict[uuid.UUID, list[Campaign]] = defaultdict(list)
+    for campaign in campaigns:
+        campaigns_by_channel[campaign.channel_id].append(campaign)
+    channels_by_id = marketing_repository.get_channels_by_ids(
+        db, ctx.organization_id, set(campaigns_by_channel.keys())
+    )
+    channels = []
+    for channel_id, channel_campaigns in campaigns_by_channel.items():
+        channel = channels_by_id.get(channel_id)
+        channels.append(
+            ChannelMarketingReportData(
+                channel_name=channel.name if channel else "Canal removido",
+                metrics=compute_marketing_metrics(aggregate_campaigns(channel_campaigns)),
+            )
+        )
+    channels.sort(key=lambda c: c.channel_name)
+
+    pdf_bytes = build_executive_report(
+        organization_name=organization.name,
+        date_from=date_from,
+        date_to=date_to,
+        generated_at=datetime.now(UTC),
+        current_metrics=current_metrics,
+        previous_metrics=previous_metrics,
+        monthly_series=monthly_series,
+        revenue_target_progress=revenue_target_progress,
+        profit_target_progress=profit_target_progress,
+        marketing=marketing,
+        campaign_count=len(campaigns),
+        channels=channels,
+    )
+
+    record_audit(
+        db,
+        action="report.executive_pdf.downloaded",
+        entity="report",
+        user_id=ctx.user.id,
+        organization_id=ctx.organization_id,
+    )
+    db.commit()
+
+    filename = f"relatorio_executivo_{date_from.isoformat()}_{date_to.isoformat()}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

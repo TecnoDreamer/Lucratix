@@ -495,6 +495,15 @@ describe("AnalyticsPage", () => {
     expect(content).toContain("2026-07-01,50000");
   });
 
+  it("mostra o botão de baixar relatório em PDF (PR4)", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Baixar relatório em PDF/ })).toBeInTheDocument();
+    });
+  });
+
   it("mostra o progresso da meta de receita no card do KPI", async () => {
     mockApiByUrl({
       targets: {
