@@ -38,6 +38,23 @@ const EXPERIMENT: Experiment = {
   ],
 };
 
+// Roteia por URL (não por ordem de chamada) — necessário porque o
+// componente busca /result tanto no carregamento inicial (PR pós-PR4,
+// gráfico de comparação de variantes) quanto depois de editar uma
+// variante; um mock por ordem de chamada quebraria ao adicionar a busca
+// inicial.
+function mockApiGet(experiments: Experiment[], results: Record<string, ExperimentResult> = {}) {
+  vi.mocked(api.get).mockImplementation((path: string) => {
+    if (path.endsWith("/experiments")) return Promise.resolve(experiments);
+    const match = /\/experiments\/([^/]+)\/result$/.exec(path);
+    if (match) {
+      const result = results[match[1]];
+      return result ? Promise.resolve(result) : Promise.reject(new Error(`sem resultado mockado: ${path}`));
+    }
+    return Promise.reject(new Error(`caminho inesperado: ${path}`));
+  });
+}
+
 function fakeResult(isSignificant: boolean | null): ExperimentResult {
   return {
     variants: [
@@ -75,9 +92,8 @@ describe("ExperimentsPage", () => {
   });
 
   it("atualizar uma variante busca o resultado e mostra o badge de significância (significativo)", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce([EXPERIMENT]);
+    mockApiGet([EXPERIMENT], { "exp-1": fakeResult(true) });
     vi.mocked(api.patch).mockResolvedValue(undefined);
-    vi.mocked(api.get).mockResolvedValueOnce(fakeResult(true));
 
     render(<ExperimentsPage />);
     await screen.findByText("Botão verde converte mais");
@@ -102,9 +118,8 @@ describe("ExperimentsPage", () => {
   });
 
   it("badge mostra 'não significativo' quando o p-valor está acima do limiar", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce([EXPERIMENT]);
+    mockApiGet([EXPERIMENT], { "exp-1": fakeResult(false) });
     vi.mocked(api.patch).mockResolvedValue(undefined);
-    vi.mocked(api.get).mockResolvedValueOnce(fakeResult(false));
 
     render(<ExperimentsPage />);
     await screen.findByText("Botão verde converte mais");
@@ -114,9 +129,8 @@ describe("ExperimentsPage", () => {
   });
 
   it("sem amostra suficiente, nenhum badge de significância aparece", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce([EXPERIMENT]);
+    mockApiGet([EXPERIMENT], { "exp-1": fakeResult(null) });
     vi.mocked(api.patch).mockResolvedValue(undefined);
-    vi.mocked(api.get).mockResolvedValueOnce(fakeResult(null));
 
     render(<ExperimentsPage />);
     await screen.findByText("Botão verde converte mais");
@@ -124,6 +138,17 @@ describe("ExperimentsPage", () => {
 
     await screen.findByText("Nenhuma variante em vantagem indicada.");
     expect(screen.queryByText(/p=/)).not.toBeInTheDocument();
+  });
+
+  it("busca o resultado de todos os experimentos no carregamento inicial e mostra o gráfico de conversão por variante", async () => {
+    mockApiGet([EXPERIMENT], { "exp-1": fakeResult(true) });
+
+    render(<ExperimentsPage />);
+    await screen.findByText("Botão verde converte mais");
+
+    // Sem nenhuma edição de variante — o resultado já veio do load inicial.
+    expect(await screen.findByRole("img", { name: "Taxa de conversão por variante" })).toBeInTheDocument();
+    expect(screen.getByText(/significativo \(p=0\.010\)/)).toBeInTheDocument();
   });
 
   it("cria experimento com Controle + Variante", async () => {
