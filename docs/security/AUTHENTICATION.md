@@ -47,13 +47,7 @@ Enquanto isso não é feito, o sistema continua funcionando exatamente como ante
 
 ## Rate limiting
 
-Em memória, por instância (`app/core/rate_limit.py`) — limitação conhecida documentada ali: não é compartilhado entre processos/instâncias, precisaria de um store externo (Redis) se o deploy passar a ter mais de uma réplica atrás de um load balancer.
-
-| Endpoint | Limite |
-|---|---|
-| `POST /auth/login` | 10 tentativas / 60s, por IP + e-mail alvo |
-| `POST /auth/password-reset/request` | 5 tentativas / 300s, por IP + e-mail alvo (adicionado nesta rodada — não existia; o endpoint podia ser chamado sem limite) |
-| `POST /auth/resend-verification` | 5 tentativas / 300s, por IP + e-mail alvo (mesmo raciocínio — vetor de spam contra caixa de entrada de terceiros agora que o envio de e-mail é real) |
+Ver [`docs/security/RATE_LIMITING.md`](RATE_LIMITING.md) para a arquitetura completa (3 dimensões de chave — IP isolado, conta isolada, IP+conta combinada — resolução de IP confiável, backoff, e por que o storage continua em memória). Resumo: todo endpoint sensível de `/auth` (login, registro, refresh, esqueci/redefinir senha, trocar senha, verificar/reenviar e-mail) tem rate limiting hoje, assim como convite de membro e criação administrativa de usuário.
 
 ## O que **não** existe (decisão deliberada, não lacuna esquecida)
 

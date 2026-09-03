@@ -11,13 +11,15 @@ devolve `dev_token` para o admin copiar o link e mandar manualmente.
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
+from app.core.client_ip import get_client_ip
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context, require_role
+from app.core.rate_limit import enforce_rate_limits, membership_invite_rate_limiter
 from app.models.membership import Membership, MembershipRole, role_rank
 from app.models.user import User
 from app.modules.memberships import repository
@@ -73,9 +75,19 @@ def list_memberships(
 @router.post("", status_code=status.HTTP_201_CREATED)
 def invite_member(
     data: MembershipInvite,
+    request: Request,
     ctx: OrganizationContext = Depends(require_role(MembershipRole.ORGANIZATION_ADMIN)),
     db: Session = Depends(get_db),
 ) -> MembershipWithUserRead:
+    # RNF-005: ja exige sessao autenticada + papel elevado, mas sem limite
+    # nenhum contra abuso de convite em massa (ex.: sessao de admin
+    # comprometida criando dezenas de contas) — ver core/rate_limit.py.
+    enforce_rate_limits(
+        [(membership_invite_rate_limiter, f"{get_client_ip(request)}:{ctx.user.id}")],
+        detail="Muitos convites em pouco tempo. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.membership_invite",
+    )
     _ensure_can_assign_role(ctx.role, data.role)
 
     try:

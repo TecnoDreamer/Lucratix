@@ -24,7 +24,7 @@ Fronteiras de confiança: (1) browser do usuário — não confiável; (2) Next.
 | **T**ampering | Atacante altera `organization_id` em uma requisição para acessar dado de outra empresa (IDOR/BOLA) | Filtro de `organization_id` derivado da sessão, nunca de input não validado (RNF-002); teste de integração dedicado (Fase 7) |
 | **R**epudiation | Usuário nega ter feito uma alteração de dado sensível (ex.: financeiro) | Trilha de auditoria append-only (RN-015) com usuário, ação, entidade, timestamp |
 | **I**nformation Disclosure | Vazamento de dado entre organizações; enumeração de e-mail cadastrado; dado sensível em log | RNF-002 (isolamento); RN-012 (sem enumeração); RNF-010 (logs sem dado sensível) |
-| **D**enial of Service | Força bruta em login; abuso de endpoint de cálculo de métrica | Rate limiting (RNF-005); nesta fase, sem proteção de DDoS de rede (fora do escopo do MVP, tratar na Fase 18) |
+| **D**enial of Service | Força bruta em login; **password spraying** (poucas senhas contra muitas contas, de um IP); **credential stuffing distribuído** (uma conta atacada de muitos IPs); abuso de endpoint de cálculo de métrica | Rate limiting em 3 dimensões — IP isolado, conta isolada, IP+conta combinada — ver [RATE_LIMITING.md](RATE_LIMITING.md) (RNF-005; auditoria 2026-09 corrigiu a estratégia de chave, que antes só cobria o caso combinado); nesta fase, sem proteção de DDoS de rede (fora do escopo do MVP, tratar na Fase 18) |
 | **E**levation of Privilege | `ANALYST` tenta se autopromover a `ORGANIZATION_OWNER`; usuário sem membership acessa organização | RN-009 (hierarquia de papéis, só atribui igual ou inferior ao próprio); RN-008 (membership obrigatória) |
 
 ## Risco mais crítico
