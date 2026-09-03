@@ -20,6 +20,12 @@ dependencies = [
     # planilha). Cobre leitura E escrita, entao serve tanto o import
     # quanto o export.
     "openpyxl>=3.1",
+    # Relatorio em PDF server-side (Funil, 2026-09-02) — decisao confirmada
+    # com o usuario (server-side, Python). ReportLab e pip-instalavel sem
+    # nenhuma biblioteca de sistema (ao contrario de WeasyPrint, que exige
+    # Pango/Cairo/GDK-PixBuf na imagem Docker) — mesmo criterio ja usado
+    # para escolher openpyxl no lugar de pandas acima.
+    "reportlab>=4.2",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +38,9 @@ dev = [
     "mypy>=1.13",
     "bandit>=1.7",
     "pip-audit>=2.7",
+    # So para os testes lerem/conferirem o texto de dentro do PDF gerado
+    # (app/modules/reports/pdf_builder.py) — nunca usado em producao.
+    "pypdf>=5.0",
 ]
 
 [build-system]
