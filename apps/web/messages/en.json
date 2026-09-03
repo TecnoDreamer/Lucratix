@@ -108,6 +108,10 @@
       "month": "Month",
       "value": "Value",
       "noDataCell": "no data"
+    },
+    "generatePdfReportButton": {
+      "generating": "Generating PDF...",
+      "error": "Could not generate the PDF report."
     }
   },
   "workspace": {
@@ -702,7 +706,8 @@
       "evolutionChartTitle": "Temporal evolution",
       "evolutionStageLabel": "Stage:",
       "emptyByChannelTitle": "No channel has funnel data in this period.",
-      "channelSummary": "Leads: {leads} · Customers: {customers}"
+      "channelSummary": "Leads: {leads} · Customers: {customers}",
+      "generatePdfReport": "Generate PDF report"
     }
   },
   "products": {

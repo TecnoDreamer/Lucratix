@@ -108,6 +108,10 @@
       "month": "Mes",
       "value": "Valor",
       "noDataCell": "sin dato"
+    },
+    "generatePdfReportButton": {
+      "generating": "Generando PDF...",
+      "error": "No fue posible generar el informe en PDF."
     }
   },
   "workspace": {
@@ -702,7 +706,8 @@
       "evolutionChartTitle": "Evolución temporal",
       "evolutionStageLabel": "Etapa:",
       "emptyByChannelTitle": "Ningún canal tiene datos de embudo en este período.",
-      "channelSummary": "Leads: {leads} · Clientes: {customers}"
+      "channelSummary": "Leads: {leads} · Clientes: {customers}",
+      "generatePdfReport": "Generar informe PDF"
     }
   },
   "products": {
