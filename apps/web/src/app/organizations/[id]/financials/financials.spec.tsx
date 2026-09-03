@@ -52,7 +52,10 @@ describe("FinancialsPage", () => {
 
     render(<FinancialsPage />);
 
-    expect(await screen.findByText("41,9%")).toBeInTheDocument();
+    // Aparece na tabela e (de novo, sr-only) na tabela alternativa do
+    // gráfico de evolução de margem (PR4) — mesmo dado, duas representações.
+    const matches = await screen.findAllByText("41,9%");
+    expect(matches.length).toBeGreaterThan(0);
     expect(screen.queryByText("41.9%")).not.toBeInTheDocument();
   });
 
@@ -63,6 +66,26 @@ describe("FinancialsPage", () => {
 
     await screen.findByText("2026-06-01");
     expect(screen.getAllByText("não aplicável").length).toBeGreaterThan(0);
+  });
+
+  it("mostra o gráfico de evolução de receita/lucro/margem (PR4)", async () => {
+    vi.mocked(api.get).mockResolvedValue([PERIOD]);
+
+    render(<FinancialsPage />);
+
+    await screen.findByText("2026-06-01");
+    expect(screen.getByRole("img", { name: "Receita — evolução mensal" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Lucro — evolução mensal" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Margem — evolução mensal" })).toBeInTheDocument();
+  });
+
+  it("não mostra o gráfico de evolução sem nenhum período", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    render(<FinancialsPage />);
+
+    await screen.findByText("Nenhum período financeiro registrado ainda.");
+    expect(screen.queryByRole("img", { name: "Receita — evolução mensal" })).not.toBeInTheDocument();
   });
 
   it("erro 401 redireciona para login", async () => {

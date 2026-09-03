@@ -14,6 +14,20 @@ def format_integer(value: float) -> str:
     return f"{round(value):,}".replace(",", ".")
 
 
+def format_decimal(value: float, *, max_fraction_digits: int = 2) -> str:
+    """1234567.891 -> "1.234.567,89" (separador de milhar com ponto, decimal
+    com vírgula, até `max_fraction_digits` casas, casas finais só-zero
+    suprimidas — mesma convencao de `formatDecimal` em lib/formatters.ts,
+    usada pelas metricas monetarias/de razao do relatorio basico: revenue,
+    profit, cac, average_ticket, roas, cpc, cpm, cpl, cpa nao sao percentual
+    nem contagem inteira, entao nem format_integer nem format_percentage
+    serve pra elas)."""
+    formatted = f"{value:,.{max_fraction_digits}f}"
+    if "." in formatted:
+        formatted = formatted.rstrip("0").rstrip(".")
+    return formatted.replace(",", "\x00").replace(".", ",").replace("\x00", ".")
+
+
 def format_percentage(value: float, *, signed: bool = False) -> str:
     """0.267 -> "26,7%" (multiplica por 100, 1 casa decimal, virgula —
     mesma convencao de `formatPercentage` em lib/formatters.ts). `signed`

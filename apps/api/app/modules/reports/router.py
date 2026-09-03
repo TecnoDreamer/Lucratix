@@ -15,8 +15,9 @@ from app.core.database import get_db
 from app.core.deps import OrganizationContext, require_role
 from app.models.funnel_snapshot import FunnelSnapshot
 from app.models.membership import MembershipRole
-from app.modules.analytics.date_ranges import months_between, previous_equivalent_range
+from app.modules.analytics.date_ranges import month_end, months_between, previous_equivalent_range
 from app.modules.analytics.funnel_analytics import compute_stage_conversions, stage_values
+from app.modules.analytics.marketing_service import aggregate_campaigns, compute_marketing_metrics
 from app.modules.analytics.service import aggregate_funnels, compute_dashboard_metrics
 from app.modules.baselines import repository as baselines_repository
 from app.modules.financials import repository as financials_repository
@@ -24,6 +25,7 @@ from app.modules.funnels import repository as funnels_repository
 from app.modules.marketing import repository as marketing_repository
 from app.modules.metrics.engine import compare_periods
 from app.modules.organizations import repository as organizations_repository
+from app.modules.reports.basic_pdf import build_basic_report
 from app.modules.reports.funnel_pdf import ChannelReportData, build_funnel_report
 from app.schemas.metrics import DashboardRead, MetricResultRead, PeriodComparisonRead
 from app.schemas.organization import OrganizationRead
@@ -71,6 +73,66 @@ def get_basic_report(
         dashboard=dashboard,
         revenue_vs_baseline=revenue_vs_baseline,
         profit_vs_baseline=profit_vs_baseline,
+    )
+
+
+@router.get("/basic/pdf")
+def get_basic_report_pdf(
+    period: date,
+    # Mesma permissao de /reports/basic — e o mesmo dado, so que em PDF, nao
+    # um nivel de acesso novo (PR4, mesmo criterio da PR3).
+    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Relatorio Basico (RF-026) em PDF, gerado no servidor — PR4 (adocao do
+    padrao de PDF da PR3 em outra tela, ver docs/reports/PR4_INVENTARIO.md).
+    So compoe dado ja calculado pelas mesmas funcoes de /reports/basic e
+    /analytics/marketing — nenhuma regra de negocio nova aqui.
+    """
+    organization = organizations_repository.get_organization(db, ctx.organization_id)
+    assert organization is not None
+
+    financial = financials_repository.get_financial_period(db, ctx.organization_id, period)
+    funnel = funnels_repository.get_funnel_snapshot(db, ctx.organization_id, period)
+    dashboard = compute_dashboard_metrics(financial, funnel)
+
+    baseline = baselines_repository.get_current_baseline(db, ctx.organization_id)
+    revenue_vs_baseline = None
+    profit_vs_baseline = None
+    if baseline is not None:
+        revenue_vs_baseline = compare_periods(baseline.revenue, dashboard["revenue"].value)
+        profit_vs_baseline = compare_periods(baseline.profit, dashboard["profit"].value)
+
+    campaigns = marketing_repository.list_campaigns_in_range(
+        db, ctx.organization_id, period, month_end(period)
+    )
+    marketing = compute_marketing_metrics(aggregate_campaigns(campaigns))
+
+    pdf_bytes = build_basic_report(
+        organization_name=organization.name,
+        period=period,
+        generated_at=datetime.now(UTC),
+        dashboard=dashboard,
+        revenue_vs_baseline=revenue_vs_baseline,
+        profit_vs_baseline=profit_vs_baseline,
+        marketing=marketing,
+        campaign_count=len(campaigns),
+    )
+
+    record_audit(
+        db,
+        action="report.basic_pdf.downloaded",
+        entity="report",
+        user_id=ctx.user.id,
+        organization_id=ctx.organization_id,
+    )
+    db.commit()
+
+    filename = f"relatorio_{period.isoformat()}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

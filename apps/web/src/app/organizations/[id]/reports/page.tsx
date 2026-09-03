@@ -15,6 +15,7 @@ import {
 import { buttonSecondary, input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
 import { IconFileText } from "@/components/icons";
+import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
 import type { Organization } from "@/lib/types";
 
 interface BasicReport {
@@ -154,6 +155,15 @@ export default function ReportPage() {
           </button>
         </div>
       </div>
+
+      {report && (
+        <div className="mt-3 print:hidden">
+          <GeneratePdfReportButton
+            path={`/api/v1/organizations/${id}/reports/basic/pdf?period=${period}`}
+            label={t("generatePdfReport")}
+          />
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 print:hidden">
