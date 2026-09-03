@@ -5,12 +5,18 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import type { Experiment, ExperimentResult } from "@/lib/business";
+import { formatPercentage } from "@/lib/formatters";
 import { buttonPrimary, buttonSecondary, input, label, select as selectClass, sectionTitle } from "@/lib/ui";
 import { Alert, Badge, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconFlask } from "@/components/icons";
+import { ChannelBarChart, type ChannelBarChartDatum } from "@/components/channel-bar-chart";
 
 async function fetchExperiments(id: string): Promise<Experiment[]> {
   return api.get<Experiment[]>(`/api/v1/organizations/${id}/experiments`);
+}
+
+async function fetchResult(id: string, experimentId: string): Promise<ExperimentResult> {
+  return api.get<ExperimentResult>(`/api/v1/organizations/${id}/experiments/${experimentId}/result`);
 }
 
 const STATUS_TONE: Record<string, string> = {
@@ -38,8 +44,32 @@ export default function ExperimentsPage() {
   useEffect(() => {
     let cancelled = false;
     fetchExperiments(id)
-      .then((result) => {
-        if (!cancelled) setExperiments(result);
+      .then((fetched) => {
+        if (cancelled) return;
+        setExperiments(fetched);
+        setLoading(false);
+        // Busca o resultado de todos os experimentos já no carregamento
+        // inicial (PR pós-PR4, gráfico de conversão por variante) — antes,
+        // `results` só era preenchido depois de editar uma variante, e o
+        // gráfico nunca apareceria numa primeira visita à tela. Roda depois
+        // de `setLoading(false)`, sem bloquear a lista principal por causa
+        // dela; falhas individuais (ex.: experimento recém-criado, sem dado
+        // ainda) não devem quebrar as demais — cada busca é independente.
+        void Promise.all(
+          fetched.map(async (exp) => {
+            try {
+              return [exp.id, await fetchResult(id, exp.id)] as const;
+            } catch {
+              return null;
+            }
+          })
+        ).then((entries) => {
+          if (cancelled) return;
+          const resultsById = Object.fromEntries(
+            entries.filter((e): e is readonly [string, ExperimentResult] => e !== null)
+          );
+          setResults((prev) => ({ ...prev, ...resultsById }));
+        });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -48,9 +78,7 @@ export default function ExperimentsPage() {
           return;
         }
         setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -92,9 +120,7 @@ export default function ExperimentsPage() {
         `/api/v1/organizations/${id}/experiments/${experimentId}/variants/${variantId}`,
         { sample_size: sampleSize ? Number(sampleSize) : null, conversions: conversions ? Number(conversions) : null }
       );
-      const result = await api.get<ExperimentResult>(
-        `/api/v1/organizations/${id}/experiments/${experimentId}/result`
-      );
+      const result = await fetchResult(id, experimentId);
       setResults((prev) => ({ ...prev, [experimentId]: result }));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("variantUpdateError"));
@@ -156,14 +182,29 @@ export default function ExperimentsPage() {
                     </div>
 
                     {result && (
-                      <div className="mt-3 rounded-lg bg-blue-50 p-3 text-xs text-blue-900 dark:bg-blue-500/10 dark:text-blue-200">
-                        <p className="font-medium">
-                          {result.leading_variant_name
-                            ? t("leadingVariant", { name: result.leading_variant_name })
-                            : t("noLeadingVariant")}
-                        </p>
-                        <p className="mt-1 text-blue-800/80 dark:text-blue-200/80">{result.note}</p>
-                      </div>
+                      <>
+                        <div className="mt-3">
+                          <ChannelBarChart
+                            data={result.variants.map(
+                              (v): ChannelBarChartDatum => ({
+                                key: v.name,
+                                label: v.name,
+                                value: v.conversion_rate.is_applicable ? v.conversion_rate.value : null,
+                              })
+                            )}
+                            valueFormatter={formatPercentage}
+                            label={t("conversionRateByVariant")}
+                          />
+                        </div>
+                        <div className="mt-3 rounded-lg bg-blue-50 p-3 text-xs text-blue-900 dark:bg-blue-500/10 dark:text-blue-200">
+                          <p className="font-medium">
+                            {result.leading_variant_name
+                              ? t("leadingVariant", { name: result.leading_variant_name })
+                              : t("noLeadingVariant")}
+                          </p>
+                          <p className="mt-1 text-blue-800/80 dark:text-blue-200/80">{result.note}</p>
+                        </div>
+                      </>
                     )}
                   </Card>
                 </li>

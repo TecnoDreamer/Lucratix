@@ -1114,6 +1114,7 @@
     "significant": "significativo",
     "notSignificant": "não significativo",
     "sampleSizePlaceholder": "Amostra",
-    "conversionsPlaceholder": "Conversões"
+    "conversionsPlaceholder": "Conversões",
+    "conversionRateByVariant": "Taxa de conversão por variante"
   }
 }

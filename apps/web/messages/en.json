@@ -1114,6 +1114,7 @@
     "significant": "significant",
     "notSignificant": "not significant",
     "sampleSizePlaceholder": "Sample",
-    "conversionsPlaceholder": "Conversions"
+    "conversionsPlaceholder": "Conversions",
+    "conversionRateByVariant": "Conversion rate by variant"
   }
 }
