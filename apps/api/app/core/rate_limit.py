@@ -160,10 +160,16 @@ email_verification_account_rate_limiter = RateLimiter(max_attempts=5, window_sec
 # ainda (registro), ou quando o token/sessao ja e a defesa principal e isto
 # e so defesa em profundidade (confirmacao de reset/verificacao).
 # ---------------------------------------------------------------------------
-# /auth/register: sem conta pra isolar antes de criar uma — so IP. 10/300s
-# e generoso o bastante pra uma familia/escritorio cadastrando varias contas
-# reais, e baixo o bastante pra dificultar criacao de contas em massa.
-register_ip_rate_limiter = RateLimiter(max_attempts=10, window_seconds=300)
+# /auth/register: sem conta pra isolar antes de criar uma — so IP. Um IP
+# compartilhado pode legitimamente gerar rajadas bem maiores do que se
+# imaginaria (escritorio/evento de onboarding cadastrando varias pessoas
+# de uma vez; a propria suite e2e deste projeto, rodando contra a mesma
+# API, faz dezenas de cadastros em minutos — foi exatamente esse caso que
+# corrigiu o valor inicial de 10, baixo demais mesmo pra uso legitimo).
+# 100/300s ainda corta um script automatizado em ordens de grandeza (um
+# atacante sem limite tentaria muito mais que isso por segundo), sem
+# bloquear nenhum uso real observado.
+register_ip_rate_limiter = RateLimiter(max_attempts=100, window_seconds=300)
 # /auth/password-reset/confirm: o token opaco (256 bits) ja torna forca
 # bruta offline inviavel — isto e so defesa em profundidade contra um
 # script tentando tokens/chamando o endpoint em volume.
