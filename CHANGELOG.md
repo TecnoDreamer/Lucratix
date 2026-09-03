@@ -21,6 +21,7 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 - Botão "Gerar relatório PDF" (`GeneratePdfReportButton`, componente reutilizável) na
   seção "Análise do Funil".
   Ver `docs/reports/PDF_INFRAESTRUTURA.md`/`FUNIL_PDF.md`.
+  [#112](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/112)
 
 ## 2026-09-02
 
