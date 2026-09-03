@@ -12,14 +12,27 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
+from app.core.client_ip import get_client_ip
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.password_policy import describe_missing_requirements, missing_requirements
 from app.core.rate_limit import (
+    change_password_account_rate_limiter,
+    email_verification_account_rate_limiter,
+    email_verification_ip_rate_limiter,
     email_verification_rate_limiter,
+    enforce_rate_limits,
+    login_account_rate_limiter,
+    login_ip_rate_limiter,
     login_rate_limiter,
+    password_reset_account_rate_limiter,
+    password_reset_confirm_ip_rate_limiter,
+    password_reset_ip_rate_limiter,
     password_reset_rate_limiter,
+    refresh_ip_rate_limiter,
+    register_ip_rate_limiter,
+    verify_email_ip_rate_limiter,
 )
 from app.core.security import (
     SESSION_REVOKED_DETAIL,
@@ -111,7 +124,15 @@ def _set_auth_cookies(response: Response, db: Session, user: User) -> None:
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(data: UserRegister, db: Session = Depends(get_db)) -> dict[str, str]:
+def register(data: UserRegister, request: Request, db: Session = Depends(get_db)) -> dict[str, str]:
+    # RNF-005: sem conta pra isolar antes de existir — so por IP, contra
+    # criacao de conta em massa/automacao (ver core/rate_limit.py).
+    enforce_rate_limits(
+        [(register_ip_rate_limiter, get_client_ip(request))],
+        detail="Muitas tentativas de cadastro. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.register",
+    )
     _enforce_password_policy(data.password)
     created, raw_token = register_user(db, data)
     if created:
@@ -136,20 +157,31 @@ def register(data: UserRegister, db: Session = Depends(get_db)) -> dict[str, str
 def login(
     data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)
 ) -> UserRead:
-    # RNF-005: limita tentativas por IP + e-mail alvo, para nao permitir
-    # que um IP unico faca forca bruta distribuida entre varias contas
-    # nem que um unico e-mail seja atacado a partir de varios IPs sem limite.
-    client_host = request.client.host if request.client else "unknown"
-    rate_limit_key = f"{client_host}:{data.email}"
-    if not login_rate_limiter.check(rate_limit_key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Muitas tentativas de login. Tente novamente em instantes.",
-        )
+    # RNF-005: 3 dimensoes independentes — IP isolado (trava spray: poucas
+    # senhas contra muitas contas do mesmo IP), conta isolada (trava
+    # stuffing distribuido: uma conta atacada de muitos IPs) e a combinacao
+    # IP+conta (mais apertada, cobre o caso comum de usuario legitimo
+    # errando a propria senha). Ver core/rate_limit.py — chave unica
+    # IP:conta sozinha nao bloqueia nenhum dos dois primeiros casos.
+    client_ip = get_client_ip(request)
+    enforce_rate_limits(
+        [
+            (login_ip_rate_limiter, client_ip),
+            (login_account_rate_limiter, data.email),
+            (login_rate_limiter, f"{client_ip}:{data.email}"),
+        ],
+        detail="Muitas tentativas de login. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.login",
+    )
 
     user = authenticate_user(db, data.email, data.password)
     if user is None:
-        # Mensagem generica: nao diferencia "email inexistente" de "senha incorreta" (RF-002).
+        # Mensagem generica: nao diferencia "email inexistente" de "senha
+        # incorreta" (RF-002). Sem entity_id/PII no audit — o volume de
+        # eventos ja e o sinal util pra detectar abuso, nao "quem" (RN-012).
+        record_audit(db, action="user.login_failed", entity="user")
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais invalidas"
         )
@@ -161,6 +193,7 @@ def login(
 
 @router.post("/refresh")
 def refresh(
+    request: Request,
     response: Response,
     refresh_token: str | None = Cookie(default=None),
     db: Session = Depends(get_db),
@@ -175,6 +208,15 @@ def refresh(
     refresh_token assinado e nao-expirado nao basta se a sessao foi revogada
     por um login em outro dispositivo.
     """
+    # RNF-005: risco menor que login (ja exige refresh_token valido + sessao
+    # nao revogada), mas sem nenhum limite antes desta rodada — generoso de
+    # proposito (clientes legitimos chamam isto automaticamente).
+    enforce_rate_limits(
+        [(refresh_ip_rate_limiter, get_client_ip(request))],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.refresh",
+    )
     if refresh_token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Sessao invalida ou expirada"
@@ -222,6 +264,9 @@ def logout(
         try:
             payload = decode_token(access_token, TokenType.ACCESS)
             revoke_session(db, payload.session_id)
+            record_audit(
+                db, action="user.logout", entity="user", entity_id=payload.user_id, user_id=payload.user_id
+            )
             db.commit()
         except InvalidTokenError:
             pass
@@ -259,15 +304,20 @@ _RESET_REQUEST_MESSAGE = (
 def request_password_reset_route(
     data: PasswordResetRequest, request: Request, db: Session = Depends(get_db)
 ) -> dict[str, str]:
-    # RNF-005: mesmo raciocinio do rate limit de login (IP + e-mail alvo) —
-    # sem isso, o endpoint vira vetor de abuso/spam (ver core/rate_limit.py).
-    client_host = request.client.host if request.client else "unknown"
-    rate_limit_key = f"{client_host}:{data.email}"
-    if not password_reset_rate_limiter.check(rate_limit_key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Muitas tentativas. Tente novamente em instantes.",
-        )
+    # RNF-005: mesmas 3 dimensoes do login (ver core/rate_limit.py) — o
+    # endpoint dispara e-mail de verdade, entao sem isso vira vetor de
+    # abuso/spam contra a caixa de entrada de terceiros.
+    client_ip = get_client_ip(request)
+    enforce_rate_limits(
+        [
+            (password_reset_ip_rate_limiter, client_ip),
+            (password_reset_account_rate_limiter, data.email),
+            (password_reset_rate_limiter, f"{client_ip}:{data.email}"),
+        ],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.password_reset_request",
+    )
 
     raw_token = request_password_reset(db, data.email)
     db.commit()
@@ -285,8 +335,17 @@ def request_password_reset_route(
 
 @router.post("/password-reset/confirm")
 def confirm_password_reset_route(
-    data: PasswordResetConfirm, db: Session = Depends(get_db)
+    data: PasswordResetConfirm, request: Request, db: Session = Depends(get_db)
 ) -> dict[str, str]:
+    # RNF-005: o token opaco (256 bits) ja torna forca bruta offline
+    # inviavel — isto e so defesa em profundidade contra um script testando
+    # tokens/chamando o endpoint em volume (ver core/rate_limit.py).
+    enforce_rate_limits(
+        [(password_reset_confirm_ip_rate_limiter, get_client_ip(request))],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.password_reset_confirm",
+    )
     _enforce_password_policy(data.new_password)
     success = confirm_password_reset(db, data.token, data.new_password)
     if not success:
@@ -303,6 +362,15 @@ def change_password_route(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
+    # RNF-005: usuario ja autenticado (sessao unica, RN-013) — o risco aqui
+    # e uma sessao comprometida testando a senha atual em loop; por conta,
+    # nao por IP (o atacante ja tem uma sessao valida de algum lugar).
+    enforce_rate_limits(
+        [(change_password_account_rate_limiter, str(current_user.id))],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.change_password",
+    )
     _enforce_password_policy(data.new_password)
     success = change_password(db, current_user, data.current_password, data.new_password)
     if not success:
@@ -322,8 +390,16 @@ def change_password_route(
 
 @router.post("/verify-email")
 def verify_email_route(
-    data: EmailVerificationConfirm, db: Session = Depends(get_db)
+    data: EmailVerificationConfirm, request: Request, db: Session = Depends(get_db)
 ) -> dict[str, str]:
+    # RNF-005: mesmo raciocinio de password-reset/confirm — o token ja e a
+    # defesa principal, isto e defesa em profundidade.
+    enforce_rate_limits(
+        [(verify_email_ip_rate_limiter, get_client_ip(request))],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.verify_email",
+    )
     success = confirm_email_verification(db, data.token)
     if not success:
         raise HTTPException(
@@ -343,16 +419,20 @@ _RESEND_VERIFICATION_MESSAGE = (
 def resend_verification_route(
     data: ResendVerificationRequest, request: Request, db: Session = Depends(get_db)
 ) -> dict[str, str]:
-    # RNF-005: mesmo raciocinio do rate limit de password-reset — sem isso,
-    # o endpoint vira vetor de spam contra a caixa de entrada de terceiros
-    # (ver core/rate_limit.py).
-    client_host = request.client.host if request.client else "unknown"
-    rate_limit_key = f"{client_host}:{data.email}"
-    if not email_verification_rate_limiter.check(rate_limit_key):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Muitas tentativas. Tente novamente em instantes.",
-        )
+    # RNF-005: mesmas 3 dimensoes do login/password-reset (ver
+    # core/rate_limit.py) — sem isso, o endpoint vira vetor de spam contra a
+    # caixa de entrada de terceiros.
+    client_ip = get_client_ip(request)
+    enforce_rate_limits(
+        [
+            (email_verification_ip_rate_limiter, client_ip),
+            (email_verification_account_rate_limiter, data.email),
+            (email_verification_rate_limiter, f"{client_ip}:{data.email}"),
+        ],
+        detail="Muitas tentativas. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.resend_verification",
+    )
 
     raw_token = resend_verification_email(db, data.email)
     db.commit()

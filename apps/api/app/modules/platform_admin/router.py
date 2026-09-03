@@ -9,13 +9,19 @@ docs/security/ACCESS_CONTROL.md.
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
+from app.core.client_ip import get_client_ip
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import require_platform_admin
+from app.core.rate_limit import (
+    enforce_rate_limits,
+    membership_invite_rate_limiter,
+    platform_user_create_rate_limiter,
+)
 from app.models.membership import Membership
 from app.models.user import User
 from app.modules.auth.service import create_user_with_reset_token
@@ -111,9 +117,18 @@ def list_organization_memberships(
 def grant_organization_access(
     organization_id: uuid.UUID,
     data: MembershipInvite,
+    request: Request,
     admin: User = Depends(require_platform_admin),
     db: Session = Depends(get_db),
 ) -> MembershipWithUserRead:
+    # RNF-005: mesmo criterio de memberships/router.py::invite_member —
+    # ver core/rate_limit.py.
+    enforce_rate_limits(
+        [(membership_invite_rate_limiter, f"{get_client_ip(request)}:{admin.id}")],
+        detail="Muitos convites em pouco tempo. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.membership_invite",
+    )
     _require_organization(db, organization_id)
     try:
         membership, user, raw_token = grant_access(
@@ -207,9 +222,18 @@ def list_users(
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 def create_user(
     data: PlatformUserCreate,
+    request: Request,
     admin: User = Depends(require_platform_admin),
     db: Session = Depends(get_db),
 ) -> PlatformUserCreateResponse:
+    # RNF-005: ja atras de require_platform_admin, mas sem limite nenhum
+    # contra criacao de conta em massa (ver core/rate_limit.py).
+    enforce_rate_limits(
+        [(platform_user_create_rate_limiter, f"{get_client_ip(request)}:{admin.id}")],
+        detail="Muitas contas criadas em pouco tempo. Tente novamente em instantes.",
+        db=db,
+        action="auth.rate_limited.platform_user_create",
+    )
     created = create_user_with_reset_token(db, name=data.name, email=data.email)
     if created is None:
         raise HTTPException(

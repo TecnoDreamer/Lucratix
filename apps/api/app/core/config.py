@@ -18,6 +18,15 @@ class Settings(BaseSettings):
 
     cookie_secure: bool = False
 
+    # Defesa contra forca bruta (docs/security/RATE_LIMITING.md): quantos
+    # hops de proxy confiavel existem na frente da API, pra `client_ip.py`
+    # saber quantas posicoes contar a partir da DIREITA de `X-Forwarded-For`.
+    # 0 (padrao) = nenhum proxy confiavel conhecido — usa so
+    # `request.client.host`, nunca um header que o proprio cliente controla.
+    # So mudar se um proxy/CDN confiavel (ex.: Cloudflare) for colocado na
+    # frente do Railway; nenhum ponto de chamada precisa mudar alem disso.
+    trusted_proxy_count: int = 0
+
     # E-mail transacional (RF-001, confirmação de conta; reaproveitado por
     # reset de senha e criação de conta por admin — ver app/core/email.py).
     # `resend_api_key=None` (padrão) mantém o comportamento de hoje (nenhuma

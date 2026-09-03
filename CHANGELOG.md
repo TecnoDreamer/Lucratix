@@ -4,6 +4,24 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Segurança — rate limiting/hardening de autenticação, PR1 de 4)
+- Corrigida a estratégia de chave do rate limiting: antes era sempre `IP:e-mail` combinada, o
+  que não bloqueava password spraying (poucas senhas contra muitas contas, 1 IP) nem credential
+  stuffing distribuído (1 conta, muitos IPs). Todo endpoint sensível agora verifica 3 dimensões
+  independentes — IP isolado, conta isolada, combinada (`app/core/rate_limit.py::enforce_rate_limits`).
+- Cobertura de rate limiting estendida a `/register`, `/refresh`, `/password-reset/confirm`,
+  `/change-password`, `/verify-email`, convite de membership e criação administrativa de usuário
+  — nenhum tinha limite antes desta rodada.
+- `app/core/client_ip.py` (novo): resolução de IP confiável — nunca aceita `X-Forwarded-For` sem
+  `TRUSTED_PROXY_COUNT` configurado explicitamente (nenhum proxy confiável hoje, Railway sem
+  réplica).
+- `RateLimiter` agora é thread-safe (`threading.Lock`) — corrige uma corrida de dados real.
+- `Retry-After` no 429; eventos de auditoria novos (`user.login_failed`, `user.logout`,
+  `auth.rate_limited.<endpoint>`).
+- Redis avaliado e **não** adicionado nesta rodada (confirmado com o usuário: produção roda
+  instância única no Railway) — decisão e gatilho de revisão documentados em
+  `docs/security/RATE_LIMITING.md` (novo, junto de `docs/security/LOGS_E_AUDITORIA.md`).
+
 ### Added (Backlog pós-PR4 — exportação de Auditoria)
 - `audit_logs` como domínio exportável (CSV/XLSX/JSON) na Central de Dados. Novo campo
   `DomainSpec.importable` (default `True`) impede que o domínio — export-only, RN-015 —
