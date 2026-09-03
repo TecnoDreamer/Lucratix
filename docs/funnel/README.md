@@ -3,15 +3,18 @@
 Documenta a evolução do Funil pedida pelo usuário em 2026-09-01/02 ("Funil Multicanal, Gráficos e Relatórios PDF"): transformar a tela de Funil — antes um formulário de 8 campos manuais por mês, sem nenhuma atribuição a canal/campanha — numa ferramenta analítica completa. Dividida em 4 PRs (ver `docs/analytics/CHART_DECISIONS.md`, entrada "Funil multicanal").
 
 - [MODELAGEM.md](MODELAGEM.md) — por que `channel_id` é uma coluna nullable em `funnel_snapshots`, não uma tabela filha nem uma view, e a armadilha de `UNIQUE`+`NULL` no Postgres.
-- [KPIS.md](KPIS.md) — as 8 etapas do funil, as 7 conversões/abandonos etapa-a-etapa, e o que ainda não é calculado (maior gargalo, qualificação automática de MQL/SQL).
+- [KPIS.md](KPIS.md) — as 8 etapas do funil, as 7 conversões/abandonos etapa-a-etapa, gargalo/insights determinísticos, a série mensal, e o que ainda não é calculado.
+- [UX.md](UX.md) — estrutura da tela, o ícone `?` reutilizável (já existia), a decisão de Recharts, e por que Fonte/Plataforma não são oferecidas como segmentação.
 
-## Escopo desta rodada (PR1 de 4)
+## Escopo por rodada
 
-Implementado: `funnel_snapshots.channel_id` (migration `0016_funnel_snapshot_channel`); `GET /analytics/funnel` (funil agregado por intervalo, com conversão/abandono etapa-a-etapa e comparação período-a-período da taxa de conversão); `GET /analytics/funnel/by-channel` (mesmo drill-down de `/analytics/marketing/by-channel`); segmentação por canal na importação/exportação de Funil (Central de Dados); 1 verbete novo no Glossário ("Taxa de Abandono").
+**PR1 — modelagem, banco, API, KPIs** ([#110](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/110)): `funnel_snapshots.channel_id` (migration `0016`); `GET /analytics/funnel` (funil agregado por intervalo, conversão/abandono etapa-a-etapa, comparação período-a-período); `GET /analytics/funnel/by-channel`; segmentação por canal na importação/exportação (Central de Dados); 1º verbete de Glossário ("Taxa de Abandono").
 
-**Fora de escopo desta rodada** (PRs seguintes do mesmo pedido):
-- **PR2** — UX do Funil (alternância agregado/segmentado, seletor de canal, comparação de período na tela), os 14 verbetes de Glossário restantes (Funil, Impressões, Visitas, Lead, MQL, SQL, Oportunidade, Cliente, Recompra, Canal, Fonte, Plataforma, Campanha, e reaproveitar "Taxa de Conversão") atrás de um ícone `?` reutilizável, adoção de **Recharts** no Funil.
+**PR2 — UX, Glossário completo, gráficos (Recharts)**: `GET /analytics/funnel/series` (evolução temporal, mesmo padrão de `/analytics/executive/series`); seção "Análise do Funil" na tela (agregado/por canal via `SegmentedControl`, extraído do padrão de botões-pílula já duplicado 2x); os 13 verbetes de Glossário restantes (categoria nova "funil", `MetricDefinition.unit`/`direction` viram opcionais para suportar conceito categórico) — "Taxa de Conversão" reaproveitada, fechando os 15 termos pedidos; `MetricHelp` (ícone `?`) usado nos novos verbetes, sem nenhum componente novo (já era não-hover-only); **Recharts** adotado (primeira exceção ao padrão SVG-artesanal — `FunnelStagesChart`, `StageConversionChart`, `FunnelEvolutionChart`, `FunnelByChannelTable`); gargalo/insights determinísticos client-side (`lib/funnel-insights.ts`).
+
+**Fora de escopo até aqui** (PRs seguintes):
 - **PR3** — infraestrutura de relatório PDF **server-side em Python**, relatório do Funil.
 - **PR4** — inventário e adoção do padrão de gráfico/PDF nas demais telas.
+- **Fonte/Plataforma como segmentação real** — não modeladas (ver `UX.md`); documentadas no Glossário como conceitos ainda não suportados, mesmo critério de honestidade de MRR/ARR.
 
-Ver também [CHART_DECISIONS.md](../analytics/CHART_DECISIONS.md) (decisão de adotar Recharts especificamente para o Funil, e PDF server-side) e [metrics-catalog.md](../analytics/metrics-catalog.md).
+Ver também [CHART_DECISIONS.md](../analytics/CHART_DECISIONS.md) (decisão de adotar Recharts, e PDF server-side) e [metrics-catalog.md](../analytics/metrics-catalog.md).

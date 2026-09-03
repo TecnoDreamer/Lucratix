@@ -274,4 +274,130 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
     direction: "lower_is_better",
     aliases: ["custo por mil", "cost per mille"],
   },
+  // Funil multicanal (RF, prompt de funil/gráficos/PDF) — conceitos
+  // categóricos, sem unit/direction (ver metric-types.ts). Ordem espelha
+  // FUNNEL_STAGES do backend (app/modules/analytics/funnel_analytics.py).
+  {
+    id: "funnel",
+    name: "Funil",
+    category: "funil",
+    shortDescription: "O caminho que o público percorre, do primeiro contato até virar cliente (e recomprar).",
+    description:
+      "Representa as etapas pelas quais o público passa, do primeiro contato com a marca até a compra — e, opcionalmente, a recompra. Neste sistema o funil tem 8 etapas fixas, sempre na mesma ordem: Impressões → Visitas → Leads → MQLs → SQLs → Oportunidades → Clientes → Recompras.",
+    aliases: ["funil de vendas", "funil de marketing", "funnel"],
+  },
+  {
+    id: "impressions",
+    name: "Impressões",
+    category: "funil",
+    shortDescription: "Quantas vezes um anúncio ou conteúdo foi exibido para alguém.",
+    description:
+      "Primeira etapa do funil: cada vez que um anúncio, post ou página aparece na tela de alguém conta como uma impressão — não significa que a pessoa clicou nem que percebeu o conteúdo.",
+    aliases: ["impressoes", "views", "visualizacoes", "exibicoes"],
+  },
+  {
+    id: "visits",
+    name: "Visitas",
+    category: "funil",
+    shortDescription: "Quantas vezes alguém chegou ao site ou página depois de uma impressão.",
+    description:
+      "Segunda etapa do funil: contabiliza os acessos reais à página, vindos ou não de um anúncio — é o primeiro sinal de interesse ativo, diferente da impressão, que é passiva.",
+    aliases: ["visitas", "sessoes", "sessions", "acessos"],
+  },
+  {
+    id: "lead",
+    name: "Lead",
+    category: "funil",
+    shortDescription: "Uma pessoa ou empresa que demonstrou interesse e deixou algum contato (e-mail, telefone).",
+    description:
+      "Terceira etapa do funil: alguém que converteu numa página (preencheu um formulário, baixou um material, pediu contato) e passou a ser identificável — deixa de ser só uma visita anônima.",
+    aliases: ["leads", "contato qualificado", "prospect"],
+  },
+  {
+    id: "mql",
+    name: "Lead Qualificado de Marketing",
+    acronym: "MQL",
+    category: "funil",
+    shortDescription: "Um lead que o time de marketing considera com potencial real, segundo critérios da empresa.",
+    description:
+      "Quarta etapa do funil: o lead avança quando atinge um nível de engajamento ou perfil que o marketing considera promissor.",
+    note: "Sem regra automática de qualificação implementada neste sistema — o valor de MQLs de cada período/canal é sempre informado manualmente (Funil ou Central de Dados).",
+    aliases: ["mqls", "marketing qualified lead", "lead qualificado de marketing"],
+  },
+  {
+    id: "sql",
+    name: "Lead Qualificado de Vendas",
+    acronym: "SQL",
+    category: "funil",
+    shortDescription: "Um MQL que o time de vendas validou como pronto para uma abordagem comercial direta.",
+    description:
+      "Quinta etapa do funil: o lead avança de MQL para SQL quando o time de vendas confirma que há oportunidade real de negócio, geralmente após um primeiro contato.",
+    note: "Sem regra automática de qualificação implementada neste sistema — mesmo caso de MQL, sempre um valor manual.",
+    aliases: ["sqls", "sales qualified lead", "lead qualificado de vendas"],
+  },
+  {
+    id: "opportunity",
+    name: "Oportunidade",
+    category: "funil",
+    shortDescription: "Uma negociação em andamento com um SQL, com chance real de virar venda.",
+    description:
+      "Sexta etapa do funil: o SQL vira oportunidade quando entra formalmente num processo de negociação (proposta, orçamento, reunião comercial) — ainda não é uma venda fechada.",
+    aliases: ["oportunidades", "opportunity", "negociacao em andamento"],
+  },
+  {
+    id: "customer",
+    name: "Cliente",
+    category: "funil",
+    shortDescription: "Quem efetivamente comprou — a oportunidade que se converteu em venda.",
+    description:
+      "Sétima etapa do funil: a oportunidade termina em venda fechada, e a pessoa/empresa passa a ser cliente. Alimenta diretamente métricas financeiras como CAC e Ticket Médio.",
+    aliases: ["clientes", "customer", "cliente novo", "venda fechada"],
+  },
+  {
+    id: "repeat_purchase",
+    name: "Recompra",
+    category: "funil",
+    shortDescription: "Quando um cliente já existente compra de novo.",
+    description:
+      "Oitava e última etapa do funil: mede a fidelização — clientes que voltam a comprar depois da primeira venda. Alimenta a Taxa de Recorrência (métrica própria).",
+    aliases: ["recompras", "repeat purchase", "clientes recorrentes"],
+  },
+  {
+    id: "channel",
+    name: "Canal",
+    category: "funil",
+    shortDescription: "A grande categoria de onde vem o tráfego ou lead — ex.: Redes Sociais, Busca Orgânica, E-mail.",
+    description:
+      "Agrupa campanhas por tipo de origem de alto nível (ex.: \"Paid Social\", \"Busca Paga\", \"E-mail Marketing\"). Cada campanha pertence a exatamente um canal — é a dimensão usada para segmentar o Funil e o Marketing por canal nas telas de Analytics.",
+    aliases: ["canais", "channel", "canal de marketing", "canal de aquisicao"],
+  },
+  {
+    id: "campaign",
+    name: "Campanha",
+    category: "funil",
+    shortDescription: "Uma iniciativa específica de marketing, com nome, período e investimento próprios, dentro de um canal.",
+    description:
+      "É a unidade mais granular de marketing já modelada neste sistema — tem nome, datas de início/fim, investimento e métricas próprias (impressões, cliques, leads etc.), e pertence a exatamente um Canal.",
+    aliases: ["campanhas", "campaign", "campanha de marketing"],
+  },
+  {
+    id: "source",
+    name: "Fonte",
+    category: "funil",
+    shortDescription: "De onde exatamente veio o tráfego dentro de um canal — ex.: \"google\", \"facebook\", \"newsletter-outubro\".",
+    description:
+      "Conceito de mercado mais granular que Canal: identifica a origem específica do tráfego (um site de busca, uma rede social específica, um boletim por e-mail) — não só \"que tipo de canal converteu\", mas \"qual site/ferramenta específica\".",
+    note: "Este sistema ainda não modela Fonte como um campo próprio — hoje só Canal e Campanha são dimensões reais no banco de dados. Cadastrado aqui para fins educacionais, mesmo critério já usado para MRR/ARR.",
+    aliases: ["source", "origem do trafego", "utm_source"],
+  },
+  {
+    id: "platform",
+    name: "Plataforma",
+    category: "funil",
+    shortDescription: "A ferramenta ou tecnologia usada para veicular ou gerenciar uma campanha — ex.: Google Ads, Meta Ads, HubSpot.",
+    description:
+      "Conceito de mercado distinto de Canal e Fonte: identifica o sistema/ferramenta usado para rodar a campanha (a plataforma de anúncios, o CRM, a ferramenta de e-mail).",
+    note: "Este sistema ainda não modela Plataforma como um campo próprio — hoje só Canal e Campanha são dimensões reais no banco de dados. Cadastrado aqui para fins educacionais, mesmo critério já usado para MRR/ARR.",
+    aliases: ["platform", "ferramenta de marketing", "plataforma de anuncios"],
+  },
 ];

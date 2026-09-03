@@ -298,3 +298,23 @@ class FunnelByChannelRead(BaseModel):
     date_from: date
     date_to: date
     channels: list[ChannelFunnelRead]
+
+
+class MonthlyFunnelStagesRead(BaseModel):
+    """Um ponto da série mensal do funil agregado — as 8 etapas calculadas
+    isoladamente para este mês (não acumulado). Mês sem snapshot aparece com
+    `is_applicable=False` em cada etapa (RN-003), nunca omitido — mesma
+    semântica de `MonthlyMetricsRead`."""
+
+    period: date
+    stages: FunnelStagesRead
+
+
+class FunnelSeriesRead(BaseModel):
+    """Série mensal do funil agregado (channel_id IS NULL), um ponto por mês
+    de calendário tocado pelo intervalo — alimenta o gráfico de evolução
+    temporal. Mirror de `ExecutiveSeriesRead`."""
+
+    date_from: date
+    date_to: date
+    points: list[MonthlyFunnelStagesRead]

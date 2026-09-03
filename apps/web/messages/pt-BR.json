@@ -80,6 +80,34 @@
       "specialCharacter": "Um caractere especial",
       "minNumbers": "Pelo menos 3 números",
       "metCount": "{met} de {total} requisitos de senha atendidos"
+    },
+    "funnelStagesChart": {
+      "defaultLabel": "Funil",
+      "labelWithChannel": "{label} — funil",
+      "labelNoData": "{chartLabel}: sem dados suficientes no período",
+      "noData": "Sem dados suficientes no período.",
+      "tableCaption": "{chartLabel}, por etapa",
+      "stage": "Etapa",
+      "value": "Valor"
+    },
+    "stageConversionChart": {
+      "chartLabel": "Conversão por etapa",
+      "labelNoData": "Conversão por etapa: sem dados suficientes no período",
+      "noData": "Sem dados suficientes no período.",
+      "bottleneckNote": "Menor conversão observada: de {from} para {to} ({value}).",
+      "transition": "Transição",
+      "conversionRate": "Taxa de conversão",
+      "dropOffRate": "Taxa de abandono",
+      "vsPreviousPeriod": "Vs. período anterior"
+    },
+    "funnelEvolutionChart": {
+      "labelWithStage": "Evolução de {stage}",
+      "labelNoData": "{chartLabel}: sem dados suficientes no período",
+      "noData": "Sem dados suficientes no período.",
+      "tableCaption": "{chartLabel}, por mês",
+      "month": "Mês",
+      "value": "Valor",
+      "noDataCell": "sem dado"
     }
   },
   "workspace": {
@@ -662,6 +690,19 @@
       "opportunities": "Oportunidades",
       "customers": "Clientes",
       "repeat_purchases": "Recompras"
+    },
+    "manualEntryTitle": "Lançamento manual",
+    "analytics": {
+      "title": "Análise do Funil",
+      "viewToggleLabel": "Visualização",
+      "viewAggregated": "Agregado",
+      "viewByChannel": "Por canal",
+      "funnelChartTitle": "Funil",
+      "conversionChartTitle": "Conversão por etapa",
+      "evolutionChartTitle": "Evolução temporal",
+      "evolutionStageLabel": "Etapa:",
+      "emptyByChannelTitle": "Nenhum canal com dado de funil neste período.",
+      "channelSummary": "Leads: {leads} · Clientes: {customers}"
     }
   },
   "products": {
@@ -967,7 +1008,8 @@
       "marketing": "Marketing",
       "vendas": "Vendas",
       "clientes": "Clientes",
-      "crescimento": "Crescimento"
+      "crescimento": "Crescimento",
+      "funil": "Funil"
     }
   },
   "admin": {

@@ -26,13 +26,28 @@ Para cada par consecutivo (`STAGE_TRANSITIONS`), duas métricas:
 Exemplo: 500 leads, 300 MQLs → conversão Lead→MQL = 60%, abandono dessa
 etapa = 40%.
 
-## O que NÃO é calculado nesta PR
+## "Maior gargalo" e insights (PR2, client-side)
 
-- **"Maior gargalo"** — fica client-side (PR2): é só "qual das 7
-  conversões tem a menor taxa", trivial de derivar na UI a partir da
-  lista já ordenada por etapa. Deliberadamente **não** um campo
-  server-side, e deliberadamente sem linguagem causal (nunca "o
-  problema é X"), só "a menor conversão observada é entre X e Y".
+`findBottleneck`/`computeFunnelInsights` (`apps/web/src/lib/funnel-insights.ts`)
+— a etapa com a menor taxa de conversão **aplicável** entre as 7,
+achada em cima dos valores que o backend já calculou (nunca um campo
+novo na API, nunca uma fórmula nova). Deliberadamente sem linguagem
+causal (nunca "o problema é X"), só "a menor conversão observada é
+entre X e Y" — mesmo espírito de `lib/insights.ts` (Visão Executiva).
+Um segundo insight aponta a maior variação de conversão período-a-
+período. Renderizados via `InsightsPanel` (reaproveitado).
+
+## Série mensal (`GET /analytics/funnel/series`, PR2)
+
+Mesmo padrão de `GET /analytics/executive/series`: um ponto por mês de
+calendário tocado pelo intervalo, com as 8 etapas daquele mês (mês sem
+snapshot aparece com `is_applicable=False`, nunca omitido). Alimenta o
+gráfico de evolução temporal (`FunnelEvolutionChart`, uma etapa por vez
+— ver `UX.md`). Só existe para o funil **agregado**; não há série
+mensal por canal nesta rodada.
+
+## O que ainda NÃO é calculado
+
 - **Qualificação automática de MQL/SQL** — ver `MODELAGEM.md`.
 - **Atribuição de canal** (qual canal trouxe qual lead/MQL/SQL) — o que
   existe é segmentação por canal (uma linha de funil por canal), não

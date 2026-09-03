@@ -5,9 +5,28 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type FunnelSnapshot } from "@/lib/business";
+import { resolvePreset, type DateRange } from "@/lib/date-ranges";
+import { formatMetric } from "@/lib/metrics";
+import {
+  FUNNEL_STAGE_KEYS,
+  type ChannelFunnel,
+  type FunnelAnalytics,
+  type FunnelByChannel,
+  type FunnelSeries,
+  type FunnelStageKey,
+} from "@/lib/funnel-metrics";
+import { computeFunnelInsights } from "@/lib/funnel-insights";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconFunnel } from "@/components/icons";
+import { DateRangeFilter } from "@/components/date-range-filter";
+import { SegmentedControl } from "@/components/segmented-control";
+import { MetricHelp } from "@/components/metric-help";
+import { FunnelStagesChart } from "@/components/funnel-stages-chart";
+import { StageConversionChart } from "@/components/stage-conversion-chart";
+import { FunnelEvolutionChart } from "@/components/funnel-evolution-chart";
+import { FunnelByChannelTable } from "@/components/funnel-by-channel-table";
+import { InsightsPanel } from "@/components/insights-panel";
 
 async function fetchSnapshots(id: string): Promise<FunnelSnapshot[]> {
   return api.get<FunnelSnapshot[]>(`/api/v1/organizations/${id}/funnel-snapshots`);
@@ -28,6 +47,231 @@ const FIELD_KEYS: (keyof FunnelSnapshot)[] = [
   "customers",
   "repeat_purchases",
 ];
+
+type AnalyticsView = "aggregated" | "by_channel";
+
+// FUNNEL_STAGE_KEYS usa o nome de coluna do backend (plural/snake_case,
+// ex.: "repeat_purchases"); os verbetes do Glossário usam o conceito no
+// singular (ex.: "repeat_purchase") — só impressions/visits coincidem.
+const STAGE_GLOSSARY_ID: Record<FunnelStageKey, string> = {
+  impressions: "impressions",
+  visits: "visits",
+  leads: "lead",
+  mqls: "mql",
+  sqls: "sql",
+  opportunities: "opportunity",
+  customers: "customer",
+  repeat_purchases: "repeat_purchase",
+};
+
+/** Seção analítica do Funil (RF do prompt de funil/gráficos/PDF) — KPIs
+ * por etapa, conversão/abandono, evolução temporal, alternância
+ * agregado/por canal e insights determinísticos. Independente da tabela
+ * de lançamento manual abaixo (que continua sendo a forma de entrada de
+ * dado, inalterada). */
+function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) {
+  const router = useRouter();
+  const t = useTranslations("funnel.analytics");
+  const tFields = useTranslations("funnel.fields");
+  const tCommon = useTranslations("common");
+
+  const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
+  const [view, setView] = useState<AnalyticsView>("aggregated");
+  const [evolutionStage, setEvolutionStage] = useState<FunnelStageKey>("leads");
+
+  const [analytics, setAnalytics] = useState<FunnelAnalytics | null>(null);
+  const [series, setSeries] = useState<FunnelSeries | null>(null);
+  const [byChannel, setByChannel] = useState<FunnelByChannel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [byChannelLoading, setByChannelLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) {
+        setLoading(true);
+        setError(null);
+      }
+    });
+
+    const handleError = (err: unknown) => {
+      if (cancelled) return;
+      if (err instanceof ApiError && err.status === 401) {
+        router.push(loginRedirectPath(err));
+        return;
+      }
+      setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
+    };
+
+    const query = `date_from=${range.dateFrom}&date_to=${range.dateTo}`;
+    Promise.all([
+      api
+        .get<FunnelAnalytics>(`/api/v1/organizations/${organizationId}/analytics/funnel?${query}`)
+        .then((result) => {
+          if (!cancelled) setAnalytics(result);
+        })
+        .catch(handleError),
+      api
+        .get<FunnelSeries>(`/api/v1/organizations/${organizationId}/analytics/funnel/series?${query}`)
+        .then((result) => {
+          if (!cancelled) setSeries(result);
+        })
+        .catch(handleError),
+    ]).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId, range.dateFrom, range.dateTo]);
+
+  // "Por canal" busca sob demanda, na primeira vez que o toggle é usado —
+  // evita uma chamada que a maioria das visitas (agregado, o padrão) nunca
+  // precisa.
+  useEffect(() => {
+    if (view !== "by_channel" || byChannel !== null) return;
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) setByChannelLoading(true);
+    });
+    api
+      .get<FunnelByChannel>(
+        `/api/v1/organizations/${organizationId}/analytics/funnel/by-channel?date_from=${range.dateFrom}&date_to=${range.dateTo}`
+      )
+      .then((result) => {
+        if (!cancelled) setByChannel(result);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 401) {
+          router.push(loginRedirectPath(err));
+          return;
+        }
+        setError(err instanceof ApiError ? err.message : tCommon("genericConnectionError"));
+      })
+      .finally(() => {
+        if (!cancelled) setByChannelLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, organizationId, range.dateFrom, range.dateTo]);
+
+  // Trocar o período invalida o drill-down por canal já buscado, pra não
+  // mostrar dado de um intervalo diferente do selecionado.
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) setByChannel(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [range.dateFrom, range.dateTo]);
+
+  const insights = analytics ? computeFunnelInsights(analytics.conversions) : [];
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <IconFunnel className="h-4 w-4 text-slate-400" />
+        <h2 className={sectionTitle}>{t("title")}</h2>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <DateRangeFilter value={range} onChange={setRange} />
+        <SegmentedControl
+          value={view}
+          onChange={setView}
+          ariaLabel={t("viewToggleLabel")}
+          options={[
+            { value: "aggregated", label: t("viewAggregated") },
+            { value: "by_channel", label: t("viewByChannel") },
+          ]}
+        />
+      </div>
+
+      {error && (
+        <div className="mt-4">
+          <Alert>{error}</Alert>
+        </div>
+      )}
+
+      {loading ? (
+        <Skeleton className="mt-4 h-40 w-full" />
+      ) : view === "aggregated" && analytics && series ? (
+        <div className="mt-4 flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {FUNNEL_STAGE_KEYS.map((key) => (
+              <Card key={key} className="p-4">
+                <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {tFields(key)}
+                  <MetricHelp metric={STAGE_GLOSSARY_ID[key]} />
+                </p>
+                <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+                  {formatMetric(analytics.stages[key], { notApplicableLabel: tCommon("notApplicable") })}
+                </p>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("funnelChartTitle")}</h3>
+            <div className="mt-3">
+              <FunnelStagesChart stages={analytics.stages} />
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("conversionChartTitle")}</h3>
+            <div className="mt-3">
+              <StageConversionChart conversions={analytics.conversions} tFields={tFields} />
+            </div>
+          </Card>
+
+          <InsightsPanel insights={insights} />
+
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("evolutionChartTitle")}</h3>
+              <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                {t("evolutionStageLabel")}
+                <select
+                  value={evolutionStage}
+                  onChange={(e) => setEvolutionStage(e.target.value as FunnelStageKey)}
+                  className={`${input} w-auto py-1 text-xs`}
+                >
+                  {FUNNEL_STAGE_KEYS.map((key) => (
+                    <option key={key} value={key}>
+                      {tFields(key)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="mt-3">
+              <FunnelEvolutionChart points={series.points} stage={evolutionStage} label={tFields(evolutionStage)} />
+            </div>
+          </Card>
+        </div>
+      ) : view === "by_channel" ? (
+        byChannelLoading ? (
+          <Skeleton className="mt-4 h-40 w-full" />
+        ) : byChannel && byChannel.channels.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState icon={<IconFunnel className="h-5 w-5" />} title={t("emptyByChannelTitle")} />
+          </div>
+        ) : byChannel ? (
+          <FunnelByChannelTable channels={byChannel.channels as ChannelFunnel[]} />
+        ) : null
+      ) : null}
+    </div>
+  );
+}
 
 export default function FunnelPage() {
   const { id } = useParams<{ id: string }>();
@@ -94,9 +338,11 @@ export default function FunnelPage() {
 
   return (
     <div className="animate-fade-in-up py-8">
-      <div className="flex items-center gap-2">
+      <FunnelAnalyticsSection organizationId={id} />
+
+      <div className="mt-10 flex items-center gap-2">
         <IconFunnel className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>{t("title")}</h2>
+        <h2 className={sectionTitle}>{t("manualEntryTitle")}</h2>
       </div>
 
       {error && (

@@ -88,5 +88,6 @@ export function useMetricCategoryLabels(): Record<MetricCategory, string> {
     vendas: t("vendas"),
     clientes: t("clientes"),
     crescimento: t("crescimento"),
+    funil: t("funil"),
   };
 }

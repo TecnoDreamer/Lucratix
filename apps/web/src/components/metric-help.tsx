@@ -135,9 +135,11 @@ export function MetricHelp({ metric }: { metric: string }) {
         {definition.acronym ? `${definition.acronym} — ${definition.name}` : definition.name}
       </p>
       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{definition.shortDescription}</p>
-      <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {definition.direction === "lower_is_better" ? `↓ ${t("lowerIsBetter")}` : `↑ ${t("higherIsBetter")}`}
-      </p>
+      {definition.direction && (
+        <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+          {definition.direction === "lower_is_better" ? `↓ ${t("lowerIsBetter")}` : `↑ ${t("higherIsBetter")}`}
+        </p>
+      )}
       {definition.formula && (
         <p className="mt-2 rounded-md bg-slate-50 px-2 py-1.5 font-mono text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {definition.formula}

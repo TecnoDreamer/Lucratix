@@ -4,6 +4,24 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-02
 
+### Added (Funil multicanal — UX, Glossário completo, Recharts, PR2 de 4)
+- Nova seção "Análise do Funil" na tela de Funil (`organizations/[id]/funnel`):
+  alternância Agregado/Por canal (`SegmentedControl`, componente novo extraído do
+  padrão de botões-pílula já duplicado), cards das 8 etapas, visualização em
+  funil e evolução temporal (`GET /analytics/funnel/series`, endpoint novo),
+  conversão/abandono por etapa com o "gargalo" (menor conversão aplicável)
+  destacado, insights determinísticos e `FunnelByChannelTable` (drill-down por
+  canal, seções expansíveis). Tabela/formulário de lançamento manual inalterados.
+- **Recharts** adotado (primeira exceção ao padrão de gráfico SVG artesanal do
+  produto) — só no Funil, pelas 3 visualizações acima.
+- 13 verbetes novos no Glossário (Funil, Impressões, Visitas, Lead, MQL, SQL,
+  Oportunidade, Cliente, Recompra, Canal, Campanha, Fonte, Plataforma) — os 2
+  últimos documentados como conceitos ainda não modelados neste sistema.
+  `MetricDefinition.unit`/`direction` viram opcionais para suportar esse tipo de
+  verbete categórico. O ícone `?` reutilizável (`MetricHelp`) já existia.
+  Ver `docs/funnel/README.md`.
+  [#111](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/111)
+
 ### Added (Funil multicanal — modelagem e KPIs, PR1 de 4)
 - `funnel_snapshots.channel_id` (nullable, migration `0016_funnel_snapshot_channel`) —
   o funil passa a poder ser segmentado por canal, sem alterar o comportamento do

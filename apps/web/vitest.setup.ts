@@ -9,6 +9,21 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView() {};
 }
 
+// jsdom tambem nao implementa ResizeObserver — usado pelo `ResponsiveContainer`
+// do Recharts (funil/gráficos, 2026-09-02) para medir o container antes de
+// desenhar. Sem isso, montar qualquer gráfico Recharts em teste lança
+// `ReferenceError`. Stub minimo (observe/unobserve/disconnect no-op) — os
+// testes de gráfico verificam a tabela `sr-only`/visível com os dados, não o
+// layout medido de verdade (isso é responsabilidade do navegador real).
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
 // i18n (2026-09-01): mock global de `next-intl` usando o motor real de
 // ICU MessageFormat (`createTranslator`, recomendado pela própria
 // documentação do next-intl para testar sem `<NextIntlClientProvider>`),

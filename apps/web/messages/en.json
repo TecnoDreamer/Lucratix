@@ -80,6 +80,34 @@
       "specialCharacter": "One special character",
       "minNumbers": "At least 3 numbers",
       "metCount": "{met} of {total} password requirements met"
+    },
+    "funnelStagesChart": {
+      "defaultLabel": "Funnel",
+      "labelWithChannel": "{label} — funnel",
+      "labelNoData": "{chartLabel}: not enough data in this period",
+      "noData": "Not enough data in this period.",
+      "tableCaption": "{chartLabel}, by stage",
+      "stage": "Stage",
+      "value": "Value"
+    },
+    "stageConversionChart": {
+      "chartLabel": "Conversion by stage",
+      "labelNoData": "Conversion by stage: not enough data in this period",
+      "noData": "Not enough data in this period.",
+      "bottleneckNote": "Lowest conversion observed: from {from} to {to} ({value}).",
+      "transition": "Transition",
+      "conversionRate": "Conversion rate",
+      "dropOffRate": "Drop-off rate",
+      "vsPreviousPeriod": "Vs. previous period"
+    },
+    "funnelEvolutionChart": {
+      "labelWithStage": "{stage} evolution",
+      "labelNoData": "{chartLabel}: not enough data in this period",
+      "noData": "Not enough data in this period.",
+      "tableCaption": "{chartLabel}, by month",
+      "month": "Month",
+      "value": "Value",
+      "noDataCell": "no data"
     }
   },
   "workspace": {
@@ -662,6 +690,19 @@
       "opportunities": "Opportunities",
       "customers": "Customers",
       "repeat_purchases": "Repeat purchases"
+    },
+    "manualEntryTitle": "Manual entry",
+    "analytics": {
+      "title": "Funnel Analysis",
+      "viewToggleLabel": "View",
+      "viewAggregated": "Aggregated",
+      "viewByChannel": "By channel",
+      "funnelChartTitle": "Funnel",
+      "conversionChartTitle": "Conversion by stage",
+      "evolutionChartTitle": "Temporal evolution",
+      "evolutionStageLabel": "Stage:",
+      "emptyByChannelTitle": "No channel has funnel data in this period.",
+      "channelSummary": "Leads: {leads} · Customers: {customers}"
     }
   },
   "products": {
@@ -967,7 +1008,8 @@
       "marketing": "Marketing",
       "vendas": "Sales",
       "clientes": "Customers",
-      "crescimento": "Growth"
+      "crescimento": "Growth",
+      "funil": "Funnel"
     }
   },
   "admin": {
