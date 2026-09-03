@@ -10,10 +10,27 @@ is_applicable=False.
 
 from dataclasses import dataclass
 
+from app.core.formatting import format_percentage
 from app.models.funnel_snapshot import FunnelSnapshot
 from app.modules.analytics.service import AggregatedFunnel
 from app.modules.metrics import engine
 from app.modules.metrics.engine import MetricResult
+
+# Rotulo pt-BR de cada etapa, para texto (relatorio em PDF) — mesma lista
+# de STAGE_LABELS em apps/web/src/lib/funnel-insights.ts (duplicado de
+# proposito: sao 2 runtimes diferentes, nenhum deles importa arquivo do
+# outro; mesma escolha ja feita la de nao passar por i18n neste texto
+# determinístico).
+_STAGE_LABELS_PT_BR: dict[str, str] = {
+    "impressions": "Impressões",
+    "visits": "Visitas",
+    "leads": "Leads",
+    "mqls": "MQLs",
+    "sqls": "SQLs",
+    "opportunities": "Oportunidades",
+    "customers": "Clientes",
+    "repeat_purchases": "Recompras",
+}
 
 # Ordem fixa das etapas (RN-006), igual as colunas de FunnelSnapshot.
 FUNNEL_STAGES: tuple[str, ...] = (
@@ -82,3 +99,65 @@ def stage_values(funnel: FunnelSnapshot | AggregatedFunnel | None) -> dict[str, 
         )
         for stage in FUNNEL_STAGES
     }
+
+
+def _find_bottleneck(conversions: list[StageConversion]) -> StageConversion | None:
+    """A etapa com a menor taxa de conversao aplicavel entre as 7 — nunca
+    um calculo novo, so o minimo dos valores ja computados. `None` quando
+    nenhuma conversao e aplicavel (sem dado no periodo)."""
+    applicable = [
+        c for c in conversions if c.conversion_rate.is_applicable and c.conversion_rate.value is not None
+    ]
+    if not applicable:
+        return None
+
+    def _rate(conversion: StageConversion) -> float:
+        assert conversion.conversion_rate.value is not None  # ja filtrado em `applicable`
+        return conversion.conversion_rate.value
+
+    return min(applicable, key=_rate)
+
+
+def describe_bottleneck(conversions: list[StageConversion]) -> str | None:
+    """Observacao deterministica (RF: deteccao de gargalo, sem linguagem
+    causal) — mesma regra de `findBottleneck`/`computeFunnelInsights` em
+    apps/web/src/lib/funnel-insights.ts, aqui como texto pt-BR pro
+    relatorio em PDF. `None` quando nao ha nenhuma conversao aplicavel."""
+    bottleneck = _find_bottleneck(conversions)
+    if bottleneck is None or bottleneck.conversion_rate.value is None:
+        return None
+    from_label = _STAGE_LABELS_PT_BR[bottleneck.from_stage]
+    to_label = _STAGE_LABELS_PT_BR[bottleneck.to_stage]
+    return (
+        f"A menor taxa de conversão do período está entre {from_label} e {to_label}: "
+        f"{format_percentage(bottleneck.conversion_rate.value)}."
+    )
+
+
+def describe_biggest_mover(current: list[StageConversion], previous: list[StageConversion]) -> str | None:
+    """Observacao deterministica — a conversao com a maior variacao (em
+    modulo) de taxa entre o periodo atual e o anterior equivalente. Mesma
+    regra do segundo insight de `computeFunnelInsights`
+    (funnel-insights.ts). `current`/`previous` precisam estar na mesma
+    ordem de STAGE_TRANSITIONS (garantido por quem monta as duas listas
+    via `compute_stage_conversions`). `None` quando nenhuma comparacao e
+    aplicavel (dado insuficiente num dos dois lados em todas as etapas)."""
+    biggest: tuple[StageConversion, float] | None = None
+    for curr, prev in zip(current, previous, strict=True):
+        if not curr.conversion_rate.is_applicable or curr.conversion_rate.value is None:
+            continue
+        comparison = engine.compare_periods(prev.conversion_rate.value, curr.conversion_rate.value)
+        if comparison.percent_change is None:
+            continue
+        if biggest is None or abs(comparison.percent_change) > abs(biggest[1]):
+            biggest = (curr, comparison.percent_change)
+
+    if biggest is None:
+        return None
+    conversion, percent_change = biggest
+    from_label = _STAGE_LABELS_PT_BR[conversion.from_stage]
+    to_label = _STAGE_LABELS_PT_BR[conversion.to_stage]
+    return (
+        f"A conversão de {from_label} para {to_label} teve a maior variação do período: "
+        f"{format_percentage(percent_change, signed=True)} vs. o período anterior."
+    )

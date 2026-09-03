@@ -7,6 +7,8 @@ from app.modules.analytics.funnel_analytics import (
     FUNNEL_STAGES,
     STAGE_TRANSITIONS,
     compute_stage_conversions,
+    describe_biggest_mover,
+    describe_bottleneck,
     stage_values,
 )
 
@@ -78,3 +80,40 @@ def test_stage_values_reads_each_present_stage():
     assert values["impressions"].value == 1000
     assert values["visits"].value == 400
     assert values["leads"].is_applicable is False
+
+
+def test_describe_bottleneck_points_to_the_lowest_applicable_conversion():
+    funnel = FunnelSnapshot(
+        impressions=10000, visits=2000, leads=500, mqls=300, sqls=150,
+        opportunities=100, customers=40, repeat_purchases=10,
+    )
+    text = describe_bottleneck(compute_stage_conversions(funnel))
+    assert text is not None
+    # Impressões -> Visitas: 2000/10000 = 20% e a MENOR das 7 conversões
+    # (as outras vao de 25% a 66,7%) — confere que o texto aponta essa
+    # etapa especificamente, nao qualquer uma.
+    assert "Impressões" in text and "Visitas" in text
+    assert "20,0%" in text
+
+
+def test_describe_bottleneck_none_when_nothing_is_applicable():
+    funnel = FunnelSnapshot()
+    assert describe_bottleneck(compute_stage_conversions(funnel)) is None
+
+
+def test_describe_biggest_mover_points_to_the_largest_absolute_change():
+    current = compute_stage_conversions(FunnelSnapshot(leads=100, mqls=40, sqls=8))  # 40%, 20%
+    previous = compute_stage_conversions(FunnelSnapshot(leads=100, mqls=20, sqls=10))  # 20%, 50%
+    text = describe_biggest_mover(current, previous)
+    assert text is not None
+    # leads->mqls: 20% -> 40% (+100% de variacao relativa).
+    # mqls->sqls: 50% -> 20% (-60% de variacao relativa) — menor em
+    # modulo, mesmo tendo dado nos dois lados tambem.
+    assert "Leads" in text and "MQLs" in text
+    assert "+100" in text
+
+
+def test_describe_biggest_mover_none_without_any_applicable_comparison():
+    current = compute_stage_conversions(FunnelSnapshot())
+    previous = compute_stage_conversions(FunnelSnapshot())
+    assert describe_biggest_mover(current, previous) is None
