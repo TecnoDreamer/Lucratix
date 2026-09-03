@@ -2,6 +2,26 @@
 
 Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o projeto não tinha changelog antes (deploy contínuo, sem versionamento por release). Formato livre inspirado em [Keep a Changelog](https://keepachangelog.com/), agrupado por data.
 
+## 2026-09-03
+
+### Added (Funil multicanal — relatório em PDF server-side, PR3 de 4)
+- Infraestrutura reutilizável de relatório em PDF (`app/modules/reports/pdf_builder.py`,
+  ReportLab — decisão confirmada com o usuário, sem nenhuma biblioteca de sistema, ao
+  contrário de WeasyPrint) para qualquer relatório futuro compor suas seções.
+- `GET /api/v1/organizations/{id}/reports/funnel/pdf?date_from&date_to` — relatório do
+  Funil em 11 seções (capa, sumário executivo, visão geral das etapas, conversão/abandono
+  com gargalo destacado, comparação com período anterior, evolução mensal, segmentação e
+  comparação por canal — omitidas quando não há canal com dado, observações
+  determinísticas, definições, rodapé/paginação). Mesma permissão (`ANALYST+`) e mesma
+  validação de `/analytics/funnel`; nenhuma regra de negócio nova, só composição.
+- `describe_bottleneck`/`describe_biggest_mover` (`funnel_analytics.py`) — port pro Python
+  das mesmas 2 regras de `lib/funnel-insights.ts`, para o sumário executivo determinístico.
+- `app/core/formatting.py` (novo) — formatação pt-BR de número no backend, necessária
+  porque o PDF é gerado inteiramente no servidor.
+- Botão "Gerar relatório PDF" (`GeneratePdfReportButton`, componente reutilizável) na
+  seção "Análise do Funil".
+  Ver `docs/reports/PDF_INFRAESTRUTURA.md`/`FUNIL_PDF.md`.
+
 ## 2026-09-02
 
 ### Added (Funil multicanal — UX, Glossário completo, Recharts, PR2 de 4)
