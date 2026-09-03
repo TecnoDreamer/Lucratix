@@ -4,6 +4,14 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Backlog pós-PR4 — PDF Executivo em Analytics)
+- `GET /api/v1/organizations/{id}/reports/executive/pdf?date_from&date_to` — Relatório da Visão
+  Executiva em PDF (`apps/api/app/modules/reports/executive_pdf.py`), mesmo padrão de
+  `pdf_builder.py`. KPIs Executivos, Evolução Mensal, Progresso de Metas (só receita/lucro),
+  Marketing do Período e Marketing por Canal — as 3 últimas omitidas por completo sem meta/
+  campanha, RN-003. Correlação e Funil ficam de fora de propósito (ver
+  `docs/reports/PR4_INVENTARIO.md`). Botão "Baixar relatório em PDF" na tela de Analytics.
+
 ### Added (Funil multicanal — inventário e adoção nas demais telas, PR4 de 4)
 - `GET /api/v1/organizations/{id}/reports/basic/pdf?period=` — Relatório Básico (RF-026)
   em PDF server-side, mesmo padrão de `pdf_builder.py` da PR3 (KPIs do período,

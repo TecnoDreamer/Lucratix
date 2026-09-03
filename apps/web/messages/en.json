@@ -646,7 +646,8 @@
       "invalidValue": "Enter a numeric value for the target.",
       "saveError": "Could not save the target.",
       "deleteError": "Could not remove the target."
-    }
+    },
+    "generatePdfReport": "Download PDF report"
   },
   "dashboard": {
     "title": "Dashboard",

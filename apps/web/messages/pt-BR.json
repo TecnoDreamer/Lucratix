@@ -646,7 +646,8 @@
       "invalidValue": "Informe um valor numérico para a meta.",
       "saveError": "Não foi possível salvar a meta.",
       "deleteError": "Não foi possível remover a meta."
-    }
+    },
+    "generatePdfReport": "Baixar relatório em PDF"
   },
   "dashboard": {
     "title": "Dashboard",
