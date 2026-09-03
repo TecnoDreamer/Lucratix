@@ -18,8 +18,10 @@ Registro dos eventos de auditoria relacionados a autenticação/segurança — o
 | `membership.invited` / `membership.invited_new_account` | `membership` | Convite de membro (RF-012) | Antes desta rodada |
 | `membership.granted_by_platform_admin` | `membership` | Mesmo fluxo, via painel de Super Admin | Antes desta rodada |
 | `user.created_by_platform_admin` | `user` | Criação administrativa de conta | Antes desta rodada |
+| `user.password_reset_completed` | `user` | `/auth/password-reset/confirm` bem-sucedido | PR2 (recuperação de senha) |
+| `user.email_verified` | `user` | `/auth/verify-email` bem-sucedido | PR2 (recuperação de senha) |
 
-**Deliberadamente fora desta rodada** (ver `docs/reports/PR4_INVENTARIO.md`-style de registro — não esquecido, planejado para uma rodada seguinte): `user.password_reset_completed` (confirmação de reset) e `user.email_verified` — ambos vão junto da PR de recuperação de senha (revogar sessão + notificar por e-mail após reset), que precisa resolver o usuário a partir do token de qualquer forma; adicionar o evento de auditoria isolado agora duplicaria esse trabalho sem o contexto completo (ex.: se a sessão foi de fato revogada).
+`confirm_password_reset`/`confirm_email_verification` (`apps/api/app/modules/auth/service.py`) passaram a devolver o `User` resolvido (antes, só `bool`) — é o que permite o router auditar com `entity_id`/`user_id` corretos.
 
 ## O que nunca é logado
 

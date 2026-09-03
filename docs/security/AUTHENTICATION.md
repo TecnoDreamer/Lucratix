@@ -19,6 +19,8 @@ administrativa) precisa atender 4 requisitos simultâneos — ver
 
 Fluxo de link único, sem etapa de código/OTP separada: `POST /password-reset/request` (e-mail) → token opaco de 256 bits, hash SHA-256 armazenado (`app/models/password_reset_token.py`), TTL de 1 hora, uso único → `POST /password-reset/confirm` (token + nova senha). Resposta de `/request` é **sempre idêntica** independente de o e-mail existir (RN-012, evita enumeração de contas).
 
+Um reset bem-sucedido (auditoria de hardening, 2026-09) também **revoga qualquer sessão ativa do usuário** (`revoke_active_session_for_user`, `app/core/sessions.py`) — se a conta estava comprometida, a sessão de quem a invadiu não sobrevive ao reset, em vez de valer até expirar sozinha (até 7 dias) — e **notifica por e-mail** que a senha mudou, para o dono legítimo perceber se não foi ele. `/change-password` (usuário já autenticado) notifica da mesma forma, mas não revoga a sessão atual — é a própria sessão do ator legítimo fazendo a troca.
+
 ## Verificação de e-mail (RF-001, 2026-08-31)
 
 RF-001 sempre previu *"sistema cria usuário com status `pending`/`active`"* — implementado agora. Cadastro (`POST /auth/register`) gera um `EmailVerificationToken` (mesma forma de `PasswordResetToken`, tabela separada — nunca reaproveita o mesmo token para os dois propósitos) e envia um e-mail de confirmação. `POST /auth/verify-email` confirma; `POST /auth/resend-verification` reenvia (genérico + rate limited, RN-012). `GET /auth/me` devolve `email_verified: bool` (nunca o timestamp cru).

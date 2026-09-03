@@ -4,6 +4,9 @@ todo fluxo aqui exercita o caminho `dev_token`, o mesmo que já existia para
 password-reset. Verificar e-mail NUNCA bloqueia login (decisão documentada
 em docs/security/AUTHENTICATION.md)."""
 
+from app.models.audit_log import AuditLog
+from app.models.user import User
+
 
 def _register(client, email: str, name: str = "Ana") -> dict:
     return client.post(
@@ -34,6 +37,19 @@ def test_verify_email_with_valid_token_marks_verified(client):
     )
     me = client.get("/api/v1/auth/me").json()
     assert me["email_verified"] is True
+
+
+def test_verify_email_records_audit_event_with_the_users_id(client, db_session):
+    email = "verificacao.audit@example.com"
+    body = _register(client, email)
+
+    client.post("/api/v1/auth/verify-email", json={"token": body["dev_token"]})
+
+    user = db_session.query(User).filter(User.email == email).one()
+    events = db_session.query(AuditLog).filter(AuditLog.action == "user.email_verified").all()
+    assert len(events) == 1
+    assert events[0].entity_id == user.id
+    assert events[0].user_id == user.id
 
 
 def test_verify_email_does_not_block_login_before_verifying(client):

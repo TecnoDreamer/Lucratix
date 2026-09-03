@@ -4,6 +4,21 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Segurança — hardening da recuperação de senha, PR2 de 4)
+- `confirm_password_reset` agora revoga qualquer sessão ativa do usuário
+  (`app/core/sessions.py::revoke_active_session_for_user`, novo) — se a conta
+  estava comprometida, a sessão de quem a invadiu não sobrevive a um reset
+  bem-sucedido, em vez de valer até expirar sozinha (achado da auditoria da
+  PR1).
+- `/password-reset/confirm` e `/change-password` agora enviam e-mail de
+  notificação ("sua senha foi alterada") após sucesso.
+- Novos eventos de auditoria `user.password_reset_completed`/
+  `user.email_verified` — `confirm_password_reset`/`confirm_email_verification`
+  passaram a devolver o `User` resolvido (antes só `bool`), permitindo o
+  router auditar com `entity_id`/`user_id` corretos.
+- 689 testes de backend passando (suíte completa, sozinha); `ruff`/`mypy`
+  limpos.
+
 ### Added (Segurança — rate limiting/hardening de autenticação, PR1 de 4)
 - Corrigida a estratégia de chave do rate limiting: antes era sempre `IP:e-mail` combinada, o
   que não bloqueava password spraying (poucas senhas contra muitas contas, 1 IP) nem credential

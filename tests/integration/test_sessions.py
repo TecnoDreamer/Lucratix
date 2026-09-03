@@ -10,6 +10,7 @@ from app.core.sessions import (
     SessionRevokedError,
     create_session,
     get_active_session,
+    revoke_active_session_for_user,
     revoke_session,
 )
 from app.models.session import Session as UserSession
@@ -93,3 +94,38 @@ def test_revoke_session_is_idempotent(db_session):
 
     revoke_session(db_session, session.id)
     assert session.revoked_at == first_revoked_at
+
+
+def test_revoke_active_session_for_user_revokes_the_active_session(db_session):
+    # Auditoria de hardening (2026-09): usado apos reset de senha bem-
+    # sucedido — se a conta estava comprometida, a sessao do atacante nao
+    # deve sobreviver ao reset.
+    user = _make_user(db_session)
+    session = create_session(db_session, user.id)
+
+    revoke_active_session_for_user(db_session, user.id)
+    # UPDATE em lote (Core) nao sincroniza objeto ja carregado no identity
+    # map sozinho — mesma caracteristica de `create_session`
+    # (ver test_create_session_revokes_previous_active_session acima, que
+    # tambem precisa de `refresh`). Nunca aparece em producao: cada request
+    # HTTP usa uma `Session` nova, sem objeto antigo em cache.
+    db_session.refresh(session)
+
+    with pytest.raises(SessionRevokedError):
+        get_active_session(db_session, session.id)
+
+
+def test_revoke_active_session_for_user_without_any_active_session_is_a_safe_noop(db_session):
+    user = _make_user(db_session)
+    # Nenhuma sessao foi criada — nao deve levantar excecao nenhuma.
+    revoke_active_session_for_user(db_session, user.id)
+
+
+def test_revoke_active_session_for_user_never_touches_another_users_session(db_session):
+    user_a = _make_user(db_session)
+    user_b = _make_user(db_session)
+    session_b = create_session(db_session, user_b.id)
+
+    revoke_active_session_for_user(db_session, user_a.id)
+
+    assert get_active_session(db_session, session_b.id).id == session_b.id
