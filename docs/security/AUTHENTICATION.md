@@ -8,6 +8,8 @@ JWT stateless quanto a assinatura/expiração, mas com sessão única validada n
 
 **Login revoga qualquer sessão ativa anterior do mesmo usuário**, com atomicidade garantida por um índice único parcial no banco (`uq_sessions_one_active_per_user`, migration `0007_sessions`), não apenas pela ordem das instruções da aplicação — ver `app/core/sessions.py`. Login em um novo dispositivo desconecta qualquer outro dispositivo já autenticado; a UX correspondente (mensagem "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo.") está em `apps/web/src/lib/api.ts` (`loginRedirectPath`) e na página de login (`?reason=session_revoked`).
 
+Cada sessão guarda `ip_address`/`user_agent` de quando foi criada (migration `0017_session_metadata`, auditoria de hardening 2026-09) — forense de incidente ("de onde veio esta sessão?"), nunca usado em nenhuma decisão de autorização, e não exibido em nenhuma tela hoje (consulta direta via banco). Sem MFA implementado ainda — ver [`MFA.md`](MFA.md) para a arquitetura proposta (TOTP para papéis privilegiados).
+
 ## Política de senha forte (2026-09-02)
 
 Toda senha nova (cadastro, alteração, redefinição, convite/criação

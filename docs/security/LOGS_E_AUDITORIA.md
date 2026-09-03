@@ -23,6 +23,10 @@ Registro dos eventos de auditoria relacionados a autenticação/segurança — o
 
 `confirm_password_reset`/`confirm_email_verification` (`apps/api/app/modules/auth/service.py`) passaram a devolver o `User` resolvido (antes, só `bool`) — é o que permite o router auditar com `entity_id`/`user_id` corretos.
 
+## Sessão como complemento (não substituto) da auditoria
+
+`sessions.ip_address`/`user_agent` (migration `0017_session_metadata`) não são eventos de `AuditLog` — são metadado da própria sessão, gravado uma vez na criação (login). Útil pra correlacionar numa investigação: "este evento `user.login_failed` de tal horário" + "esta sessão ativa, criada logo depois, deste IP/user-agent" contam uma história mais completa que os eventos de auditoria sozinhos (que não guardam IP nenhum hoje). Consulta direta ao banco, sem endpoint/tela dedicada.
+
 ## O que nunca é logado
 
 Nunca aparece em `AuditLog`, em nenhum evento, sob nenhuma circunstância:

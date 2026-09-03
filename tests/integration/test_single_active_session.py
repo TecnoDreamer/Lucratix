@@ -7,6 +7,8 @@ test_multi_tenant_isolation.py).
 """
 
 from app.core.security import SESSION_REVOKED_DETAIL
+from app.models.session import Session as UserSession
+from app.models.user import User
 
 _EMAIL = "sessao.unica@example.com"
 _PASSWORD = "SenhaForte123!"
@@ -71,6 +73,29 @@ def test_logout_revokes_session_immediately(client_factory):
     resp = device_a.get("/api/v1/auth/me", cookies={"access_token": stale_access_token})
     assert resp.status_code == 401
     assert resp.json()["detail"] == SESSION_REVOKED_DETAIL
+
+
+def test_login_records_ip_and_user_agent_on_the_session(client, db_session):
+    # Auditoria de hardening (2026-09): forense de incidente — "de onde veio
+    # esta sessao?" — nunca usado em nenhuma decisao de autorizacao.
+    email = "sessao.metadado@example.com"
+    client.post(
+        "/api/v1/auth/register", json={"name": "Ana", "email": email, "password": _PASSWORD}
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": _PASSWORD},
+        headers={"User-Agent": "TestClient-Hardening/1.0"},
+    )
+
+    user = db_session.query(User).filter(User.email == email).one()
+    session = (
+        db_session.query(UserSession)
+        .filter(UserSession.user_id == user.id, UserSession.revoked_at.is_(None))
+        .one()
+    )
+    assert session.ip_address == "testclient"
+    assert session.user_agent == "TestClient-Hardening/1.0"
 
 
 def test_second_login_after_first_logout_is_a_fresh_session_not_flagged_as_revoked(

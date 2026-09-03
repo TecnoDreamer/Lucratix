@@ -4,6 +4,19 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Segurança — metadado de sessão + proposta de MFA, PR3 de 4)
+- `sessions` ganha `ip_address`/`user_agent` (migration `0017_session_metadata`), gravados
+  no login (`create_session`) — forense de incidente, nunca usado em decisão de
+  autorização, sem tela/endpoint dedicado.
+- `docs/security/MFA.md` (novo) — proposta de arquitetura de MFA (TOTP, não SMS) para
+  papéis privilegiados (`ORGANIZATION_OWNER`/`ORGANIZATION_ADMIN`/Super Admin).
+  **Não implementado** — documento de arquitetura para uma rodada futura, mesma
+  disciplina de "avaliado, não implementado" já usada neste projeto.
+- Corrigida referência quebrada a `docs/security/SESSAO_UNICA.md` (nunca existiu) na
+  docstring de `app/models/session.py`.
+- 692 testes de backend passando (suíte completa, sozinha); migration testada
+  ponta a ponta (upgrade + downgrade) contra banco vazio; `ruff`/`mypy` limpos.
+
 ### Added (Segurança — hardening da recuperação de senha, PR2 de 4)
 - `confirm_password_reset` agora revoga qualquer sessão ativa do usuário
   (`app/core/sessions.py::revoke_active_session_for_user`, novo) — se a conta

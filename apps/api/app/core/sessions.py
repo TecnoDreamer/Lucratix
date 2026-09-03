@@ -29,7 +29,17 @@ class SessionInvalidError(Exception):
     """A sessao referenciada nao existe ou expirou naturalmente."""
 
 
-def create_session(db: DBSession, user_id: uuid.UUID) -> UserSession:
+def create_session(
+    db: DBSession,
+    user_id: uuid.UUID,
+    *,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> UserSession:
+    """`ip_address`/`user_agent` (auditoria de hardening, 2026-09) sao so
+    forense de incidente — nunca lidos em nenhuma decisao de autorizacao,
+    entao um chamador que nao os informa (default None) nao muda nenhum
+    comportamento existente."""
     now = datetime.now(UTC)
     db.execute(
         update(UserSession)
@@ -39,6 +49,8 @@ def create_session(db: DBSession, user_id: uuid.UUID) -> UserSession:
     session = UserSession(
         user_id=user_id,
         expires_at=now + timedelta(days=settings.refresh_token_expire_days),
+        ip_address=ip_address,
+        user_agent=user_agent,
     )
     db.add(session)
     db.flush()

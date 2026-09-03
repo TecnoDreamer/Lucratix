@@ -31,6 +31,23 @@ def test_create_session_returns_active_session(db_session):
     assert session.expires_at > datetime.now(UTC)
 
 
+def test_create_session_without_metadata_leaves_it_null(db_session):
+    # Chamador que nao informa ip_address/user_agent (default None) nao
+    # inventa nenhum valor — mesmo comportamento de sessoes criadas antes
+    # dessas colunas existirem (migration 0017_session_metadata).
+    user = _make_user(db_session)
+    session = create_session(db_session, user.id)
+    assert session.ip_address is None
+    assert session.user_agent is None
+
+
+def test_create_session_records_ip_and_user_agent_when_provided(db_session):
+    user = _make_user(db_session)
+    session = create_session(db_session, user.id, ip_address="203.0.113.10", user_agent="TestAgent/1.0")
+    assert session.ip_address == "203.0.113.10"
+    assert session.user_agent == "TestAgent/1.0"
+
+
 def test_create_session_revokes_previous_active_session(db_session):
     user = _make_user(db_session)
     first = create_session(db_session, user.id)
