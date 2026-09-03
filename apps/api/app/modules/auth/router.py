@@ -105,11 +105,18 @@ def _set_cookie(response: Response, name: str, value: str, max_age: int) -> None
     )
 
 
-def _set_auth_cookies(response: Response, db: Session, user: User) -> None:
+def _set_auth_cookies(response: Response, db: Session, user: User, request: Request) -> None:
     # RN-013: revoga qualquer sessao ativa anterior do usuario e cria uma
     # nova; o `sid` da sessao criada aqui e o que fica embutido em ambos os
-    # tokens (ver core/sessions.py::create_session).
-    session = create_session(db, user.id)
+    # tokens (ver core/sessions.py::create_session). IP/user-agent (auditoria
+    # de hardening, 2026-09) sao so forense de incidente, nunca usados em
+    # nenhuma decisao de autorizacao.
+    session = create_session(
+        db,
+        user.id,
+        ip_address=get_client_ip(request),
+        user_agent=(request.headers.get("user-agent") or "")[:255] or None,
+    )
     access_token = create_access_token(user.id, session.id)
     refresh_token = create_refresh_token(user.id, session.id)
     _set_cookie(
@@ -185,7 +192,7 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais invalidas"
         )
-    _set_auth_cookies(response, db, user)
+    _set_auth_cookies(response, db, user, request)
     record_audit(db, action="user.login", entity="user", entity_id=user.id, user_id=user.id)
     db.commit()
     return UserRead.model_validate(user)

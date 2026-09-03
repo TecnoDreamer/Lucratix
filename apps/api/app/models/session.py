@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,8 +20,8 @@ class Session(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     para o mesmo usuario. O `id` desta linha vira a claim `sid` embutida em
     ambos os tokens (access e refresh) emitidos naquele login; toda request
     autenticada valida que a sessao referenciada ainda esta ativa — um JWT
-    com assinatura/expiracao validas nao basta (ver core/deps.py e ADR de
-    sessao unica em docs/security/SESSAO_UNICA.md).
+    com assinatura/expiracao validas nao basta (ver core/deps.py e a secao
+    de sessao unica em docs/security/AUTHENTICATION.md).
     """
 
     __tablename__ = "sessions"
@@ -31,3 +31,10 @@ class Session(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Forense de incidente (auditoria de hardening, 2026-09) — "de onde veio
+    # esta sessao?" sem precisar cruzar com audit_logs (que nao guarda IP).
+    # Nullable, sem valor inventado para sessoes anteriores a esta coluna
+    # existir (migration 0017_session_metadata). Nunca exibido em nenhuma
+    # tela hoje — consulta direta (SQL/admin) durante investigacao real.
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)

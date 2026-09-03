@@ -5,6 +5,7 @@
 - [AUTHENTICATION.md](AUTHENTICATION.md) — funcionamento do sistema de autenticação (sessão, tokens, recuperação de senha, verificação de e-mail, rate limiting).
 - [RATE_LIMITING.md](RATE_LIMITING.md) — defesa contra força bruta/credential stuffing/password spraying: as 3 dimensões de chave (IP isolado, conta isolada, combinada), resolução de IP confiável, backoff, decisão de storage.
 - [LOGS_E_AUDITORIA.md](LOGS_E_AUDITORIA.md) — eventos de auditoria de autenticação/segurança, o que nunca é logado, multi-tenancy dos logs.
+- [MFA.md](MFA.md) — proposta de arquitetura de MFA (TOTP) para papéis privilegiados — **não implementado**, documento de arquitetura pra uma rodada futura.
 - [POLITICA_DE_SENHAS.md](POLITICA_DE_SENHAS.md) — política de senha forte (2026-09-02): requisitos, onde é aplicada, contrato de erro, hashing, legado.
 - [TESTES_DE_AUTENTICACAO.md](TESTES_DE_AUTENTICACAO.md) — cobertura de teste (unitário/integração/E2E) da política de senha e dos fluxos de autenticação.
 - [ACCESS_CONTROL.md](ACCESS_CONTROL.md) — controle de acesso (papéis, RBAC, exceções de Super Admin).
