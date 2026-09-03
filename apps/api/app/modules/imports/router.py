@@ -62,8 +62,11 @@ def list_domains(
     ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
 ) -> dict[str, list[DomainFieldRead]]:
     """Dominios disponiveis para importacao e seus campos — usado pelo
-    frontend para montar a primeira etapa do wizard (escolher destino)."""
-    return {key: _domain_fields_read(key) for key in DOMAIN_REGISTRY}
+    frontend para montar a primeira etapa do wizard (escolher destino).
+    So os importaveis (ver DomainSpec.importable) — um dominio export-only
+    como `audit_logs` nunca deve aparecer aqui, senao o wizard ofereceria
+    um destino que o proprio POST /imports rejeitaria em seguida."""
+    return {key: _domain_fields_read(key) for key, domain in DOMAIN_REGISTRY.items() if domain.importable}
 
 
 @router.post("/mapping-templates", status_code=status.HTTP_201_CREATED)

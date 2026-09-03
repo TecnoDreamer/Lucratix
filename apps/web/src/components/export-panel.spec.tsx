@@ -149,4 +149,28 @@ describe("ExportPanel", () => {
       );
     });
   });
+
+  it("sem papel suficiente (ou sem organização carregada), não mostra a opção Auditoria", () => {
+    render(<ExportPanel organizationId="org-1" />);
+    expect(screen.queryByRole("button", { name: "Auditoria" })).not.toBeInTheDocument();
+  });
+
+  it("VIEWER não vê a opção Auditoria — o endpoint exige ORGANIZATION_ADMIN", () => {
+    render(<ExportPanel organizationId="org-1" role="VIEWER" />);
+    expect(screen.queryByRole("button", { name: "Auditoria" })).not.toBeInTheDocument();
+  });
+
+  it("ORGANIZATION_ADMIN vê e consegue exportar Auditoria", async () => {
+    mockDownloadFile.mockResolvedValue(fakeBlobResult("audit_logs_export.csv"));
+    render(<ExportPanel organizationId="org-1" role="ORGANIZATION_ADMIN" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Auditoria" }));
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+
+    await waitFor(() => {
+      expect(mockDownloadFile).toHaveBeenCalledWith(
+        "/api/v1/organizations/org-1/exports/audit_logs?format=csv"
+      );
+    });
+  });
 });

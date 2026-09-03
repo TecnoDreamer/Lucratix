@@ -51,6 +51,13 @@ class DomainSpec:
     # ignorado/escondido para esses domínios (ver exports/readers.py e
     # o seletor de domínio no frontend).
     supports_date_range: bool = True
+    # False para domínios só-exportáveis (ex.: Auditoria — append-only por
+    # design, RN-015; "importar" uma linha de auditoria de uma planilha
+    # seria falsificar a trilha). `DOMAIN_REGISTRY` é compartilhado entre
+    # import e export (ver módulo `exports/`); esta flag é o que impede um
+    # domínio de virar destino de import só por existir aqui. Default True
+    # preserva o comportamento dos domínios já cadastrados.
+    importable: bool = True
 
 
 def normalize_natural_key_value(value: object) -> object:
@@ -356,11 +363,33 @@ CAMPAIGNS = DomainSpec(
     ),
 )
 
+AUDIT_LOGS = DomainSpec(
+    key="audit_logs",
+    display_name="Auditoria",
+    # Export-only (ver DomainSpec.importable acima) — sem chave natural
+    # (upsert nao se aplica, nunca ha "linha existente" pra comparar).
+    natural_key=(),
+    importable=False,
+    fields=(
+        # `created_at` e na verdade `datetime`, nao `date` — mas
+        # exports/serializers.py so checa `isinstance(value, date)` (datetime
+        # e subclasse) e chama `.isoformat()`, entao funciona sem mudar o
+        # serializer generico. `data_type` nunca alimenta parser de import
+        # aqui, porque `importable=False` bloqueia isso mais cedo.
+        FieldSpec("created_at", "Quando", (), "date"),
+        FieldSpec("user_email", "Usuário", (), "string"),
+        FieldSpec("action", "Ação", (), "string"),
+        FieldSpec("entity", "Entidade", (), "string"),
+        FieldSpec("entity_id", "ID da Entidade", (), "string"),
+    ),
+)
+
 DOMAIN_REGISTRY: dict[str, DomainSpec] = {
     FINANCIAL_PERIODS.key: FINANCIAL_PERIODS,
     FUNNEL_SNAPSHOTS.key: FUNNEL_SNAPSHOTS,
     PRODUCTS.key: PRODUCTS,
     CAMPAIGNS.key: CAMPAIGNS,
+    AUDIT_LOGS.key: AUDIT_LOGS,
 }
 
 

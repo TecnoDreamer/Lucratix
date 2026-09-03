@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { ApiError, downloadFile } from "@/lib/api";
 import { triggerBrowserDownload } from "@/lib/browser-download";
 import { DATA_DOMAIN_KEYS, useDataDomains } from "@/lib/data-domains";
+import { hasMinimumRole } from "@/lib/roles";
+import type { MembershipRole } from "@/lib/types";
 import { buttonPrimary, input as inputClass, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, Card } from "@/components/ui";
 import { IconDownload } from "@/components/icons";
@@ -20,10 +22,20 @@ const FORMATS: { id: ExportFormat; label: string }[] = [
 ];
 
 /** Seção sempre visível (inclusive para VIEWER) — exportar é leitura, mesmo
- * nível de permissão de GET /financials (ver ARCHITECTURE.md). */
-export function ExportPanel({ organizationId }: { organizationId: string }) {
+ * nível de permissão de GET /financials (ver ARCHITECTURE.md), EXCETO o
+ * domínio Auditoria, que exige `minRole` (ver `lib/data-domains.ts`) —
+ * filtrado aqui por `role`, não passado como prop pra evitar reabrir
+ * `useOrganization()` dentro do componente (quebraria os testes existentes,
+ * que renderizam `<ExportPanel />` sem `OrganizationProvider`). */
+export function ExportPanel({
+  organizationId,
+  role,
+}: {
+  organizationId: string;
+  role?: MembershipRole | null;
+}) {
   const t = useTranslations("common.exportPanel");
-  const dataDomains = useDataDomains();
+  const dataDomains = useDataDomains().filter((d) => !d.minRole || hasMinimumRole(role, d.minRole));
   const [domain, setDomain] = useState(DATA_DOMAIN_KEYS[0].key);
   const [format, setFormat] = useState<ExportFormat>("csv");
   const [filterByDate, setFilterByDate] = useState(false);

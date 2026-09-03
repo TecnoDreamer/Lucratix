@@ -75,6 +75,11 @@ describe("ImportWizard", () => {
     expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
   });
 
+  it("nunca oferece Auditoria como destino — é um domínio export-only", () => {
+    render(<ImportWizard organizationId="org-1" />);
+    expect(screen.queryByRole("option", { name: "Auditoria" })).not.toBeInTheDocument();
+  });
+
   it("envia o arquivo e avança para o mapeamento com a sugestão pré-preenchida", async () => {
     vi.mocked(api.postForm).mockResolvedValue(UPLOAD_RESPONSE);
 

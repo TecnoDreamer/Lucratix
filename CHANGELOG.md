@@ -4,6 +4,20 @@ Este arquivo passa a registrar mudanças notáveis a partir desta entrada — o 
 
 ## 2026-09-03
 
+### Added (Backlog pós-PR4 — exportação de Auditoria)
+- `audit_logs` como domínio exportável (CSV/XLSX/JSON) na Central de Dados. Novo campo
+  `DomainSpec.importable` (default `True`) impede que o domínio — export-only, RN-015 —
+  apareça como destino de import, mesmo com `DOMAIN_REGISTRY` compartilhado entre os dois
+  lados do pipeline. `GET /exports/audit_logs` exige `ORGANIZATION_ADMIN`
+  (`exports/router.py::_DOMAIN_MINIMUM_ROLE`, primeira exceção ao nível "qualquer membership
+  ativa" dos outros 4 domínios) — mesmo nível de `GET /audit-logs`. `user_id` resolvido para
+  e-mail na exportação.
+
+### Added (Backlog pós-PR4 — gráfico de conversão por variante em Experimentos)
+- Reaproveita `ChannelBarChart` (componente genérico da PR4) pra comparar a taxa de conversão
+  de Controle vs. Variante. Corrige um bug real: o resultado só era buscado depois de editar
+  uma variante — agora é buscado de todos os experimentos já no carregamento inicial da tela.
+
 ### Added (Backlog pós-PR4 — PDF Executivo em Analytics)
 - `GET /api/v1/organizations/{id}/reports/executive/pdf?date_from&date_to` — Relatório da Visão
   Executiva em PDF (`apps/api/app/modules/reports/executive_pdf.py`), mesmo padrão de

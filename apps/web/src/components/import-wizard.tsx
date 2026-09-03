@@ -134,7 +134,10 @@ export function ImportWizard({
   onImportCompleted?: () => void;
 }) {
   const t = useTranslations("centralDeDados.importWizard");
-  const dataDomains = useDataDomains();
+  // Nunca oferece um domínio export-only (ex.: Auditoria) como destino de
+  // import — DOMAIN_REGISTRY é compartilhado com exports/, mas import é
+  // sempre um subconjunto.
+  const dataDomains = useDataDomains().filter((d) => d.importable);
   const [step, setStep] = useState<Step>("upload");
   const [error, setError] = useState<string | null>(null);
 

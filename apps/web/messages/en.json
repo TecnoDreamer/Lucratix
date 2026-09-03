@@ -49,7 +49,8 @@
       "financial": "Financial",
       "funnel": "Funnel",
       "products": "Products",
-      "marketing": "Marketing"
+      "marketing": "Marketing",
+      "audit": "Audit"
     },
     "exportPanel": {
       "title": "Export data",
