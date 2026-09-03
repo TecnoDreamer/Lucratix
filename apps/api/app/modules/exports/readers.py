@@ -11,6 +11,8 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
+from app.models.user import User
+from app.modules.audit import repository as audit_repository
 from app.modules.financials import repository as financials_repository
 from app.modules.funnels import repository as funnels_repository
 from app.modules.marketing import repository as marketing_repository
@@ -148,6 +150,37 @@ def read_campaign_rows(
     return sorted(rows, key=lambda r: (r["start_date"] is None, r["start_date"] or date.min))
 
 
+def read_audit_log_rows(
+    db: Session, organization_id: uuid.UUID, date_from: date | None, date_to: date | None
+) -> list[dict[str, object]]:
+    """`user_id` so e `None` (acao de sistema, sem usuario autenticado — vira
+    "Sistema" na linha) ou aponta pra um usuario que existe de verdade: a FK
+    e `ondelete=SET NULL` (`AuditLog.user_id`), entao um usuario apagado ja
+    zera essa coluna no banco — ao contrario do padrao "Canal removido" dos
+    outros readers (FK `RESTRICT`), aqui nunca sobra um id orfao pra
+    resolver."""
+    if date_from is not None and date_to is not None:
+        logs = audit_repository.list_audit_logs_in_range(db, organization_id, date_from, date_to)
+    else:
+        logs = audit_repository.list_all_audit_logs(db, organization_id)
+
+    user_ids = {log.user_id for log in logs if log.user_id is not None}
+    emails_by_id: dict[uuid.UUID, str] = {
+        row[0]: row[1] for row in db.query(User.id, User.email).filter(User.id.in_(user_ids)).all()
+    }
+
+    return [
+        {
+            "created_at": log.created_at,
+            "user_email": emails_by_id.get(log.user_id, "Sistema") if log.user_id else "Sistema",
+            "action": log.action,
+            "entity": log.entity,
+            "entity_id": str(log.entity_id) if log.entity_id is not None else None,
+        }
+        for log in logs
+    ]
+
+
 DomainReader = Callable[[Session, uuid.UUID, "date | None", "date | None"], list[dict[str, object]]]
 
 DOMAIN_READERS: dict[str, DomainReader] = {
@@ -155,4 +188,5 @@ DOMAIN_READERS: dict[str, DomainReader] = {
     "funnel_snapshots": read_funnel_snapshot_rows,
     "products": read_product_rows,
     "campaigns": read_campaign_rows,
+    "audit_logs": read_audit_log_rows,
 }

@@ -250,6 +250,23 @@ def test_unsupported_domain_is_rejected(client):
     assert resp.status_code == 400
 
 
+def test_list_domains_never_includes_audit_logs(client):
+    # audit_logs e export-only (DomainSpec.importable=False, RN-015 —
+    # auditoria e append-only, "importar" seria falsificar a trilha). Nunca
+    # deve aparecer como destino de import, mesmo estando em DOMAIN_REGISTRY
+    # (compartilhado com exports/).
+    org_id = _register_login_and_create_org(client, "imp.auditdomain@example.com", "Empresa Imp Audit Domain")
+    resp = client.get(f"/api/v1/organizations/{org_id}/imports/domains")
+    assert resp.status_code == 200
+    assert "audit_logs" not in resp.json()
+
+
+def test_upload_to_audit_logs_is_rejected(client):
+    org_id = _register_login_and_create_org(client, "imp.auditupload@example.com", "Empresa Imp Audit Upload")
+    resp = _upload(client, org_id, "valid.csv", b"a,b\n1,2\n", "text/csv", domain="audit_logs")
+    assert resp.status_code == 400
+
+
 def test_cancel_import_marks_job_cancelled(client):
     org_id = _register_login_and_create_org(client, "imp.cancel@example.com", "Empresa Imp Cancel")
     content = FIXTURES.joinpath("valid.csv").read_bytes()

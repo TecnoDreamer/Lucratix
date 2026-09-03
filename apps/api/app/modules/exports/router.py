@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.audit import record_audit
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context
+from app.models.membership import MembershipRole, role_rank
 from app.modules.exports import service
 
 router = APIRouter(prefix="/api/v1/organizations/{organization_id}/exports", tags=["exports"])
@@ -16,6 +17,15 @@ router = APIRouter(prefix="/api/v1/organizations/{organization_id}/exports", tag
 # só que em arquivo — RN-010 não distingue "ver na tela" de "baixar o mesmo
 # dado" (ver docs/data-import-export/ARCHITECTURE.md). Continua exigindo
 # membership ativa na organização (RNF-002), como qualquer rota aqui.
+#
+# Exceção: audit_logs. GET /audit-logs exige ORGANIZATION_ADMIN (auditoria é
+# mais sensível que os outros domínios) — exportar o mesmo dado em CSV não
+# pode ser mais permissivo que ver na tela, senão VIEWER baixaria o que não
+# pode nem ler. Único domínio com papel mínimo até agora; os outros 4
+# continuam sem nenhuma exigência além de membership ativa.
+_DOMAIN_MINIMUM_ROLE: dict[str, MembershipRole] = {
+    "audit_logs": MembershipRole.ORGANIZATION_ADMIN,
+}
 
 
 @router.get("/{domain}")
@@ -27,6 +37,13 @@ def export_domain(
     ctx: OrganizationContext = Depends(get_organization_context),
     db: Session = Depends(get_db),
 ) -> Response:
+    minimum_role = _DOMAIN_MINIMUM_ROLE.get(domain)
+    if minimum_role is not None and role_rank(ctx.role) > role_rank(minimum_role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Papel insuficiente para esta operacao",
+        )
+
     try:
         content, content_type, filename = service.export_domain(
             db,

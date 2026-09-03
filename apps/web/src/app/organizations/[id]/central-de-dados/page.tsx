@@ -153,7 +153,7 @@ export default function CentralDeDadosPage() {
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 
       <div className="mt-6">
-        <ExportPanel organizationId={id} />
+        <ExportPanel organizationId={id} role={organization?.my_role} />
       </div>
 
       {orgLoading ? (

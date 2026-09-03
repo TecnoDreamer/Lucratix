@@ -46,7 +46,10 @@ def _json_safe(value: object) -> object:
 
 def _require_domain(domain_key: str) -> DomainSpec:
     domain = get_domain(domain_key)
-    if domain is None:
+    # Mesmo erro pros dois casos (dominio inexistente ou export-only, ex.:
+    # audit_logs) — o cliente nao precisa saber a diferenca, so que esse
+    # dominio nao aceita import.
+    if domain is None or not domain.importable:
         raise DomainNotFoundError(domain_key)
     return domain
 

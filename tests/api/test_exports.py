@@ -5,6 +5,7 @@ inclusive VIEWER) — exportar é ler o mesmo dado que já aparece na tela."""
 import csv
 import io
 import json
+from datetime import date
 
 import openpyxl
 
@@ -192,6 +193,99 @@ def test_export_campaigns_resolves_channel_name(client):
     assert payload[0]["name"] == "Black Friday"
     assert payload[0]["investment"] == 5000.0
     assert payload[0]["clicks"] == 1200
+
+
+def test_export_audit_logs_contains_seeded_entries_with_resolved_user_email(client):
+    org_id = _register_login_and_create_org(
+        client, "exp.auditcontent@example.com", "Empresa Exp Audit Content"
+    )
+    _seed_financial_periods(client, org_id)  # PUT /financials grava um audit_log
+
+    resp = client.get(f"/api/v1/organizations/{org_id}/exports/audit_logs", params={"format": "json"})
+    assert resp.status_code == 200
+    payload = json.loads(resp.content)
+    upserts = [row for row in payload if row["action"] == "financial_period.upserted"]
+    assert len(upserts) == 2  # um por PUT /financials em _seed_financial_periods
+    assert upserts[0]["user_email"] == "exp.auditcontent@example.com"
+    assert upserts[0]["entity"] == "financial_period"
+    assert upserts[0]["entity_id"] is not None
+
+
+def test_export_audit_logs_filters_by_date_range(client):
+    org_id = _register_login_and_create_org(client, "exp.auditrange@example.com", "Empresa Exp Audit Range")
+    _seed_financial_periods(client, org_id)
+
+    today = date.today().isoformat()
+    resp_today = client.get(
+        f"/api/v1/organizations/{org_id}/exports/audit_logs",
+        params={"format": "json", "date_from": today, "date_to": today},
+    )
+    assert len(json.loads(resp_today.content)) >= 2
+
+    resp_past = client.get(
+        f"/api/v1/organizations/{org_id}/exports/audit_logs",
+        params={"format": "json", "date_from": "2020-01-01", "date_to": "2020-01-02"},
+    )
+    assert json.loads(resp_past.content) == []
+
+
+def test_export_audit_logs_isolates_organizations(client):
+    org_a = _register_login_and_create_org(client, "exp.auditisoa@example.com", "Empresa Exp Audit Iso A")
+    _seed_financial_periods(client, org_a)
+    org_b = client.post("/api/v1/organizations", json={"name": "Empresa Exp Audit Iso B"}).json()["id"]
+
+    resp = client.get(f"/api/v1/organizations/{org_b}/exports/audit_logs", params={"format": "json"})
+    assert resp.status_code == 200
+    payload = json.loads(resp.content)
+    assert all(row["action"] != "financial_period.upserted" for row in payload)
+
+
+def test_viewer_cannot_export_audit_logs(client_factory):
+    owner = client_factory()
+    viewer_client = client_factory()
+    _register_and_login(owner, "Ana", "exp.auditviewerowner@example.com")
+    _register_and_login(viewer_client, "Vitor", "exp.auditviewer@example.com")
+
+    org_id = owner.post("/api/v1/organizations", json={"name": "Empresa Exp Audit Viewer"}).json()["id"]
+    owner.post(
+        f"/api/v1/organizations/{org_id}/memberships",
+        json={"email": "exp.auditviewer@example.com", "role": "VIEWER"},
+    )
+
+    resp = viewer_client.get(f"/api/v1/organizations/{org_id}/exports/audit_logs", params={"format": "json"})
+    assert resp.status_code == 403
+
+
+def test_analyst_cannot_export_audit_logs(client_factory):
+    owner = client_factory()
+    analyst_client = client_factory()
+    _register_and_login(owner, "Ana", "exp.auditanalystowner@example.com")
+    _register_and_login(analyst_client, "Beto", "exp.auditanalyst@example.com")
+
+    org_id = owner.post("/api/v1/organizations", json={"name": "Empresa Exp Audit Analyst"}).json()["id"]
+    owner.post(
+        f"/api/v1/organizations/{org_id}/memberships",
+        json={"email": "exp.auditanalyst@example.com", "role": "ANALYST"},
+    )
+
+    resp = analyst_client.get(f"/api/v1/organizations/{org_id}/exports/audit_logs", params={"format": "json"})
+    assert resp.status_code == 403
+
+
+def test_organization_admin_can_export_audit_logs(client_factory):
+    owner = client_factory()
+    admin_client = client_factory()
+    _register_and_login(owner, "Ana", "exp.auditadminowner@example.com")
+    _register_and_login(admin_client, "Carla", "exp.auditadmin@example.com")
+
+    org_id = owner.post("/api/v1/organizations", json={"name": "Empresa Exp Audit Admin"}).json()["id"]
+    owner.post(
+        f"/api/v1/organizations/{org_id}/memberships",
+        json={"email": "exp.auditadmin@example.com", "role": "ORGANIZATION_ADMIN"},
+    )
+
+    resp = admin_client.get(f"/api/v1/organizations/{org_id}/exports/audit_logs", params={"format": "json"})
+    assert resp.status_code == 200
 
 
 def test_viewer_can_export_same_as_dashboard_read(client_factory):
