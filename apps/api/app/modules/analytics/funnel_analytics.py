@@ -21,7 +21,7 @@ from app.modules.metrics.engine import MetricResult
 # proposito: sao 2 runtimes diferentes, nenhum deles importa arquivo do
 # outro; mesma escolha ja feita la de nao passar por i18n neste texto
 # determinístico).
-_STAGE_LABELS_PT_BR: dict[str, str] = {
+STAGE_LABELS_PT_BR: dict[str, str] = {
     "impressions": "Impressões",
     "visits": "Visitas",
     "leads": "Leads",
@@ -101,7 +101,7 @@ def stage_values(funnel: FunnelSnapshot | AggregatedFunnel | None) -> dict[str, 
     }
 
 
-def _find_bottleneck(conversions: list[StageConversion]) -> StageConversion | None:
+def find_bottleneck(conversions: list[StageConversion]) -> StageConversion | None:
     """A etapa com a menor taxa de conversao aplicavel entre as 7 — nunca
     um calculo novo, so o minimo dos valores ja computados. `None` quando
     nenhuma conversao e aplicavel (sem dado no periodo)."""
@@ -123,11 +123,11 @@ def describe_bottleneck(conversions: list[StageConversion]) -> str | None:
     causal) — mesma regra de `findBottleneck`/`computeFunnelInsights` em
     apps/web/src/lib/funnel-insights.ts, aqui como texto pt-BR pro
     relatorio em PDF. `None` quando nao ha nenhuma conversao aplicavel."""
-    bottleneck = _find_bottleneck(conversions)
+    bottleneck = find_bottleneck(conversions)
     if bottleneck is None or bottleneck.conversion_rate.value is None:
         return None
-    from_label = _STAGE_LABELS_PT_BR[bottleneck.from_stage]
-    to_label = _STAGE_LABELS_PT_BR[bottleneck.to_stage]
+    from_label = STAGE_LABELS_PT_BR[bottleneck.from_stage]
+    to_label = STAGE_LABELS_PT_BR[bottleneck.to_stage]
     return (
         f"A menor taxa de conversão do período está entre {from_label} e {to_label}: "
         f"{format_percentage(bottleneck.conversion_rate.value)}."
@@ -155,8 +155,8 @@ def describe_biggest_mover(current: list[StageConversion], previous: list[StageC
     if biggest is None:
         return None
     conversion, percent_change = biggest
-    from_label = _STAGE_LABELS_PT_BR[conversion.from_stage]
-    to_label = _STAGE_LABELS_PT_BR[conversion.to_stage]
+    from_label = STAGE_LABELS_PT_BR[conversion.from_stage]
+    to_label = STAGE_LABELS_PT_BR[conversion.to_stage]
     return (
         f"A conversão de {from_label} para {to_label} teve a maior variação do período: "
         f"{format_percentage(percent_change, signed=True)} vs. o período anterior."
