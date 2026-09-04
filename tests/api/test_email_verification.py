@@ -4,7 +4,11 @@ todo fluxo aqui exercita o caminho `dev_token`, o mesmo que já existia para
 password-reset. Verificar e-mail NUNCA bloqueia login (decisão documentada
 em docs/security/AUTHENTICATION.md)."""
 
+from datetime import UTC, datetime, timedelta
+
+from app.core.security import hash_opaque_token
 from app.models.audit_log import AuditLog
+from app.models.email_verification_token import EmailVerificationToken
 from app.models.user import User
 
 
@@ -80,6 +84,26 @@ def test_verify_email_token_is_single_use(client):
 
     second = client.post("/api/v1/auth/verify-email", json={"token": token})
     assert second.status_code == 400
+
+
+def test_verify_email_with_expired_token_is_rejected(client, db_session):
+    # Teste de integracao (secao 23 do prompt de hardening): "token expirado
+    # falha" — distinto de "token invalido" (formato inexistente, ja
+    # coberto acima). Mesma tecnica de test_password_reset.py:
+    # envelhecer o `expires_at` direto no banco, sem mockar relogio.
+    body = _register(client, "verificacao-expirada@example.com")
+    token = body["dev_token"]
+
+    record = (
+        db_session.query(EmailVerificationToken)
+        .filter(EmailVerificationToken.token_hash == hash_opaque_token(token))
+        .one()
+    )
+    record.expires_at = datetime.now(UTC) - timedelta(hours=1)
+    db_session.commit()
+
+    resp = client.post("/api/v1/auth/verify-email", json={"token": token})
+    assert resp.status_code == 400
 
 
 def test_resend_verification_returns_generic_message_for_unknown_email(client):
