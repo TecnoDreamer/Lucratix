@@ -820,7 +820,32 @@
     "freezeDialogDescription": "The data won't be deleted. The company will become frozen (read-only) and can be reactivated later.",
     "freezeConfirmLabel": "Close",
     "freezeReasonLabel": "Reason (optional)",
-    "freezeReasonPlaceholder": "E.g.: contract ended, client withdrew..."
+    "freezeReasonPlaceholder": "E.g.: contract ended, client withdrew...",
+    "apiKeys": {
+      "heading": "API keys",
+      "description": "Authenticate external tools (Power BI, Looker Studio, automation) to read this company's analytics data without logging in.",
+      "loadError": "Could not load API keys.",
+      "empty": "No API keys created yet.",
+      "newKeyLabel": "Key name",
+      "newKeyPlaceholder": "e.g. Power BI — Finance",
+      "createKey": "Create key",
+      "creating": "Creating...",
+      "createError": "Could not create the key.",
+      "revealTitle": "Copy your key now",
+      "revealDescription": "For security, this value will not be shown again. Store it somewhere safe.",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "dismissReveal": "Ok, I copied it",
+      "createdAt": "created on {date}",
+      "lastUsedAt": "last used on {date}",
+      "neverUsed": "never used",
+      "revoke": "Revoke",
+      "revokeError": "Could not revoke the key.",
+      "revokeDialogTitle": "Revoke this key?",
+      "revokeDialogDescription": "Any tool using this key will immediately lose access. This action cannot be undone.",
+      "revokeConfirmLabel": "Revoke",
+      "revokedHeading": "{count, plural, one {# revoked key} other {# revoked keys}}"
+    }
   },
   "authHero": {
     "points": [

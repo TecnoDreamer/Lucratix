@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
 import type { Organization } from "@/lib/types";
@@ -15,7 +15,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
-  return { ...actual, api: { ...actual.api, patch: vi.fn(), post: vi.fn(), postForm: vi.fn(), del: vi.fn() } };
+  return {
+    ...actual,
+    api: { ...actual.api, get: vi.fn(), patch: vi.fn(), post: vi.fn(), postForm: vi.fn(), del: vi.fn() },
+  };
 });
 
 function fakeOrg(overrides: Partial<Organization> = {}): Organization {
@@ -56,8 +59,16 @@ function renderWithOrg(ctxOverrides: Partial<OrganizationContextValue> = {}) {
   return { ...result, onOrganizationUpdate };
 }
 
+beforeEach(() => {
+  // ApiKeysSection (montada por padrão nesta tela) busca a lista de chaves
+  // no mount — default vazio pra não vazar em todo teste que nem toca em
+  // chave de API. Cada teste que precisa de outro comportamento sobrescreve.
+  vi.mocked(api.get).mockResolvedValue([]);
+});
+
 afterEach(() => {
   cleanup();
+  vi.mocked(api.get).mockReset();
   vi.mocked(api.patch).mockReset();
   vi.mocked(api.post).mockReset();
 });

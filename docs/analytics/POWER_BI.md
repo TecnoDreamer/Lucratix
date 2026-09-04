@@ -27,15 +27,11 @@ Embutir um relatório Power BI **dentro do próprio Lucratix** (o usuário nunca
 
 Nenhum desses quatro pré-requisitos existe hoje. **Bloqueio real, não técnico**: confirmar com o usuário se/quando ele obtém a licença Premium e faz o Azure AD App Registration antes de qualquer código desta opção ser escrito.
 
-## Ponto de extensão no backend (não implementado)
+## Ponto de extensão no backend — implementado (2026-09-04)
 
-Ambas as opções (A imediatamente, B no futuro) exigem uma forma de autenticação de API que **não existe hoje**: a API do Lucratix autentica via cookie de sessão (`access_token`/`refresh_token`, `HttpOnly`) — pensado para o SPA em `apps/web`, não para uma ferramenta externa como o Power BI Desktop, que não guarda cookie de navegador.
+Ambas as opções (A imediatamente, B no futuro) exigem uma forma de autenticação de API que a API do Lucratix não tinha: autenticava só via cookie de sessão (`access_token`/`refresh_token`, `HttpOnly`) — pensado para o SPA em `apps/web`, não para uma ferramenta externa como o Power BI Desktop, que não guarda cookie de navegador.
 
-Quando essa necessidade for priorizada, o desenho recomendado (não implementado, só o formato do problema):
-
-- Um mecanismo de **API key por organização**, escopado (só lê `analytics:*`, nunca escreve), rotacionável e revogável — análogo em espírito ao token de reset de senha já existente (`app/models/password_reset_token.py`: opaco, hash armazenado, nunca o valor em claro). Novo módulo `app/modules/api_keys/` seria o lugar natural.
-- **Nunca** reaproveitar o JWT de sessão do usuário para isso — sessão de usuário tem prazo curto (15 min access / 7 dias refresh) e é revogada por RN-013 (sessão única); uma API key para uma ferramenta de BI de terceiros precisa de um ciclo de vida próprio, independente de o usuário estar logado no navegador.
-- O endpoint de análise (`/analytics/*`) já é organization-scoped via `get_organization_context` (`app/core/deps.py`) — uma API key precisaria carregar `organization_id` + `role` do mesmo jeito que a sessão carrega hoje, para que o isolamento multi-tenant (ADR-0003, RNF-002) continue valendo sem reescrever nenhuma rota existente.
+**Implementado**: módulo de API key por organização (`app/modules/api_keys/`), escopado a leitura de analytics, rotacionável e revogável — ver [`docs/security/API_KEYS.md`](../security/API_KEYS.md) para a arquitetura completa. `GET /analytics/executive`, `/analytics/executive/series`, `/analytics/executive/targets`, `/analytics/executive/correlation`, `/analytics/marketing` e `/analytics/marketing/by-channel` (exatamente os 6 endpoints listados na seção "Dados que uma integração Power BI exporia hoje", abaixo) já aceitam `Authorization: Bearer <chave>` como alternativa ao cookie de sessão. A Opção A (Power Query "Web") já pode ser construída sobre isto — falta só o guia de configuração no Power BI Desktop em si, não mais nenhum código de backend.
 
 ## Dados que uma integração Power BI exporia hoje
 

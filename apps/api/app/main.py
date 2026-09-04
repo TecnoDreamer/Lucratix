@@ -5,6 +5,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.core.config import get_settings
 from app.core.middleware import SecurityHeadersMiddleware
 from app.modules.analytics.router import router as analytics_router
+from app.modules.api_keys.router import router as api_keys_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.baselines.router import router as baselines_router
@@ -54,6 +55,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.include_router(auth_router)
 app.include_router(organizations_router)
 app.include_router(memberships_router)
+app.include_router(api_keys_router)
 app.include_router(audit_router)
 app.include_router(baselines_router)
 app.include_router(products_router)

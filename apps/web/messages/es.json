@@ -820,7 +820,32 @@
     "freezeDialogDescription": "Los datos no se eliminarán. La empresa quedará congelada (solo lectura) y podrá reactivarse más adelante.",
     "freezeConfirmLabel": "Cerrar",
     "freezeReasonLabel": "Motivo (opcional)",
-    "freezeReasonPlaceholder": "Ej.: contrato terminado, el cliente desistió..."
+    "freezeReasonPlaceholder": "Ej.: contrato terminado, el cliente desistió...",
+    "apiKeys": {
+      "heading": "Claves de API",
+      "description": "Autentica herramientas externas (Power BI, Looker Studio, automatización) para leer los datos de analytics de esta empresa sin iniciar sesión.",
+      "loadError": "No se pudieron cargar las claves de API.",
+      "empty": "Todavía no se creó ninguna clave de API.",
+      "newKeyLabel": "Nombre de la clave",
+      "newKeyPlaceholder": "Ej.: Power BI — Financiero",
+      "createKey": "Crear clave",
+      "creating": "Creando...",
+      "createError": "No se pudo crear la clave.",
+      "revealTitle": "Copia tu clave ahora",
+      "revealDescription": "Por seguridad, este valor no se mostrará de nuevo. Guárdalo en un lugar seguro.",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "dismissReveal": "Ok, ya la copié",
+      "createdAt": "creada el {date}",
+      "lastUsedAt": "último uso el {date}",
+      "neverUsed": "nunca usada",
+      "revoke": "Revocar",
+      "revokeError": "No se pudo revocar la clave.",
+      "revokeDialogTitle": "¿Revocar esta clave?",
+      "revokeDialogDescription": "Cualquier herramienta que use esta clave perderá el acceso de inmediato. Esta acción no se puede deshacer.",
+      "revokeConfirmLabel": "Revocar",
+      "revokedHeading": "{count, plural, one {# clave revocada} other {# claves revocadas}}"
+    }
   },
   "authHero": {
     "points": [

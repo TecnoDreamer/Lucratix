@@ -194,6 +194,11 @@ refresh_ip_rate_limiter = RateLimiter(max_attempts=60, window_seconds=60)
 membership_invite_rate_limiter = RateLimiter(max_attempts=20, window_seconds=300)
 platform_user_create_rate_limiter = RateLimiter(max_attempts=20, window_seconds=300)
 
+# Mesmo raciocinio: criar chave de API ja exige ORGANIZATION_ADMIN+, mas sem
+# limite contra geracao em massa (ex.: sessao de admin comprometida criando
+# dezenas de chaves pra exfiltrar dado depois de perder acesso).
+api_key_create_rate_limiter = RateLimiter(max_attempts=20, window_seconds=300)
+
 # Protecao barata contra estourar a cota gratuita do Cloudinary (25
 # creditos/mes) por engano/abuso — 10 tentativas em 5 minutos e mais que
 # suficiente pra um fluxo normal de "tentei, nao gostei, troquei de novo".
