@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonDanger, buttonPrimary, card, input, label as labelClass, sectionTitle } from "@/lib/ui";
 import { Alert, EmptyState } from "@/components/ui";
+import { ApiKeysSection } from "@/components/api-keys-section";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { LogoUploader } from "@/components/logo-uploader";
 import { useOrganization } from "@/contexts/organization-context";
@@ -69,6 +70,8 @@ export default function OrganizationSettingsPage() {
       <OrganizationDataForm organization={current} onUpdated={handleUpdated} />
 
       <LifecycleSection organization={current} onUpdated={handleUpdated} router={router} orgId={id} />
+
+      <ApiKeysSection organizationId={id} />
     </div>
   );
 }

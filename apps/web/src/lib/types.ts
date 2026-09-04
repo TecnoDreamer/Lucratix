@@ -24,6 +24,24 @@ export interface Membership {
   dev_token?: string | null;
 }
 
+export interface ApiKey {
+  id: string;
+  organization_id: string;
+  created_by_user_id: string;
+  name: string;
+  key_prefix: string;
+  created_at: string;
+  revoked_at: string | null;
+  last_used_at: string | null;
+}
+
+// Só existe na resposta de criação (POST) — o único momento em que o valor
+// bruto existe fora do banco (que só guarda o hash). Nunca devolvido de
+// novo por nenhum outro endpoint.
+export interface ApiKeyCreated extends ApiKey {
+  raw_key: string;
+}
+
 export type OrganizationStatus = "active" | "frozen";
 
 export interface Organization {

@@ -6,6 +6,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.api_key_auth import require_role_or_api_key
 from app.core.database import get_db
 from app.core.deps import OrganizationContext, get_organization_context, require_role
 from app.models.campaign import Campaign
@@ -127,7 +128,7 @@ def compare_to_baseline(
 def get_executive_dashboard(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> ExecutiveDashboardRead:
     """RF-023, secoes 5-7 do prompt de BI: visao executiva por intervalo de
@@ -187,7 +188,7 @@ def get_executive_dashboard(
 def get_executive_series(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> ExecutiveSeriesRead:
     """Serie mensal dos mesmos 7 KPIs de `/analytics/executive`, um ponto por
@@ -229,7 +230,7 @@ def get_executive_series(
 def get_executive_targets(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> ExecutiveTargetsRead:
     """Progresso em relacao a meta (`targets`) — mesma permissao dos outros
@@ -282,7 +283,7 @@ def get_executive_correlation(
     date_to: date,
     metric_x: _CorrelationMetric,
     metric_y: _CorrelationMetric,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> ExecutiveCorrelationRead:
     """Correlacao de Pearson entre duas metricas mensais da Visao Executiva
@@ -327,7 +328,7 @@ def get_executive_correlation(
 def get_marketing_analytics(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> MarketingAnalyticsRead:
     """Métricas de campanha (ROAS, ROI, CTR, CPC, CPM, CPL, CPA) por
@@ -373,7 +374,7 @@ def get_marketing_analytics(
 def get_marketing_by_channel(
     date_from: date,
     date_to: date,
-    ctx: OrganizationContext = Depends(require_role(MembershipRole.ANALYST)),
+    ctx: OrganizationContext = Depends(require_role_or_api_key(MembershipRole.ANALYST)),
     db: Session = Depends(get_db),
 ) -> MarketingByChannelRead:
     """Drill-down de `/analytics/marketing` por canal — mesmas 7 metricas,

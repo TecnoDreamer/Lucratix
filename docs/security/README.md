@@ -6,6 +6,7 @@
 - [RATE_LIMITING.md](RATE_LIMITING.md) — defesa contra força bruta/credential stuffing/password spraying: as 3 dimensões de chave (IP isolado, conta isolada, combinada), resolução de IP confiável, backoff, decisão de storage.
 - [LOGS_E_AUDITORIA.md](LOGS_E_AUDITORIA.md) — eventos de auditoria de autenticação/segurança, o que nunca é logado, multi-tenancy dos logs.
 - [MFA.md](MFA.md) — proposta de arquitetura de MFA (TOTP) para papéis privilegiados — **não implementado**, documento de arquitetura pra uma rodada futura.
+- [API_KEYS.md](API_KEYS.md) — chave de API por organização (2026-09-04): autenticação alternativa ao cookie de sessão para ferramentas externas de analytics (Power BI, Looker Studio), papel resolvido ao vivo, revogação, isolamento multi-tenant.
 - [POLITICA_DE_SENHAS.md](POLITICA_DE_SENHAS.md) — política de senha forte (2026-09-02): requisitos, onde é aplicada, contrato de erro, hashing, legado.
 - [TESTES_DE_AUTENTICACAO.md](TESTES_DE_AUTENTICACAO.md) — cobertura de teste (unitário/integração/E2E) da política de senha e dos fluxos de autenticação.
 - [TESTES_DE_SEGURANCA_AUTENTICACAO.md](TESTES_DE_SEGURANCA_AUTENTICACAO.md) — fechamento do épico de hardening (2026-09): mapa seção-a-seção do prompt mestre de força bruta (unitário/integração/bypass/E2E) contra a cobertura real, com o racional de cada item N/A ou deferido.

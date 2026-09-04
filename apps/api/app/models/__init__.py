@@ -1,3 +1,4 @@
+from app.models.api_key import ApiKey
 from app.models.audit_log import AuditLog
 from app.models.baseline import Baseline
 from app.models.campaign import Campaign
@@ -19,6 +20,7 @@ from app.models.user import User
 from app.models.user_workspace_preference import UserWorkspacePreference
 
 __all__ = [
+    "ApiKey",
     "AuditLog",
     "Baseline",
     "Campaign",
