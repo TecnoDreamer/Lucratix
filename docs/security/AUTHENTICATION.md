@@ -59,6 +59,11 @@ Ver [`docs/security/RATE_LIMITING.md`](RATE_LIMITING.md) para a arquitetura comp
 - **"Lembrar de mim"**: não existe diferenciação de duração de sessão hoje (access/refresh já têm prazos fixos, sessão única já é o comportamento padrão). Seção 22 proíbe checkbox decorativo sem comportamento real — não foi adicionado. Se no futuro fizer sentido (ex.: refresh token de duração maior quando marcado), isso exige mudança de verdade no backend, não só na UI.
 - **Termos de Uso / Política de Privacidade / Suporte**: sem conteúdo legal real para essas páginas, não foram criados links no rodapé de autenticação — seção 37 proíbe link morto, e um link para uma página vazia/placeholder seria pior do que a ausência do link.
 
+## Endpoints equivalentes e i18n das mensagens de erro (auditoria PR4, 2026-09)
+
+- **Endpoints equivalentes**: inventário de todas as rotas de `auth`/`memberships`/`platform_admin` confirma que não existe rota duplicada/alias que ofereça login, reset ou verificação por um caminho que escape do rate limiting — um único conjunto canônico de endpoints, todos cobertos.
+- **i18n das mensagens de erro de autenticação**: as mensagens de `detail` retornadas pelo backend (incluindo as de rate limiting, ex. "Muitas tentativas de login...", e as pré-existentes, ex. "Credenciais invalidas") sempre aparecem em português, independente do locale ativo na UI — elas nunca passam pelo catálogo `next-intl` do frontend. Isto é um padrão já existente em todo o app (nenhuma mensagem de erro de qualquer módulo é traduzida hoje), não uma regressão introduzida pelo hardening — fora de escopo consertar aqui, já que seria um retrofit de i18n em toda a camada de erros da API, não algo específico de autenticação.
+
 ## Segurança preservada nesta rodada (redesign de autenticação)
 
 Nenhuma mudança nesta rodada alterou: validação server-side, cookies (`HttpOnly`/`Secure`/`SameSite`), a política de sessão única, mensagens sem enumeração de conta (login e password-reset), ou logout server-side. O redesign foi de UI/UX (visibilidade de senha, Caps Lock, telas de recuperação) e de uma lacuna real de rate limiting — não uma reescrita da lógica de autenticação existente.

@@ -74,3 +74,13 @@ def test_trusted_proxy_configured_but_header_has_fewer_hops_than_expected_falls_
     monkeypatch.setattr(client_ip_module, "get_settings", lambda: _FakeSettings(trusted_proxy_count=3))
     request = _fake_request(client_host="203.0.113.10", forwarded_for="1.1.1.1, 2.2.2.2")
     assert get_client_ip(request) == "203.0.113.10"
+
+
+def test_ipv6_socket_address_is_used_as_is(monkeypatch):
+    # Teste de bypass (secao 24): o IP e tratado como string opaca — um
+    # cliente em IPv6 nao escapa do rate limiting nem quebra a resolucao.
+    # `sessions.ip_address` ja e String(45) especificamente pra caber o
+    # maior literal IPv6 possivel (migration 0017_session_metadata).
+    monkeypatch.setattr(client_ip_module, "get_settings", lambda: _FakeSettings(trusted_proxy_count=0))
+    request = _fake_request(client_host="2001:0db8:85a3:0000:0000:8a2e:0370:7334", forwarded_for="1.2.3.4")
+    assert get_client_ip(request) == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"

@@ -181,6 +181,121 @@ def test_membership_invite_is_rate_limited(client):
     assert blocked.status_code == 429
 
 
+def test_forged_x_forwarded_for_does_not_bypass_login_rate_limit_over_http(client):
+    # Teste de bypass (secao 24 do prompt de hardening): sem
+    # trusted_proxy_count configurado (padrao de teste), um atacante
+    # variando X-Forwarded-For a cada tentativa nao contorna o rate
+    # limiting de /login, porque get_client_ip() ignora completamente o
+    # header quando nao ha proxy confiavel — ja provado na unidade
+    # (test_client_ip.py), aqui provado ponta a ponta via HTTP real.
+    email = "forjado@example.com"
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": email, "password": "SenhaForte123!"},
+    )
+
+    for i in range(login_rate_limiter.max_attempts):
+        resp = client.post(
+            "/api/v1/auth/login",
+            json={"email": email, "password": "errada"},
+            headers={"X-Forwarded-For": f"198.51.100.{i}"},
+        )
+        assert resp.status_code == 401
+
+    blocked = client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "errada"},
+        headers={"X-Forwarded-For": "198.51.100.250"},
+    )
+    assert blocked.status_code == 429
+
+
+def test_switching_device_does_not_reset_account_rate_limit(client_factory):
+    # Teste de integracao (secao 23): trocar de navegador/dispositivo (novo
+    # TestClient, cookies proprios) nao reseta a protecao da conta, porque
+    # a chave do limiter de conta e o e-mail, nunca o cookie/sessao do
+    # cliente que esta atacando.
+    device_a = client_factory()
+    device_b = client_factory()
+
+    email = "dispositivo-trocado@example.com"
+    device_a.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": email, "password": "SenhaForte123!"},
+    )
+
+    attempts_on_a = login_account_rate_limiter.max_attempts // 2
+    for _ in range(attempts_on_a):
+        resp = device_a.post("/api/v1/auth/login", json={"email": email, "password": "errada"})
+        assert resp.status_code == 401
+
+    for _ in range(login_account_rate_limiter.max_attempts - attempts_on_a):
+        resp = device_b.post("/api/v1/auth/login", json={"email": email, "password": "errada"})
+        assert resp.status_code == 401
+
+    # A soma das tentativas nos dois dispositivos ja esgotou o limite da
+    # conta — um terceiro dispositivo contra a mesma conta tambem e barrado.
+    device_c = client_factory()
+    blocked = device_c.post("/api/v1/auth/login", json={"email": email, "password": "errada"})
+    assert blocked.status_code == 429
+
+
+def test_login_with_different_email_casing_never_matches_the_real_account(client):
+    # Risco residual auditado (RATE_LIMITING.md): o sistema nao normaliza
+    # case de e-mail em nenhum fluxo. Isto NAO e um bypass porque a
+    # comparacao no banco e case-sensitive — uma variacao de casing nunca
+    # bate com a conta real, entao nem chega a testar a senha.
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "Ana@Example.com", "password": "SenhaForte123!"},
+    )
+
+    resp = client.post(
+        "/api/v1/auth/login", json={"email": "ana@example.com", "password": "SenhaForte123!"}
+    )
+    assert resp.status_code == 401
+
+    # A conta real, com o casing exato usado no cadastro, continua acessivel.
+    resp = client.post(
+        "/api/v1/auth/login", json={"email": "Ana@Example.com", "password": "SenhaForte123!"}
+    )
+    assert resp.status_code == 200
+
+
+def test_email_with_surrounding_whitespace_is_normalized_by_pydantic_before_reaching_the_route(client):
+    # Teste de bypass/normalizacao (secao 24): `EmailStr` (Pydantic) ja tira
+    # espaco nas pontas antes da validacao — nao existe brecha de "mesma
+    # conta, e-mail com espaco" tratada como identidade diferente. Cadastra
+    # SEM espaco, loga COM espaco nas pontas — tem que ser a mesma conta.
+    client.post(
+        "/api/v1/auth/register",
+        json={"name": "Ana", "email": "espaco@example.com", "password": "SenhaForte123!"},
+    )
+
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "  espaco@example.com  ", "password": "SenhaForte123!"},
+    )
+    assert resp.status_code == 200
+
+
+def test_password_with_unicode_characters_hashes_and_authenticates_correctly(client):
+    # Teste de bypass/encoding (secao 24): senha com acentuacao e emoji nao
+    # quebra o hashing (Argon2 opera sobre bytes UTF-8) nem cria
+    # inconsistencia entre o hash gravado no cadastro e a verificacao no
+    # login.
+    email = "unicode@example.com"
+    password = "Sénh@Förte123!🔒"
+
+    resp = client.post(
+        "/api/v1/auth/register", json={"name": "Ana", "email": email, "password": password}
+    )
+    assert resp.status_code == 201
+
+    resp = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert resp.status_code == 200
+
+
 def test_platform_admin_create_user_is_rate_limited(client, db_session):
     _register_login(client, "superadmin@example.com")
     admin = db_session.query(User).filter(User.email == "superadmin@example.com").one()

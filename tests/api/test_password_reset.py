@@ -1,7 +1,10 @@
 """RF-004, RF-005, RN-012 — recuperacao e alteracao de senha."""
 
-from app.core.security import SESSION_REVOKED_DETAIL
+from datetime import UTC, datetime, timedelta
+
+from app.core.security import SESSION_REVOKED_DETAIL, hash_opaque_token
 from app.models.audit_log import AuditLog
+from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 
 
@@ -139,6 +142,36 @@ def test_confirm_reset_with_invalid_token_is_rejected(client):
     resp = client.post(
         "/api/v1/auth/password-reset/confirm",
         json={"token": "token-que-nunca-existiu", "new_password": "SenhaNova123!"},
+    )
+    assert resp.status_code == 400
+
+
+def test_confirm_reset_with_expired_token_is_rejected(client, db_session):
+    # Teste de integracao (secao 23 do prompt de hardening): "token expirado
+    # falha" — distinto de "token invalido" (formato inexistente, ja
+    # coberto acima). Gera um token real via o fluxo normal, envelhece o
+    # `expires_at` dele diretamente no banco (sem precisar mockar relogio
+    # do processo da API, que roda fora do processo de teste) e confirma
+    # que passa a ser rejeitado exatamente como um token invalido.
+    email = "reset-expirado@example.com"
+    client.post(
+        "/api/v1/auth/register", json={"name": "Ana", "email": email, "password": "SenhaAntiga123!"}
+    )
+    dev_token = client.post(
+        "/api/v1/auth/password-reset/request", json={"email": email}
+    ).json()["dev_token"]
+
+    record = (
+        db_session.query(PasswordResetToken)
+        .filter(PasswordResetToken.token_hash == hash_opaque_token(dev_token))
+        .one()
+    )
+    record.expires_at = datetime.now(UTC) - timedelta(hours=1)
+    db_session.commit()
+
+    resp = client.post(
+        "/api/v1/auth/password-reset/confirm",
+        json={"token": dev_token, "new_password": "SenhaNova123!"},
     )
     assert resp.status_code == 400
 

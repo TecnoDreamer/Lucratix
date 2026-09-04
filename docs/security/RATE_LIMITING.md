@@ -53,9 +53,31 @@ Só passa a olhar `X-Forwarded-For` quando `TRUSTED_PROXY_COUNT` (env var, `Sett
 
 **Gatilho explícito para revisitar**: se o deploy passar a ter mais de uma instância/réplica atrás de um load balancer, cada réplica passaria a ter seu próprio contador — um atacante rotacionando entre instâncias furaria qualquer limite. Nesse momento, trocar o storage por um externo compartilhado (ex.: Redis) é obrigatório. A interface atual (`RateLimiter.check(key)`/`.reset(key)`/`.retry_after(key)`, chaves nomeadas por dimensão) foi desenhada para essa troca não exigir redesenhar nenhum ponto de chamada — só a implementação interna do `RateLimiter` mudaria (de `dict`+`deque` para operações atômicas do Redis, ex. `INCR`+`EXPIRE`).
 
+## Risco residual auditado: normalização de identificador (2026-09, PR4)
+
+O prompt de hardening pede identificador normalizado como uma das dimensões de chave e como caso de teste de bypass ("casing diferente de e-mail"). Auditado nesta rodada: **nenhum fluxo normaliza case do e-mail** — `authenticate_user`/`register_user`/reset/reenvio comparam com `User.email == email`, exato. O limiter de conta isolada usa o e-mail bruto (`data.email`, sem `.lower()`) como chave.
+
+**Por que isso não é explorável hoje**: a comparação do Postgres é case-sensitive (sem `citext`/índice funcional `lower()`). Uma variação de casing enviada por um atacante nunca bate com a linha da conta real — a consulta simplesmente não encontra ninguém, e o fluxo cai em "credenciais inválidas" como qualquer chute errado (`test_login_with_different_email_casing_never_matches_the_real_account`, `tests/security/test_rate_limiting.py`). Isso significa que variar o casing:
+
+- não autentica a conta real (a senha nunca chega a ser verificada);
+- não dilui a proteção da conta real (o limiter de conta isolada da conta real nunca é tocado por uma tentativa que nem chegou a resolver pra ela).
+
+**Por que não implementamos normalização mesmo assim**: normalizar exigiria uma migration de dados sobre `users.email` já em produção, com risco real de colisão (duas contas existentes que hoje só diferem em casing virariam duplicata de e-mail única) — uma mudança de dado de produção maior do que o item justifica, para um problema que a auditoria confirma não ser explorável. Fica registrado como risco residual, não como pendência esquecida — revisitar apenas se o produto decidir que contas com casing diferente do mesmo e-mail (ex.: `Ana@x.com` vs `ana@x.com`) é um problema de suporte/UX que valha a pena resolver por si só.
+
+**Espaços nas pontas**: já resolvido de graça — `EmailStr` (Pydantic) descarta espaço nas pontas antes de qualquer validação rodar; não existe brecha de "mesmo e-mail com espaço tratado como conta diferente" (`test_email_with_surrounding_whitespace_is_normalized_by_pydantic_before_reaching_the_route`).
+
+## Outros itens de bypass auditados (2026-09, PR4)
+
+- **Endpoints equivalentes**: auditado via inventário de todas as rotas de `auth`/`memberships`/`platform_admin` — não existe rota duplicada/alias que ofereça o mesmo efeito de login/reset/verificação sem passar pelo rate limiting.
+- **IPv4/IPv6**: `get_client_ip()` trata o IP como string opaca — um IPv6 no `request.client.host` funciona como chave sem erro (`test_ipv6_socket_address_is_used_as_is`, `tests/unit/test_client_ip.py`). `sessions.ip_address` já é `String(45)`, dimensionado para o maior literal IPv6 possível.
+- **Encoding**: senha com acentuação/emoji sobrevive ao round-trip hash → login sem quebrar (Argon2 opera sobre bytes UTF-8) — `test_password_with_unicode_characters_hashes_and_authenticates_correctly`.
+- **Trocar de dispositivo**: não reseta nem contorna a proteção por conta — a chave é o e-mail, nunca o cookie/sessão de quem está tentando (`test_switching_device_does_not_reset_account_rate_limit`).
+- **`X-Forwarded-For` forjado, ponta a ponta via HTTP real** (além do teste de unidade já existente de `get_client_ip` isolado): `test_forged_x_forwarded_for_does_not_bypass_login_rate_limit_over_http`.
+
 ## Testes
 
 - `tests/unit/test_rate_limit.py` — o primitivo isolado: limite, janela, chaves independentes, expiração, reset, `clear_all`, concorrência (prova o lock), `retry_after`.
-- `tests/unit/test_client_ip.py` — resolução de IP confiável: `X-Forwarded-For` forjado é ignorado por padrão; com `trusted_proxy_count` configurado, pega o hop certo.
-- `tests/security/test_rate_limiting.py` — end-to-end via HTTP: cada endpoint listado acima, mais os cenários de **spray** (mesmo IP, muitas contas) e **stuffing distribuído** (mesma conta, muitos IPs simulados via `monkeypatch`) que a chave só-combinada não bloqueava antes.
+- `tests/unit/test_client_ip.py` — resolução de IP confiável: `X-Forwarded-For` forjado é ignorado por padrão; com `trusted_proxy_count` configurado, pega o hop certo; IPv6 funciona como chave.
+- `tests/security/test_rate_limiting.py` — end-to-end via HTTP: cada endpoint listado acima, os cenários de **spray** (mesmo IP, muitas contas) e **stuffing distribuído** (mesma conta, muitos IPs simulados via `monkeypatch`), e os testes de bypass listados acima (casing, espaços, encoding, troca de dispositivo, `X-Forwarded-For` forjado).
+- `tests/e2e/login_rate_limit.spec.ts` — fluxo abusivo ponta a ponta: excesso de tentativas de login → `429` com a mensagem amigável visível na UI → cooldown real → login legítimo funciona depois.
 - `tests/conftest.py::_reset_rate_limiters` — fixture `autouse` que zera todos os limiters antes de cada teste. Necessária porque o `TestClient` do Starlette sempre reporta o host fixo `"testclient"` — sem o reset, os limiters por IP isolado acumulariam tentativas de toda a sessão de testes, não só de um teste.
