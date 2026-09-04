@@ -5,7 +5,7 @@ inclusive VIEWER) — exportar é ler o mesmo dado que já aparece na tela."""
 import csv
 import io
 import json
-from datetime import date
+from datetime import UTC, datetime
 
 import openpyxl
 
@@ -215,7 +215,10 @@ def test_export_audit_logs_filters_by_date_range(client):
     org_id = _register_login_and_create_org(client, "exp.auditrange@example.com", "Empresa Exp Audit Range")
     _seed_financial_periods(client, org_id)
 
-    today = date.today().isoformat()
+    # "Hoje" ancorado em UTC, igual ao filtro de produção
+    # (audit/repository.py::list_audit_logs_in_range filtra por dia de calendário
+    # inteiro em UTC porque CreatedAtMixin usa func.clock_timestamp()).
+    today = datetime.now(UTC).date().isoformat()
     resp_today = client.get(
         f"/api/v1/organizations/{org_id}/exports/audit_logs",
         params={"format": "json", "date_from": today, "date_to": today},
