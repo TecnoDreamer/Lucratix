@@ -89,7 +89,8 @@
       "noData": "Sem dados suficientes no período.",
       "tableCaption": "{chartLabel}, por etapa",
       "stage": "Etapa",
-      "value": "Valor"
+      "value": "Valor",
+      "conversionOfPrevious": "{rate} de {previous}"
     },
     "stageConversionChart": {
       "chartLabel": "Conversão por etapa",
@@ -99,7 +100,8 @@
       "transition": "Transição",
       "conversionRate": "Taxa de conversão",
       "dropOffRate": "Taxa de abandono",
-      "vsPreviousPeriod": "Vs. período anterior"
+      "vsPreviousPeriod": "Vs. período anterior",
+      "loss": "Perda"
     },
     "funnelEvolutionChart": {
       "labelWithStage": "Evolução de {stage}",
