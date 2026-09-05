@@ -4,6 +4,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { useTranslations } from "next-intl";
 import { formatCompactNumber, formatMonthYear } from "@/lib/formatters";
 import type { FunnelStageKey, MonthlyFunnelStages } from "@/lib/funnel-metrics";
+import { ChartTooltip } from "@/components/chart-tooltip";
 
 const HEIGHT = 220;
 
@@ -71,8 +72,21 @@ export function FunnelEvolutionChart({
               className="fill-slate-400 dark:fill-slate-600"
             />
             <Tooltip
-              labelFormatter={(v) => (typeof v === "string" ? formatMonthYear(v) : "")}
-              formatter={(value) => (typeof value === "number" ? formatCompactNumber(value) : t("noDataCell"))}
+              content={({ active, payload, label: axisLabel }) => (
+                <ChartTooltip
+                  active={active}
+                  title={typeof axisLabel === "string" ? formatMonthYear(axisLabel) : undefined}
+                  items={[
+                    {
+                      label,
+                      value:
+                        typeof payload?.[0]?.value === "number"
+                          ? formatCompactNumber(payload[0].value)
+                          : t("noDataCell"),
+                    },
+                  ]}
+                />
+              )}
             />
             <Line
               type="monotone"
@@ -81,6 +95,7 @@ export function FunnelEvolutionChart({
               className="text-blue-500 dark:text-blue-400"
               strokeWidth={2}
               dot={{ r: 2.5 }}
+              isAnimationActive={false}
               connectNulls={false}
             />
           </LineChart>

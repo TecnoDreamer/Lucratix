@@ -229,14 +229,14 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
           <Card className="p-4">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("funnelChartTitle")}</h3>
             <div className="mt-3">
-              <FunnelStagesChart stages={analytics.stages} />
+              <FunnelStagesChart stages={analytics.stages} conversions={analytics.conversions} />
             </div>
           </Card>
 
           <Card className="p-4">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("conversionChartTitle")}</h3>
             <div className="mt-3">
-              <StageConversionChart conversions={analytics.conversions} tFields={tFields} />
+              <StageConversionChart conversions={analytics.conversions} stages={analytics.stages} tFields={tFields} />
             </div>
           </Card>
 

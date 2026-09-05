@@ -89,7 +89,8 @@
       "noData": "Not enough data in this period.",
       "tableCaption": "{chartLabel}, by stage",
       "stage": "Stage",
-      "value": "Value"
+      "value": "Value",
+      "conversionOfPrevious": "{rate} of {previous}"
     },
     "stageConversionChart": {
       "chartLabel": "Conversion by stage",
@@ -99,7 +100,8 @@
       "transition": "Transition",
       "conversionRate": "Conversion rate",
       "dropOffRate": "Drop-off rate",
-      "vsPreviousPeriod": "Vs. previous period"
+      "vsPreviousPeriod": "Vs. previous period",
+      "loss": "Loss"
     },
     "funnelEvolutionChart": {
       "labelWithStage": "{stage} evolution",

@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTranslations } from "next-intl";
+import { ChartTooltip } from "@/components/chart-tooltip";
 
 const HEIGHT = 220;
 
@@ -72,9 +73,29 @@ export function ChannelBarChart({
             className="fill-slate-500 dark:fill-slate-400"
           />
           <Tooltip
-            formatter={(value) => (typeof value === "number" ? valueFormatter(value) : t("noDataPoint"))}
+            content={({ active, payload }) => (
+              <ChartTooltip
+                active={active}
+                title={payload?.[0]?.payload?.label}
+                items={[
+                  {
+                    label,
+                    value:
+                      typeof payload?.[0]?.value === "number"
+                        ? valueFormatter(payload[0].value)
+                        : t("noDataPoint"),
+                  },
+                ]}
+              />
+            )}
           />
-          <Bar dataKey="value" fill="currentColor" className="text-blue-500 dark:text-blue-400" radius={[3, 3, 0, 0]}>
+          <Bar
+            dataKey="value"
+            fill="currentColor"
+            className="text-blue-500 dark:text-blue-400"
+            radius={[3, 3, 0, 0]}
+            isAnimationActive={false}
+          >
             {data.map((entry) => (
               <Cell
                 key={entry.key}

@@ -86,6 +86,15 @@ Oitava rodada. `recharts@3.10.1` (compatível com React 19.2.8) é a **primeira 
 - **Glossário**: `MetricDefinition.unit`/`direction` viram opcionais para suportar conceito categórico (Canal, Campanha...) sem número nem direção desejável — nova categoria `"funil"`. 13 verbetes novos completam os 15 pedidos pelo prompt original; Fonte/Plataforma documentados como conceitos ainda não modelados neste sistema (mesmo critério de honestidade de MRR/ARR). O ícone `?` reutilizável (`MetricHelp`) já existia e já era não-hover-only — nenhum componente novo precisou ser criado para isso.
 - **Gargalo e insights determinísticos** (`lib/funnel-insights.ts`): mesmo espírito de `lib/insights.ts` — nunca linguagem causal, só "a menor conversão observada é entre X e Y".
 
+## Entregue (2026-09-04): redesign visual do Funil — labels externos e tooltip compartilhado (PR1 de 3)
+
+Décima rodada, primeira de uma nova sequência de 3 PRs pedida pelo usuário (prompt de UX focado nos gráficos do Funil + camada reutilizável de personalização — roadmap em `docs/charts/ARQUITETURA_DE_GRAFICOS.md`). Esta PR1 só corrige bugs visuais já existentes; não implementa personalização nem persistência.
+
+- **`ChartTooltip`** (`apps/web/src/components/chart-tooltip.tsx`, novo): primeiro tooltip customizado do produto — todo gráfico Recharts usava o `<Tooltip>` padrão da lib até aqui (sem dark mode, sem controle de contraste). Adotado pelos 4 gráficos que já existiam (`FunnelStagesChart`, `StageConversionChart`, `FunnelEvolutionChart`, `ChannelBarChart`).
+- **`FunnelStagesChart`**: os dois `LabelList` antigos (nome externo + valor branco no CENTRO do trapézio, ilegível em etapas estreitas) viram um único label externo combinado (nome + valor + conversão-em-relação-à-anterior), com conector — ver `docs/funnel/VISUALIZACOES.md`.
+- **`StageConversionChart`**: barras horizontais (`layout="vertical"`) em vez de verticais com nomes inclinados; tooltip ganhou conteúdo rico (taxa, contagens absolutas, perda, abandono) quando recebe o novo prop opcional `stages`.
+- Nenhuma dependência nova — Recharts continua a decisão vigente para a família do Funil (ver acima); nenhuma mudança na fonte dos dados (backend inalterado).
+
 ## Entregue (2026-09-03): Funil multicanal — inventário e adoção nas demais telas (PR4 de 4)
 
 Nona rodada, última desta sequência de 4 PRs. `docs/reports/PR4_INVENTARIO.md` traz a decisão completa tela a tela (adotar/adiar/não aplicável); aqui só a decisão de biblioteca do gráfico novo.

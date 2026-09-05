@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { StageConversionChart } from "./stage-conversion-chart";
-import type { StageConversion, StageConversionWithComparison } from "@/lib/funnel-metrics";
+import { buildConversionTooltipItems, StageConversionChart } from "./stage-conversion-chart";
+import type { FunnelStages, StageConversion, StageConversionWithComparison } from "@/lib/funnel-metrics";
 import type { MetricResult } from "@/lib/metrics";
 
 afterEach(() => cleanup());
@@ -69,5 +69,72 @@ describe("StageConversionChart", () => {
     ];
     render(<StageConversionChart conversions={withoutComparison} tFields={tFields} />);
     expect(screen.queryByText("Vs. período anterior")).not.toBeInTheDocument();
+  });
+
+  it("continua renderizando normalmente sem o prop `stages` (compatibilidade com chamadores existentes)", () => {
+    const withoutComparison: StageConversion[] = [
+      { from_stage: "leads", to_stage: "mqls", conversion_rate: applicable(0.5), drop_off_rate: applicable(0.5) },
+    ];
+    render(<StageConversionChart conversions={withoutComparison} tFields={tFields} />);
+    expect(screen.getAllByRole("row")).toHaveLength(2);
+  });
+});
+
+describe("buildConversionTooltipItems", () => {
+  const applicable = (value: number): MetricResult => ({ value, is_applicable: true, reason: null });
+  const t = (key: string) => ({ conversionRate: "Taxa de conversão", dropOffRate: "Taxa de abandono", loss: "Perda" })[key] ?? key;
+  const tFields = (key: string) => ({ leads: "Leads", mqls: "MQLs" })[key] ?? key;
+
+  const STAGES: FunnelStages = {
+    impressions: applicable(0),
+    visits: applicable(0),
+    leads: applicable(905),
+    mqls: applicable(505),
+    sqls: applicable(0),
+    opportunities: applicable(0),
+    customers: applicable(0),
+    repeat_purchases: applicable(0),
+  };
+
+  it("com stages disponível, inclui contagens absolutas e a perda calculada por subtração", () => {
+    const items = buildConversionTooltipItems(
+      { from: "leads", to: "mqls", value: 0.558, dropOff: applicable(0.442) },
+      STAGES,
+      t,
+      tFields,
+      "N/A"
+    );
+    expect(items).toEqual([
+      { label: "Taxa de conversão", value: "55,8%" },
+      { label: "Leads", value: "905" },
+      { label: "MQLs", value: "505" },
+      { label: "Perda", value: "400", tone: "warning" },
+      { label: "Taxa de abandono", value: "44,2%", tone: "warning" },
+    ]);
+  });
+
+  it("sem stages, mostra só taxa e abandono (nunca calcula perda com dado ausente)", () => {
+    const items = buildConversionTooltipItems(
+      { from: "leads", to: "mqls", value: 0.558, dropOff: applicable(0.442) },
+      undefined,
+      t,
+      tFields,
+      "N/A"
+    );
+    expect(items).toEqual([
+      { label: "Taxa de conversão", value: "55,8%" },
+      { label: "Taxa de abandono", value: "44,2%", tone: "warning" },
+    ]);
+  });
+
+  it("taxa não aplicável usa o rótulo de N/A em vez de um número inventado", () => {
+    const items = buildConversionTooltipItems(
+      { from: "leads", to: "mqls", value: null, dropOff: { value: null, is_applicable: false, reason: "x" } },
+      STAGES,
+      t,
+      tFields,
+      "N/A"
+    );
+    expect(items[0]).toEqual({ label: "Taxa de conversão", value: "N/A" });
   });
 });

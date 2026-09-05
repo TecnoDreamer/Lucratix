@@ -5,10 +5,13 @@ Documenta a evolução do Funil pedida pelo usuário em 2026-09-01/02 ("Funil Mu
 - [MODELAGEM.md](MODELAGEM.md) — por que `channel_id` é uma coluna nullable em `funnel_snapshots`, não uma tabela filha nem uma view, e a armadilha de `UNIQUE`+`NULL` no Postgres.
 - [KPIS.md](KPIS.md) — as 8 etapas do funil, as 7 conversões/abandonos etapa-a-etapa, gargalo/insights determinísticos, a série mensal, e o que ainda não é calculado.
 - [UX.md](UX.md) — estrutura da tela, o ícone `?` reutilizável (já existia), a decisão de Recharts, e por que Fonte/Plataforma não são oferecidas como segmentação.
+- [VISUALIZACOES.md](VISUALIZACOES.md) — redesign dos gráficos do Funil (2026-09-04): labels externos combinados, conector, barras horizontais na conversão.
 - [../reports/PDF_INFRAESTRUTURA.md](../reports/PDF_INFRAESTRUTURA.md) e [../reports/FUNIL_PDF.md](../reports/FUNIL_PDF.md) — infraestrutura de relatório em PDF (ReportLab) e as 11 seções do relatório do Funil.
 - [../reports/PR4_INVENTARIO.md](../reports/PR4_INVENTARIO.md) — decisão tela a tela (adotar/adiar/não aplicável) da adoção do padrão de gráfico/PDF nas demais telas.
 
 ## Escopo por rodada
+
+**Redesign visual (2026-09-04)** — PR1 de uma nova sequência de 3 PRs, motivada por um segundo prompt do usuário focado em UX dos gráficos do Funil e numa camada reutilizável de personalização de gráficos (roadmap em [`docs/charts/ARQUITETURA_DE_GRAFICOS.md`](../charts/ARQUITETURA_DE_GRAFICOS.md)). Corrige os bugs visuais reais herdados da PR2 acima (labels do funil sobrepostos/ilegíveis em etapas estreitas, tooltip padrão do Recharts sem dark mode, nomes inclinados na conversão) — ver [VISUALIZACOES.md](VISUALIZACOES.md). PR2/PR3 (personalização + persistência) ficam para rodadas futuras.
 
 **PR1 — modelagem, banco, API, KPIs** ([#110](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/110)): `funnel_snapshots.channel_id` (migration `0016`); `GET /analytics/funnel` (funil agregado por intervalo, conversão/abandono etapa-a-etapa, comparação período-a-período); `GET /analytics/funnel/by-channel`; segmentação por canal na importação/exportação (Central de Dados); 1º verbete de Glossário ("Taxa de Abandono").
 
