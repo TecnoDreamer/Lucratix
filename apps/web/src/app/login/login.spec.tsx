@@ -35,6 +35,14 @@ describe("LoginPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(SESSION_REVOKED_MESSAGE);
   });
 
+  it("mostra a mensagem de logout por inatividade quando ?reason=idle_timeout", () => {
+    mockSearchParams = new URLSearchParams("reason=idle_timeout");
+    render(<LoginPage />);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Você foi desconectado por inatividade. Entre novamente para continuar."
+    );
+  });
+
   it("ignora motivos desconhecidos", () => {
     mockSearchParams = new URLSearchParams("reason=algo-nao-mapeado");
     render(<LoginPage />);

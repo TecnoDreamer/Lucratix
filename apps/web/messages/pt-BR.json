@@ -879,7 +879,8 @@
       "noAccountPrefix": "Ainda nao tem conta?",
       "signUp": "Cadastre-se",
       "learnMorePrefix": "Ainda não conhece a Lucratix?",
-      "learnMoreLink": "Conheça a aplicação"
+      "learnMoreLink": "Conheça a aplicação",
+      "idleTimeoutMessage": "Você foi desconectado por inatividade. Entre novamente para continuar."
     },
     "register": {
       "heroEyebrow": "Comece agora",
@@ -1144,5 +1145,11 @@
     "sampleSizePlaceholder": "Amostra",
     "conversionsPlaceholder": "Conversões",
     "conversionRateByVariant": "Taxa de conversão por variante"
+  },
+  "idleLogout": {
+    "title": "Sua sessão está prestes a expirar",
+    "description": "Por inatividade, sua sessão será encerrada em {seconds, plural, one {# segundo} other {# segundos}}.",
+    "stayLabel": "Continuar conectado",
+    "logoutNowLabel": "Sair agora"
   }
 }

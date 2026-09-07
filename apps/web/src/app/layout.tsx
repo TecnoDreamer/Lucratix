@@ -6,6 +6,7 @@ import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeWatcher } from "@/components/theme-watcher";
 import { LocaleSync } from "@/components/locale-sync";
+import { IdleLogoutWatcher } from "@/components/idle-logout-watcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeWatcher />
           <LocaleSync />
+          <IdleLogoutWatcher />
           {children}
         </NextIntlClientProvider>
       </body>
