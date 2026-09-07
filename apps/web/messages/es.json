@@ -879,7 +879,8 @@
       "noAccountPrefix": "¿Aún no tienes cuenta?",
       "signUp": "Regístrate",
       "learnMorePrefix": "¿Aún no conoces Lucratix?",
-      "learnMoreLink": "Conoce la aplicación"
+      "learnMoreLink": "Conoce la aplicación",
+      "idleTimeoutMessage": "Se cerró tu sesión por inactividad. Inicia sesión de nuevo para continuar."
     },
     "register": {
       "heroEyebrow": "Empieza ahora",
@@ -1144,5 +1145,11 @@
     "sampleSizePlaceholder": "Muestra",
     "conversionsPlaceholder": "Conversiones",
     "conversionRateByVariant": "Tasa de conversión por variante"
+  },
+  "idleLogout": {
+    "title": "Tu sesión está por expirar",
+    "description": "Por inactividad, tu sesión se cerrará en {seconds, plural, one {# segundo} other {# segundos}}.",
+    "stayLabel": "Continuar conectado",
+    "logoutNowLabel": "Cerrar sesión ahora"
   }
 }

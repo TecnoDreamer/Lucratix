@@ -25,6 +25,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionRevoked = searchParams.get("reason") === "session_revoked";
+  const idleTimeout = searchParams.get("reason") === "idle_timeout";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +75,12 @@ function LoginContent() {
               <Alert>
                 {SESSION_REVOKED_MESSAGE} {t("sessionRevokedSuffix")}
               </Alert>
+            </div>
+          )}
+
+          {idleTimeout && !error && (
+            <div className="mt-5">
+              <Alert>{t("idleTimeoutMessage")}</Alert>
             </div>
           )}
 

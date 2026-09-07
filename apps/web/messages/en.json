@@ -879,7 +879,8 @@
       "noAccountPrefix": "Don't have an account yet?",
       "signUp": "Sign up",
       "learnMorePrefix": "Don't know Lucratix yet?",
-      "learnMoreLink": "Learn about the app"
+      "learnMoreLink": "Learn about the app",
+      "idleTimeoutMessage": "You were signed out due to inactivity. Sign in again to continue."
     },
     "register": {
       "heroEyebrow": "Get started now",
@@ -1144,5 +1145,11 @@
     "sampleSizePlaceholder": "Sample",
     "conversionsPlaceholder": "Conversions",
     "conversionRateByVariant": "Conversion rate by variant"
+  },
+  "idleLogout": {
+    "title": "Your session is about to expire",
+    "description": "Due to inactivity, your session will end in {seconds, plural, one {# second} other {# seconds}}.",
+    "stayLabel": "Stay signed in",
+    "logoutNowLabel": "Log out now"
   }
 }
