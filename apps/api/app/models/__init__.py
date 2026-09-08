@@ -17,6 +17,7 @@ from app.models.product import Product
 from app.models.session import Session
 from app.models.target import Target, TargetMetric
 from app.models.user import User
+from app.models.user_chart_preference import UserChartPreference
 from app.models.user_workspace_preference import UserWorkspacePreference
 
 __all__ = [
@@ -45,5 +46,6 @@ __all__ = [
     "Target",
     "TargetMetric",
     "User",
+    "UserChartPreference",
     "UserWorkspacePreference",
 ]

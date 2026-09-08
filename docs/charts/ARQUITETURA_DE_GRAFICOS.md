@@ -28,14 +28,15 @@ Para o `StageConversionChart` (o tooltip mais rico: taxa, contagens absolutas de
 
 Sem mudança nesta rodada — ver [`docs/analytics/CHART_DECISIONS.md`](../analytics/CHART_DECISIONS.md), que continua a fonte de verdade: Recharts para a família do Funil (decisão de 2026-09-02), SVG artesanal para os gráficos de linha do Analytics (`SeriesChart`, `CorrelationChart`). Nenhuma dependência nova.
 
-## Personalização de gráficos (PR2, 2026-09) — `ChartSettings`/preset já existem
+## Personalização de gráficos (PR2+PR3, 2026-09) — `ChartSettings`/preset + persistência já existem
 
-`docs/charts/PERSONALIZACAO_DE_GRAFICOS.md` documenta as decisões de produto (matriz de compatibilidade, presets). Aqui, o que entrou de arquitetura:
+`docs/charts/PERSONALIZACAO_DE_GRAFICOS.md` documenta as decisões de produto (matriz de compatibilidade, presets, persistência). Aqui, o que entrou de arquitetura:
 
 - **`ChartSettingsDialog`** (`components/chart-settings-dialog.tsx`) — o `ChartSettings` da composição `ChartShell` abaixo. Mesma estrutura de `ConfirmDialog` (backdrop/foco/Escape/trava de scroll — seção 21 do prompt: "não invente padrão inconsistente"). Não sabe nada de nenhum gráfico específico — os controles de cada um entram via `children`.
-- **`useChartSettings`** (`hooks/use-chart-settings.ts`) — o estado de preview→aplicar→cancelar→restaurar padrão (seção 11), usado uma vez por gráfico personalizável.
+- **`useChartSettings`** (`hooks/use-chart-settings.ts`) — o estado de preview→aplicar→cancelar→restaurar padrão (seção 11), usado uma vez por gráfico personalizável. Desde a PR3, aceita um 2º argumento opcional `persistence` (`{organizationId, chartKey, sanitize, save}`) que carrega a preferência salva no mount e salva a cada "Aplicar" (best-effort — falha de rede no save não desfaz o preview local).
 - **`lib/chart-settings.ts`** — schema + presets, puro, sem UI. Fonte única da definição de cada preset (nunca duplicada entre código e a doc de produto).
-- Sem persistência ainda — estado de sessão só (React state), reseta ao recarregar. PR3 fecha isso.
+- **`lib/chart-preferences.ts`** (PR3) — fetch/save (conversão camelCase ↔ snake_case na borda) + `sanitizeFunnelStagesSettings`/`sanitizeStageConversionSettings`, que nunca deixam uma preferência salva em formato inesperado chegar ao Recharts.
+- **`app/models/user_chart_preference.py` + `app/modules/chart_preferences/`** (backend, PR3) — tabela e endpoint `GET/PATCH /organizations/{id}/chart-preferences/{chart_key}`. Detalhe completo em `PERSONALIZACAO_DE_GRAFICOS.md`.
 
 ## Roadmap: `ChartShell` completo (fora desta rodada)
 
@@ -55,4 +56,4 @@ ChartShell
 
 Envelope reutilizável por qualquer tela (Dashboard, Analytics, Financeiro, Marketing, Produtos, Experimentos) só faz sentido construir quando o rollout passar do Funil pra essas telas — abstrair `ChartHeader`/`ChartEmptyState` agora, pra 2 instâncias que já funcionam bem inline, seria antecipar uma necessidade que ainda não existe.
 
-**Persistência**: a tabela `user_workspace_preferences` existente (`apps/api/app/models/user_workspace_preference.py`) é de propósito único (`quick_access`, um valor por usuário+organização) — não serve para múltiplos `chart_key` por usuário+organização. Uma tabela nova (`user_chart_preferences`: `user_id`+`organization_id`+`chart_key`+`schema_version`+`preferences_json`) é o desenho natural — PR3.
+**Persistência**: fechada na PR3 (`user_chart_preferences`: `user_id`+`organization_id`+`chart_key`+`schema_version`+`preferences_json` — não reaproveita `user_workspace_preferences`, que é de propósito único, um valor por usuário+organização, sem `chart_key`). Deixa de ser item de roadmap; ver `PERSONALIZACAO_DE_GRAFICOS.md`.

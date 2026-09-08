@@ -9,6 +9,7 @@ from app.modules.api_keys.router import router as api_keys_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.baselines.router import router as baselines_router
+from app.modules.chart_preferences.router import router as chart_preferences_router
 from app.modules.experiments.router import router as experiments_router
 from app.modules.exports.router import router as exports_router
 from app.modules.financials.router import router as financials_router
@@ -70,6 +71,7 @@ app.include_router(imports_router)
 app.include_router(exports_router)
 app.include_router(targets_router)
 app.include_router(workspace_preferences_router)
+app.include_router(chart_preferences_router)
 app.include_router(platform_admin_router)
 
 
