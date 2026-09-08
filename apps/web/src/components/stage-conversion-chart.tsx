@@ -1,17 +1,20 @@
 "use client";
 
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTranslations } from "next-intl";
 import { formatMetric, formatPercentChange, type MetricResult } from "@/lib/metrics";
 import { formatInteger, formatPercentage } from "@/lib/formatters";
 import { findBottleneck } from "@/lib/funnel-insights";
 import type { FunnelStages, StageConversion, StageConversionWithComparison } from "@/lib/funnel-metrics";
+import { DEFAULT_STAGE_CONVERSION_SETTINGS, type StageConversionChartSettings } from "@/lib/chart-settings";
 import { tableHead, tableRow } from "@/lib/ui";
 import { Card } from "@/components/ui";
 import { ChartTooltip, type ChartTooltipItem } from "@/components/chart-tooltip";
 
-const MIN_HEIGHT = 220;
-const HEIGHT_PER_ROW = 44;
+// Densidade (personalização, PR2) — "compacta" só aperta a altura de cada
+// linha, nunca esconde transição nenhuma.
+const MIN_HEIGHT_BY_DENSITY = { comfortable: 220, compact: 160 } as const;
+const HEIGHT_PER_ROW_BY_DENSITY = { comfortable: 44, compact: 32 } as const;
 // Espaço reservado pro nome da transição no eixo (categoria), largo o
 // bastante pra "Oportunidades → Clientes" sem cortar — nomes inclinados
 // (o problema original) deixam de existir com o layout horizontal.
@@ -85,6 +88,7 @@ export function StageConversionChart({
   conversions,
   stages,
   tFields,
+  settings = DEFAULT_STAGE_CONVERSION_SETTINGS,
 }: {
   conversions: (StageConversion | StageConversionWithComparison)[];
   /** Valores absolutos de cada etapa (`analytics.stages`) — opcional: sem
@@ -93,6 +97,7 @@ export function StageConversionChart({
    * `stages[from] - stages[to]`, os mesmos números já buscados. */
   stages?: FunnelStages;
   tFields: (key: string) => string;
+  settings?: StageConversionChartSettings;
 }) {
   const t = useTranslations("common.stageConversionChart");
   const tCommon = useTranslations("common");
@@ -108,7 +113,8 @@ export function StageConversionChart({
     isBottleneck: bottleneck !== null && c.from_stage === bottleneck.from_stage && c.to_stage === bottleneck.to_stage,
   }));
   const hasAnyApplicable = chartData.some((d) => d.value !== null);
-  const height = Math.max(MIN_HEIGHT, chartData.length * HEIGHT_PER_ROW);
+  const minHeight = MIN_HEIGHT_BY_DENSITY[settings.density];
+  const height = Math.max(minHeight, chartData.length * HEIGHT_PER_ROW_BY_DENSITY[settings.density]);
   const notApplicableLabel = tCommon("notApplicable");
 
   return (
@@ -116,7 +122,11 @@ export function StageConversionChart({
       {hasAnyApplicable ? (
         <div role="img" aria-label={t("chartLabel")} style={{ height }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ top: 8, right: settings.showValues ? 50 : 24, left: 8, bottom: 8 }}
+            >
               <XAxis
                 type="number"
                 tickFormatter={(v: number) => formatPercentage(v)}
@@ -155,6 +165,14 @@ export function StageConversionChart({
                     className={entry.isBottleneck ? "text-amber-500 dark:text-amber-400" : undefined}
                   />
                 ))}
+                {settings.showValues && (
+                  <LabelList
+                    dataKey="value"
+                    position="right"
+                    formatter={(v) => (v !== undefined && v !== null ? formatPercentage(Number(v)) : "")}
+                    className="fill-slate-600 text-[10px] dark:fill-slate-300"
+                  />
+                )}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -164,7 +182,7 @@ export function StageConversionChart({
           role="img"
           aria-label={t("labelNoData")}
           className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
-          style={{ height: MIN_HEIGHT }}
+          style={{ height: minHeight }}
         >
           {t("noData")}
         </div>

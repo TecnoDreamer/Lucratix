@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildConversionTooltipItems, StageConversionChart } from "./stage-conversion-chart";
 import type { FunnelStages, StageConversion, StageConversionWithComparison } from "@/lib/funnel-metrics";
@@ -77,6 +77,23 @@ describe("StageConversionChart", () => {
     ];
     render(<StageConversionChart conversions={withoutComparison} tFields={tFields} />);
     expect(screen.getAllByRole("row")).toHaveLength(2);
+  });
+
+  it("densidade compacta reduz a altura renderizada (a tabela continua com todas as linhas)", () => {
+    const { container: comfortable } = render(
+      <StageConversionChart conversions={CONVERSIONS_WITH_COMPARISON} tFields={tFields} />
+    );
+    const { container: compact } = render(
+      <StageConversionChart
+        conversions={CONVERSIONS_WITH_COMPARISON}
+        tFields={tFields}
+        settings={{ showValues: true, density: "compact" }}
+      />
+    );
+    const comfortableHeight = parseFloat((comfortable.querySelector('[role="img"]') as HTMLElement).style.height);
+    const compactHeight = parseFloat((compact.querySelector('[role="img"]') as HTMLElement).style.height);
+    expect(compactHeight).toBeLessThan(comfortableHeight);
+    expect(within(compact).getAllByRole("row")).toHaveLength(3);
   });
 });
 

@@ -9,6 +9,7 @@ Esta rodada segue exatamente o mesmo critério: qualquer lógica de CONTEÚDO (o
 - `buildConversionTooltipItems` (`stage-conversion-chart.tsx`) — monta os itens do tooltip rico (taxa, contagens, perda, abandono) a partir de `(row, stages, t, tFields, notApplicableLabel)`.
 - `buildStageLabelData` (`funnel-stages-chart.tsx`) — monta nome + conversão-em-relação-à-anterior por etapa aplicável do funil.
 - `ChartTooltip` em si (`chart-tooltip.tsx`) é testado por render direto (é um componente burro, sem `ResponsiveContainer`/Recharts no meio — renderiza normalmente em jsdom).
+- `ExternalStageLabel` (`funnel-stages-chart.tsx`, PR2) — mesmo raciocínio, mas pro RENDER do label em vez dos dados: é `content` de um `LabelList` do Recharts (só chamado quando o Recharts de fato desenha, o que não acontece em jsdom), mas o componente em si é só SVG comum — exportado e testado com `render(<svg><ExternalStageLabel .../></svg>)`, sem nenhum `ResponsiveContainer` no meio. É assim que `showValues=false` (personalização, PR2) é testado: renderiza o componente direto com a prop, confere que o nome continua e o detalhe some.
 
 ## Cobertura desta rodada
 
@@ -17,10 +18,20 @@ Esta rodada segue exatamente o mesmo critério: qualquer lógica de CONTEÚDO (o
 - `stage-conversion-chart.spec.tsx`: comportamento existente preservado (gargalo, mensagem vazia, coluna de comparação condicional) + compatibilidade sem o prop `stages` novo + `buildConversionTooltipItems`: com `stages` inclui contagens/perda; sem `stages` cai para taxa+abandono; taxa não aplicável nunca vira número inventado.
 - `funnel-evolution-chart.spec.tsx`/`channel-bar-chart.spec.tsx`: suíte existente sem alteração — o tooltip novo não muda nenhum comportamento coberto por esses testes (eles nunca simulavam hover).
 
+## Cobertura da personalização (PR2)
+
+- `lib/chart-settings.spec.ts`: cada preset produz exatamente a combinação documentada em [`PERSONALIZACAO_DE_GRAFICOS.md`](PERSONALIZACAO_DE_GRAFICOS.md), pros dois gráficos.
+- `hooks/use-chart-settings.spec.ts`: o ciclo abrir→trocar preset→aplicar/cancelar/restaurar, incluindo que `active` reflete o rascunho (preview ao vivo) enquanto o dialog está aberto.
+- `chart-settings-dialog.spec.tsx`: preset selecionado, trocar preset chama `onPresetChange`, os três botões do rodapé chamam a função certa (Restaurar padrão nunca chama `onApply`), Escape/clique no backdrop cancela.
+- `funnel-stages-chart.spec.tsx`/`stage-conversion-chart.spec.tsx`: densidade compacta reduz a altura renderizada sem reduzir a quantidade de linhas/etapas (nunca esconde dado).
+- **Troca de tipo de gráfico (funil ⇄ barras) não tem cobertura automatizada de componente** — nenhum dos dois desenha conteúdo interno em jsdom (0×0, mesma limitação do `ResponsiveContainer` acima), então não há seletor de DOM confiável pra distinguir qual dos dois Recharts renderizou. Verificado manualmente num navegador real (relatório da PR2).
+
 ## O que fica para verificação manual/visual (não automatizável em jsdom)
 
 - Legibilidade real do tooltip (contraste, padding, posição) em dark/light mode.
 - Ausência de sobreposição de label em um funil com diferença extrema de escala entre etapas — a lógica de dados é testada (`buildStageLabelData`), mas o posicionamento geométrico final depende do layout real do Recharts, que só existe num navegador de verdade.
 - Responsividade nos breakpoints principais.
+- Troca de tipo de gráfico (funil ⇄ barras) renderiza de fato o gráfico esperado, com os mesmos dados.
+- Fluxo completo de personalização (abrir → trocar preset → preview ao vivo no gráfico de trás → Aplicar/Cancelar/Restaurar padrão) e dark/light mode do `ChartSettingsDialog`.
 
 Conferido via `preview_start` (dev server real) antes do merge — ver relatório da PR.

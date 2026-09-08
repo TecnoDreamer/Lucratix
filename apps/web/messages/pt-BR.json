@@ -716,7 +716,11 @@
       "evolutionStageLabel": "Etapa:",
       "emptyByChannelTitle": "Nenhum canal com dado de funil neste período.",
       "channelSummary": "Leads: {leads} · Clientes: {customers}",
-      "generatePdfReport": "Gerar relatório PDF"
+      "generatePdfReport": "Gerar relatório PDF",
+      "customizeFunnelTitle": "Personalizar gráfico do funil",
+      "customizeConversionTitle": "Personalizar gráfico de conversão",
+      "funnelChartTypeFunnel": "Funil",
+      "funnelChartTypeBars": "Barras horizontais"
     }
   },
   "products": {
@@ -1151,5 +1155,29 @@
     "description": "Por inatividade, sua sessão será encerrada em {seconds, plural, one {# segundo} other {# segundos}}.",
     "stayLabel": "Continuar conectado",
     "logoutNowLabel": "Sair agora"
+  },
+  "charts": {
+    "actions": {
+      "customize": "Personalizar gráfico",
+      "reset": "Restaurar padrão",
+      "apply": "Aplicar",
+      "cancel": "Cancelar"
+    },
+    "settings": {
+      "preset": "Predefinição",
+      "showValues": "Mostrar valores",
+      "density": "Densidade",
+      "chartType": "Tipo de gráfico"
+    },
+    "density": {
+      "comfortable": "Confortável",
+      "compact": "Compacta"
+    },
+    "presets": {
+      "default": "Padrão",
+      "compact": "Compacto",
+      "analytical": "Analítico",
+      "presentation": "Apresentação"
+    }
   }
 }

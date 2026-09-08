@@ -716,7 +716,11 @@
       "evolutionStageLabel": "Stage:",
       "emptyByChannelTitle": "No channel has funnel data in this period.",
       "channelSummary": "Leads: {leads} · Customers: {customers}",
-      "generatePdfReport": "Generate PDF report"
+      "generatePdfReport": "Generate PDF report",
+      "customizeFunnelTitle": "Customize funnel chart",
+      "customizeConversionTitle": "Customize conversion chart",
+      "funnelChartTypeFunnel": "Funnel",
+      "funnelChartTypeBars": "Horizontal bars"
     }
   },
   "products": {
@@ -1151,5 +1155,29 @@
     "description": "Due to inactivity, your session will end in {seconds, plural, one {# second} other {# seconds}}.",
     "stayLabel": "Stay signed in",
     "logoutNowLabel": "Log out now"
+  },
+  "charts": {
+    "actions": {
+      "customize": "Customize chart",
+      "reset": "Restore defaults",
+      "apply": "Apply",
+      "cancel": "Cancel"
+    },
+    "settings": {
+      "preset": "Preset",
+      "showValues": "Show values",
+      "density": "Density",
+      "chartType": "Chart type"
+    },
+    "density": {
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    },
+    "presets": {
+      "default": "Default",
+      "compact": "Compact",
+      "analytical": "Analytical",
+      "presentation": "Presentation"
+    }
   }
 }
