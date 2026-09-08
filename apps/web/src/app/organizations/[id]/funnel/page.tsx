@@ -17,6 +17,12 @@ import {
 } from "@/lib/funnel-metrics";
 import { computeFunnelInsights } from "@/lib/funnel-insights";
 import { funnelStagesSettingsForPreset, stageConversionSettingsForPreset } from "@/lib/chart-settings";
+import {
+  saveFunnelStagesPreferences,
+  saveStageConversionPreferences,
+  sanitizeFunnelStagesSettings,
+  sanitizeStageConversionSettings,
+} from "@/lib/chart-preferences";
 import { buttonGhost, buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconFunnel, IconSettings } from "@/components/icons";
@@ -90,11 +96,21 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
   const [byChannelLoading, setByChannelLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Personalização dos dois gráficos do Funil (redesign, PR2) — estado de
-  // sessão só, sem persistência ainda (PR3 fica com isso quando a tabela de
-  // preferência existir). Ver hooks/use-chart-settings.ts.
-  const funnelStagesSettings = useChartSettings(funnelStagesSettingsForPreset);
-  const conversionSettings = useChartSettings(stageConversionSettingsForPreset);
+  // Personalização dos dois gráficos do Funil (redesign, PR2 + persistência
+  // da PR3) — carrega a preferência salva por usuário+organização+gráfico
+  // no mount e salva a cada "Aplicar". Ver hooks/use-chart-settings.ts.
+  const funnelStagesSettings = useChartSettings(funnelStagesSettingsForPreset, {
+    organizationId,
+    chartKey: "funnel-stages",
+    sanitize: sanitizeFunnelStagesSettings,
+    save: saveFunnelStagesPreferences,
+  });
+  const conversionSettings = useChartSettings(stageConversionSettingsForPreset, {
+    organizationId,
+    chartKey: "stage-conversion",
+    sanitize: sanitizeStageConversionSettings,
+    save: saveStageConversionPreferences,
+  });
   const tCharts = useTranslations("charts");
 
   useEffect(() => {
