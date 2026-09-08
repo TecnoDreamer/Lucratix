@@ -1,12 +1,15 @@
 "use client";
 
-import { Cell, Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
+import { Bar, BarChart, Cell, Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTranslations } from "next-intl";
 import { formatCompactNumber, formatPercentage } from "@/lib/formatters";
 import { FUNNEL_STAGE_KEYS, type FunnelStages, type StageConversion } from "@/lib/funnel-metrics";
+import { DEFAULT_FUNNEL_STAGES_SETTINGS, type FunnelStagesChartSettings } from "@/lib/chart-settings";
 import { ChartTooltip } from "@/components/chart-tooltip";
 
-const HEIGHT = 260;
+// Densidade (personalização, PR2) — "compacta" só aperta o espaço vertical,
+// nunca esconde etapa nenhuma (seção 31 do prompt: "não esconder informação").
+const HEIGHT_BY_DENSITY = { comfortable: 260, compact: 180 } as const;
 // Reserva espaço à direita do funil pro label externo (conector + duas
 // linhas de texto) — sem isso, a etapa mais larga (normalmente a
 // primeira) ocupa quase 100% da largura do container, e o label dela
@@ -15,6 +18,11 @@ const HEIGHT = 260;
 // · 10% de Visitas"), não calibrado pro dataset atual — funciona igual
 // com qualquer combinação de valores.
 const LABEL_AREA_WIDTH = 190;
+// Espaço reservado pro nome da etapa no eixo (categoria) do modo "barras"
+// (preset Analítico) — mesmo valor de CATEGORY_AXIS_WIDTH em
+// stage-conversion-chart.tsx (não vale a pena um import cruzado por uma
+// constante só).
+const BARS_CATEGORY_AXIS_WIDTH = 150;
 // Mesma cor (azul) do restante dos gráficos do produto (SeriesChart),
 // variando só a opacidade por etapa — não é um "ranking" de cor por etapa,
 // só ajuda a distinguir uma faixa da seguinte no funil.
@@ -64,27 +72,29 @@ export function buildStageLabelData(
   });
 }
 
-/** `content` customizado do `LabelList` — desenha nome + valor + conversão
- * num único bloco de texto à direita do trapézio, ligado por um conector
- * discreto. Substitui os dois `LabelList` antigos (nome à direita, valor
- * em branco NO CENTRO do trapézio — ilegível em etapas estreitas). `x`,
- * `y`, `width`, `height` vêm do próprio layout do Recharts para aquela
- * etapa — nunca coordenada fixa, robusto a qualquer diferença de escala
- * entre etapas (RF: "10.000.000 → ... → 1" não pode quebrar o layout).
+/** `content` customizado do `LabelList` — desenha nome (+ valor + conversão,
+ * quando `showValues`) num único bloco de texto à direita do trapézio,
+ * ligado por um conector discreto. Substitui os dois `LabelList` antigos
+ * (nome à direita, valor em branco NO CENTRO do trapézio — ilegível em
+ * etapas estreitas). `x`, `y`, `width`, `height` vêm do próprio layout do
+ * Recharts para aquela etapa — nunca coordenada fixa, robusto a qualquer
+ * diferença de escala entre etapas (RF: "10.000.000 → ... → 1" não pode
+ * quebrar o layout).
  */
-function ExternalStageLabel(props: {
+export function ExternalStageLabel(props: {
   x?: string | number;
   y?: string | number;
   width?: string | number;
   height?: string | number;
   index?: number;
   data: StageLabelDatum[];
+  showValues: boolean;
 }) {
   const x = Number(props.x);
   const y = Number(props.y);
   const width = Number(props.width);
   const height = Number(props.height);
-  const { index, data } = props;
+  const { index, data, showValues } = props;
   if ([x, y, width, height].some((n) => Number.isNaN(n)) || index === undefined) {
     return null;
   }
@@ -112,21 +122,23 @@ function ExternalStageLabel(props: {
       <text
         x={textX}
         y={centerY}
-        dy={-3}
+        dy={showValues ? -3 : 4}
         textAnchor="start"
         className="fill-slate-700 text-[11px] font-medium dark:fill-slate-300"
       >
         {stage.name}
       </text>
-      <text
-        x={textX}
-        y={centerY}
-        dy={11}
-        textAnchor="start"
-        className="fill-slate-500 text-[10px] dark:fill-slate-500"
-      >
-        {detail}
-      </text>
+      {showValues && (
+        <text
+          x={textX}
+          y={centerY}
+          dy={11}
+          textAnchor="start"
+          className="fill-slate-500 text-[10px] dark:fill-slate-500"
+        >
+          {detail}
+        </text>
+      )}
     </g>
   );
 }
@@ -142,19 +154,27 @@ function ExternalStageLabel(props: {
  * Acessibilidade: gráfico nunca é a única representação (ver
  * `docs/analytics/CHART_DECISIONS.md`) — tabela `sr-only` com os mesmos
  * dados, mesmo padrão de `series-chart.tsx`.
+ *
+ * Personalização (PR2, `settings` opcional — default preserva o
+ * comportamento de sempre): `chartType="bars"` troca o funil por barras
+ * horizontais progressivas (as duas únicas formas que a seção 9 do prompt
+ * aprova pra dado de funil — nunca pizza/scatter, que nem tem código aqui).
  */
 export function FunnelStagesChart({
   stages,
   conversions,
   label,
+  settings = DEFAULT_FUNNEL_STAGES_SETTINGS,
 }: {
   stages: FunnelStages;
   conversions?: StageConversion[];
   label?: string;
+  settings?: FunnelStagesChartSettings;
 }) {
   const t = useTranslations("common.funnelStagesChart");
   const tFields = useTranslations("funnel.fields");
   const chartLabel = label ? t("labelWithChannel", { label }) : t("defaultLabel");
+  const height = HEIGHT_BY_DENSITY[settings.density];
 
   const applicableStages: { key: (typeof FUNNEL_STAGE_KEYS)[number]; value: number }[] = [];
   for (const key of FUNNEL_STAGE_KEYS) {
@@ -169,7 +189,7 @@ export function FunnelStagesChart({
         role="img"
         aria-label={t("labelNoData", { chartLabel })}
         className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
-        style={{ height: HEIGHT }}
+        style={{ height }}
       >
         {t("noData")}
       </div>
@@ -188,33 +208,76 @@ export function FunnelStagesChart({
 
   return (
     <div>
-      <div role="img" aria-label={chartLabel} style={{ height: HEIGHT }} className="text-blue-500 dark:text-blue-400">
+      <div role="img" aria-label={chartLabel} style={{ height }} className="text-blue-500 dark:text-blue-400">
         <ResponsiveContainer width="100%" height="100%">
-          <FunnelChart margin={{ top: 8, right: LABEL_AREA_WIDTH, bottom: 8, left: 8 }}>
-            <Tooltip
-              content={({ active, payload }) => (
-                <ChartTooltip
-                  active={active}
-                  title={payload?.[0]?.payload?.name}
-                  items={
-                    payload?.[0]?.value !== undefined
-                      ? [{ label: t("value"), value: formatCompactNumber(Number(payload[0].value)) }]
-                      : []
-                  }
-                />
-              )}
-            />
-            <Funnel dataKey="value" data={data} isAnimationActive={false}>
-              {data.map((entry) => (
-                <Cell key={entry.name} fill="currentColor" fillOpacity={entry.fillOpacity} />
-              ))}
-              <LabelList
+          {settings.chartType === "bars" ? (
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 8, right: settings.showValues ? 70 : 16, left: 8, bottom: 8 }}
+            >
+              <YAxis
+                type="category"
                 dataKey="name"
-                position="right"
-                content={(props) => <ExternalStageLabel {...props} data={labelData} />}
+                width={BARS_CATEGORY_AXIS_WIDTH}
+                tick={{ fontSize: 11 }}
+                className="fill-slate-600 dark:fill-slate-300"
               />
-            </Funnel>
-          </FunnelChart>
+              <XAxis type="number" hide />
+              <Tooltip
+                content={({ active, payload }) => (
+                  <ChartTooltip
+                    active={active}
+                    title={payload?.[0]?.payload?.name}
+                    items={
+                      payload?.[0]?.value !== undefined
+                        ? [{ label: t("value"), value: formatCompactNumber(Number(payload[0].value)) }]
+                        : []
+                    }
+                  />
+                )}
+              />
+              <Bar dataKey="value" fill="currentColor" radius={[0, 3, 3, 0]} isAnimationActive={false}>
+                {data.map((entry) => (
+                  <Cell key={entry.name} fillOpacity={entry.fillOpacity} />
+                ))}
+                {settings.showValues && (
+                  <LabelList
+                    dataKey="value"
+                    position="right"
+                    formatter={(v) => formatCompactNumber(Number(v))}
+                    className="fill-slate-600 text-[11px] dark:fill-slate-300"
+                  />
+                )}
+              </Bar>
+            </BarChart>
+          ) : (
+            <FunnelChart margin={{ top: 8, right: LABEL_AREA_WIDTH, bottom: 8, left: 8 }}>
+              <Tooltip
+                content={({ active, payload }) => (
+                  <ChartTooltip
+                    active={active}
+                    title={payload?.[0]?.payload?.name}
+                    items={
+                      payload?.[0]?.value !== undefined
+                        ? [{ label: t("value"), value: formatCompactNumber(Number(payload[0].value)) }]
+                        : []
+                    }
+                  />
+                )}
+              />
+              <Funnel dataKey="value" data={data} isAnimationActive={false}>
+                {data.map((entry) => (
+                  <Cell key={entry.name} fill="currentColor" fillOpacity={entry.fillOpacity} />
+                ))}
+                <LabelList
+                  dataKey="name"
+                  position="right"
+                  content={(props) => <ExternalStageLabel {...props} data={labelData} showValues={settings.showValues} />}
+                />
+              </Funnel>
+            </FunnelChart>
+          )}
         </ResponsiveContainer>
       </div>
 

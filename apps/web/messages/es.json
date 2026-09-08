@@ -716,7 +716,11 @@
       "evolutionStageLabel": "Etapa:",
       "emptyByChannelTitle": "Ningún canal tiene datos de embudo en este período.",
       "channelSummary": "Leads: {leads} · Clientes: {customers}",
-      "generatePdfReport": "Generar informe PDF"
+      "generatePdfReport": "Generar informe PDF",
+      "customizeFunnelTitle": "Personalizar gráfico del embudo",
+      "customizeConversionTitle": "Personalizar gráfico de conversión",
+      "funnelChartTypeFunnel": "Embudo",
+      "funnelChartTypeBars": "Barras horizontales"
     }
   },
   "products": {
@@ -1151,5 +1155,29 @@
     "description": "Por inactividad, tu sesión se cerrará en {seconds, plural, one {# segundo} other {# segundos}}.",
     "stayLabel": "Continuar conectado",
     "logoutNowLabel": "Cerrar sesión ahora"
+  },
+  "charts": {
+    "actions": {
+      "customize": "Personalizar gráfico",
+      "reset": "Restaurar valores predeterminados",
+      "apply": "Aplicar",
+      "cancel": "Cancelar"
+    },
+    "settings": {
+      "preset": "Preselección",
+      "showValues": "Mostrar valores",
+      "density": "Densidad",
+      "chartType": "Tipo de gráfico"
+    },
+    "density": {
+      "comfortable": "Cómoda",
+      "compact": "Compacta"
+    },
+    "presets": {
+      "default": "Predeterminado",
+      "compact": "Compacto",
+      "analytical": "Analítico",
+      "presentation": "Presentación"
+    }
   }
 }

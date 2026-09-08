@@ -16,9 +16,10 @@ import {
   type FunnelStageKey,
 } from "@/lib/funnel-metrics";
 import { computeFunnelInsights } from "@/lib/funnel-insights";
-import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
+import { funnelStagesSettingsForPreset, stageConversionSettingsForPreset } from "@/lib/chart-settings";
+import { buttonGhost, buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
-import { IconFunnel } from "@/components/icons";
+import { IconFunnel, IconSettings } from "@/components/icons";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { SegmentedControl } from "@/components/segmented-control";
 import { MetricHelp } from "@/components/metric-help";
@@ -28,6 +29,8 @@ import { FunnelEvolutionChart } from "@/components/funnel-evolution-chart";
 import { FunnelByChannelTable } from "@/components/funnel-by-channel-table";
 import { InsightsPanel } from "@/components/insights-panel";
 import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
+import { ChartSettingsDialog } from "@/components/chart-settings-dialog";
+import { useChartSettings } from "@/hooks/use-chart-settings";
 
 async function fetchSnapshots(id: string): Promise<FunnelSnapshot[]> {
   return api.get<FunnelSnapshot[]>(`/api/v1/organizations/${id}/funnel-snapshots`);
@@ -86,6 +89,13 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
   const [loading, setLoading] = useState(true);
   const [byChannelLoading, setByChannelLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Personalização dos dois gráficos do Funil (redesign, PR2) — estado de
+  // sessão só, sem persistência ainda (PR3 fica com isso quando a tabela de
+  // preferência existir). Ver hooks/use-chart-settings.ts.
+  const funnelStagesSettings = useChartSettings(funnelStagesSettingsForPreset);
+  const conversionSettings = useChartSettings(stageConversionSettingsForPreset);
+  const tCharts = useTranslations("charts");
 
   useEffect(() => {
     let cancelled = false;
@@ -227,18 +237,137 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
           </div>
 
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("funnelChartTitle")}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("funnelChartTitle")}</h3>
+              <button
+                type="button"
+                onClick={funnelStagesSettings.open}
+                aria-label={tCharts("actions.customize")}
+                className={`${buttonGhost} !p-1.5`}
+              >
+                <IconSettings className="h-4 w-4" />
+              </button>
+            </div>
             <div className="mt-3">
-              <FunnelStagesChart stages={analytics.stages} conversions={analytics.conversions} />
+              <FunnelStagesChart
+                stages={analytics.stages}
+                conversions={analytics.conversions}
+                settings={funnelStagesSettings.active}
+              />
             </div>
           </Card>
 
+          <ChartSettingsDialog
+            open={funnelStagesSettings.isOpen}
+            title={t("customizeFunnelTitle")}
+            preset={funnelStagesSettings.preset}
+            onPresetChange={funnelStagesSettings.changePreset}
+            onApply={funnelStagesSettings.apply}
+            onCancel={funnelStagesSettings.cancel}
+            onReset={funnelStagesSettings.reset}
+          >
+            {funnelStagesSettings.draft && (
+              <>
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {tCharts("settings.chartType")}
+                  </p>
+                  <SegmentedControl
+                    value={funnelStagesSettings.draft.chartType}
+                    onChange={(chartType) => funnelStagesSettings.updateDraft((d) => ({ ...d, chartType }))}
+                    ariaLabel={tCharts("settings.chartType")}
+                    options={[
+                      { value: "funnel", label: t("funnelChartTypeFunnel") },
+                      { value: "bars", label: t("funnelChartTypeBars") },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {tCharts("settings.density")}
+                  </p>
+                  <SegmentedControl
+                    value={funnelStagesSettings.draft.density}
+                    onChange={(density) => funnelStagesSettings.updateDraft((d) => ({ ...d, density }))}
+                    ariaLabel={tCharts("settings.density")}
+                    options={[
+                      { value: "comfortable", label: tCharts("density.comfortable") },
+                      { value: "compact", label: tCharts("density.compact") },
+                    ]}
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={funnelStagesSettings.draft.showValues}
+                    onChange={(e) => funnelStagesSettings.updateDraft((d) => ({ ...d, showValues: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
+                  />
+                  {tCharts("settings.showValues")}
+                </label>
+              </>
+            )}
+          </ChartSettingsDialog>
+
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("conversionChartTitle")}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t("conversionChartTitle")}</h3>
+              <button
+                type="button"
+                onClick={conversionSettings.open}
+                aria-label={tCharts("actions.customize")}
+                className={`${buttonGhost} !p-1.5`}
+              >
+                <IconSettings className="h-4 w-4" />
+              </button>
+            </div>
             <div className="mt-3">
-              <StageConversionChart conversions={analytics.conversions} stages={analytics.stages} tFields={tFields} />
+              <StageConversionChart
+                conversions={analytics.conversions}
+                stages={analytics.stages}
+                tFields={tFields}
+                settings={conversionSettings.active}
+              />
             </div>
           </Card>
+
+          <ChartSettingsDialog
+            open={conversionSettings.isOpen}
+            title={t("customizeConversionTitle")}
+            preset={conversionSettings.preset}
+            onPresetChange={conversionSettings.changePreset}
+            onApply={conversionSettings.apply}
+            onCancel={conversionSettings.cancel}
+            onReset={conversionSettings.reset}
+          >
+            {conversionSettings.draft && (
+              <>
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {tCharts("settings.density")}
+                  </p>
+                  <SegmentedControl
+                    value={conversionSettings.draft.density}
+                    onChange={(density) => conversionSettings.updateDraft((d) => ({ ...d, density }))}
+                    ariaLabel={tCharts("settings.density")}
+                    options={[
+                      { value: "comfortable", label: tCharts("density.comfortable") },
+                      { value: "compact", label: tCharts("density.compact") },
+                    ]}
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={conversionSettings.draft.showValues}
+                    onChange={(e) => conversionSettings.updateDraft((d) => ({ ...d, showValues: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
+                  />
+                  {tCharts("settings.showValues")}
+                </label>
+              </>
+            )}
+          </ChartSettingsDialog>
 
           <InsightsPanel insights={insights} />
 

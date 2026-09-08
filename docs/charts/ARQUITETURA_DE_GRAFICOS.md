@@ -28,9 +28,31 @@ Para o `StageConversionChart` (o tooltip mais rico: taxa, contagens absolutas de
 
 Sem mudança nesta rodada — ver [`docs/analytics/CHART_DECISIONS.md`](../analytics/CHART_DECISIONS.md), que continua a fonte de verdade: Recharts para a família do Funil (decisão de 2026-09-02), SVG artesanal para os gráficos de linha do Analytics (`SeriesChart`, `CorrelationChart`). Nenhuma dependência nova.
 
-## Roadmap: camada de personalização (fora desta rodada)
+## Personalização de gráficos (PR2, 2026-09) — `ChartSettings`/preset já existem
 
-O prompt que motivou esta rodada também pede uma camada reutilizável de personalização de gráfico — menu "Personalizar", presets (Padrão/Compacto/Analítico/Apresentação), matriz de compatibilidade por tipo de dado, e persistência da preferência por usuário+organização+gráfico. Deliberadamente fora desta PR (que só corrige os bugs visuais existentes): é uma feature nova de UX, não uma correção, com risco e tamanho bem diferentes. Fica documentado aqui como próxima rodada:
+`docs/charts/PERSONALIZACAO_DE_GRAFICOS.md` documenta as decisões de produto (matriz de compatibilidade, presets). Aqui, o que entrou de arquitetura:
 
-- **Composição `ChartShell`** (`ChartHeader`/`ChartToolbar`/`ChartRenderer`/`ChartTooltip` — já existe/`ChartLegend`/`ChartSettings`/`ChartEmptyState`/`ChartErrorState`) — envelope reutilizável por qualquer tela (Dashboard, Analytics, Financeiro, Marketing, Produtos, Experimentos), não só o Funil.
-- **Persistência**: a tabela `user_workspace_preferences` existente (`apps/api/app/models/user_workspace_preference.py`) é de propósito único (`quick_access`, um valor por usuário+organização) — não serve para múltiplos `chart_key` por usuário+organização. Uma tabela nova (`user_chart_preferences`: `user_id`+`organization_id`+`chart_key`+`schema_version`+`preferences_json`) é o desenho natural, a criar só quando a UI de personalização existir de verdade (não faz sentido persistir uma preferência que a UI ainda não oferece).
+- **`ChartSettingsDialog`** (`components/chart-settings-dialog.tsx`) — o `ChartSettings` da composição `ChartShell` abaixo. Mesma estrutura de `ConfirmDialog` (backdrop/foco/Escape/trava de scroll — seção 21 do prompt: "não invente padrão inconsistente"). Não sabe nada de nenhum gráfico específico — os controles de cada um entram via `children`.
+- **`useChartSettings`** (`hooks/use-chart-settings.ts`) — o estado de preview→aplicar→cancelar→restaurar padrão (seção 11), usado uma vez por gráfico personalizável.
+- **`lib/chart-settings.ts`** — schema + presets, puro, sem UI. Fonte única da definição de cada preset (nunca duplicada entre código e a doc de produto).
+- Sem persistência ainda — estado de sessão só (React state), reseta ao recarregar. PR3 fecha isso.
+
+## Roadmap: `ChartShell` completo (fora desta rodada)
+
+Falta só `ChartHeader`/`ChartLegend`/`ChartEmptyState`/`ChartErrorState` pra composição completa da seção 13:
+
+```
+ChartShell
+├── ChartHeader        (ainda inline em cada página — funciona bem pra 2 instâncias)
+├── ChartToolbar        ✓ (o botão de engrenagem + ChartSettingsDialog)
+├── ChartRenderer        ✓ (os próprios FunnelStagesChart/StageConversionChart)
+├── ChartTooltip        ✓ (PR1)
+├── ChartLegend        (nenhum dos 2 gráficos do Funil precisa — nenhuma implementação ainda)
+├── ChartSettings        ✓ (ChartSettingsDialog + lib/chart-settings.ts)
+├── ChartEmptyState        (ainda inline — cada gráfico já trata o próprio estado vazio)
+└── ChartErrorState        (nenhuma implementação ainda)
+```
+
+Envelope reutilizável por qualquer tela (Dashboard, Analytics, Financeiro, Marketing, Produtos, Experimentos) só faz sentido construir quando o rollout passar do Funil pra essas telas — abstrair `ChartHeader`/`ChartEmptyState` agora, pra 2 instâncias que já funcionam bem inline, seria antecipar uma necessidade que ainda não existe.
+
+**Persistência**: a tabela `user_workspace_preferences` existente (`apps/api/app/models/user_workspace_preference.py`) é de propósito único (`quick_access`, um valor por usuário+organização) — não serve para múltiplos `chart_key` por usuário+organização. Uma tabela nova (`user_chart_preferences`: `user_id`+`organization_id`+`chart_key`+`schema_version`+`preferences_json`) é o desenho natural — PR3.

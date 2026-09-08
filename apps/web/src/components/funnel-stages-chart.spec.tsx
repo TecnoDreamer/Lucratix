@@ -1,6 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { buildStageLabelData, FunnelStagesChart } from "./funnel-stages-chart";
+import { buildStageLabelData, ExternalStageLabel, FunnelStagesChart } from "./funnel-stages-chart";
 import type { FunnelStages, StageConversion } from "@/lib/funnel-metrics";
 import type { MetricResult } from "@/lib/metrics";
 
@@ -62,6 +62,26 @@ describe("FunnelStagesChart", () => {
     render(<FunnelStagesChart stages={FULL_STAGES} label="Google Ads" />);
     expect(screen.getByRole("img", { name: "Google Ads — funil" })).toBeInTheDocument();
   });
+
+  it("densidade compacta reduz a altura renderizada (nunca esconde etapa)", () => {
+    const { container: comfortable } = render(<FunnelStagesChart stages={FULL_STAGES} />);
+    const { container: compact } = render(
+      <FunnelStagesChart stages={FULL_STAGES} settings={{ chartType: "funnel", showValues: true, density: "compact" }} />
+    );
+    const comfortableHeight = parseFloat((comfortable.querySelector('[role="img"]') as HTMLElement).style.height);
+    const compactHeight = parseFloat((compact.querySelector('[role="img"]') as HTMLElement).style.height);
+    expect(compactHeight).toBeLessThan(comfortableHeight);
+    // Continua com as 8 linhas na tabela — densidade nunca esconde dado.
+    const table = within(compact).getByText("Funil, por etapa").closest("table")!;
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(8);
+  });
+
+  // chartType ("funnel" ⇄ "bars") troca o componente Recharts renderizado
+  // (FunnelChart/BarChart), mas nenhum dos dois desenha conteúdo interno em
+  // jsdom (ResponsiveContainer mede 0×0 sem layout real de navegador — ver
+  // docs/charts/TESTES.md) — não tem seletor de DOM confiável pra
+  // distinguir os dois aqui. Verificado manualmente num navegador real
+  // (relatório da PR).
 });
 
 describe("buildStageLabelData", () => {
@@ -121,5 +141,42 @@ describe("buildStageLabelData", () => {
     );
     expect(data[1].conversionLabel).not.toContain("NaN");
     expect(data[1].conversionLabel).not.toContain("undefined");
+  });
+});
+
+describe("ExternalStageLabel", () => {
+  // Renderizado direto (sem ResponsiveContainer/Recharts no meio) — mesma
+  // razão de buildStageLabelData ser função pura: o Recharts não desenha
+  // conteúdo interno em jsdom (0×0 sem layout real de navegador), mas este
+  // componente em si é só SVG comum, testável isolado.
+  const data = [{ name: "Leads", value: 905, conversionLabel: "8,1% de Visitas" }];
+
+  it("showValues=true desenha nome e o detalhe (valor + conversão)", () => {
+    render(
+      <svg>
+        <ExternalStageLabel x={0} y={0} width={100} height={30} index={0} data={data} showValues />
+      </svg>
+    );
+    expect(screen.getByText("Leads")).toBeInTheDocument();
+    expect(screen.getByText("905 · 8,1% de Visitas")).toBeInTheDocument();
+  });
+
+  it("showValues=false esconde o detalhe, mas mantém o nome da etapa", () => {
+    render(
+      <svg>
+        <ExternalStageLabel x={0} y={0} width={100} height={30} index={0} data={data} showValues={false} />
+      </svg>
+    );
+    expect(screen.getByText("Leads")).toBeInTheDocument();
+    expect(screen.queryByText("905 · 8,1% de Visitas")).not.toBeInTheDocument();
+  });
+
+  it("coordenadas inválidas (NaN) não desenham nada, em vez de quebrar", () => {
+    const { container } = render(
+      <svg>
+        <ExternalStageLabel x={undefined} y={0} width={100} height={30} index={0} data={data} showValues />
+      </svg>
+    );
+    expect(container.querySelector("text")).toBeNull();
   });
 });

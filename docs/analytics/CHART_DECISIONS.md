@@ -86,6 +86,14 @@ Oitava rodada. `recharts@3.10.1` (compatível com React 19.2.8) é a **primeira 
 - **Glossário**: `MetricDefinition.unit`/`direction` viram opcionais para suportar conceito categórico (Canal, Campanha...) sem número nem direção desejável — nova categoria `"funil"`. 13 verbetes novos completam os 15 pedidos pelo prompt original; Fonte/Plataforma documentados como conceitos ainda não modelados neste sistema (mesmo critério de honestidade de MRR/ARR). O ícone `?` reutilizável (`MetricHelp`) já existia e já era não-hover-only — nenhum componente novo precisou ser criado para isso.
 - **Gargalo e insights determinísticos** (`lib/funnel-insights.ts`): mesmo espírito de `lib/insights.ts` — nunca linguagem causal, só "a menor conversão observada é entre X e Y".
 
+## Entregue (2026-09-07): personalização dos gráficos do Funil (PR2 de 3)
+
+Segunda rodada da sequência iniciada pela PR1 acima — menu "Personalizar", presets (Padrão/Compacto/Analítico/Apresentação) e matriz de compatibilidade por gráfico (seções 7-11 do prompt de redesign). Sem persistência ainda (estado de sessão só — PR3 fecha isso com uma tabela nova, `user_chart_preferences`).
+
+- **`ChartSettingsDialog`** (`components/chart-settings-dialog.tsx`, novo) + **`useChartSettings`** (`hooks/use-chart-settings.ts`, novo) + **`lib/chart-settings.ts`** (schema/presets, novo) — as peças reutilizáveis de `ChartSettings`/`ChartToolbar` da arquitetura `ChartShell` (seção 13), documentadas em `docs/charts/ARQUITETURA_DE_GRAFICOS.md`.
+- `FunnelStagesChart` ganha tipo (funil ⇄ barras horizontais — o exemplo literal da seção 9), mostrar/ocultar valores, densidade. `StageConversionChart` ganha mostrar/ocultar valores e densidade — **sem** seletor de tipo (reoferecer barras verticais reintroduziria o bug de nomes inclinados que a PR1 corrigiu).
+- Ver `docs/charts/PERSONALIZACAO_DE_GRAFICOS.md` pra matriz de compatibilidade e tabela de presets completas.
+
 ## Entregue (2026-09-04): redesign visual do Funil — labels externos e tooltip compartilhado (PR1 de 3)
 
 Décima rodada, primeira de uma nova sequência de 3 PRs pedida pelo usuário (prompt de UX focado nos gráficos do Funil + camada reutilizável de personalização — roadmap em `docs/charts/ARQUITETURA_DE_GRAFICOS.md`). Esta PR1 só corrige bugs visuais já existentes; não implementa personalização nem persistência.
