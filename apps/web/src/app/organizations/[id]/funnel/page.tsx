@@ -76,10 +76,17 @@ const STAGE_GLOSSARY_ID: Record<FunnelStageKey, string> = {
 
 /** Seção analítica do Funil (RF do prompt de funil/gráficos/PDF) — KPIs
  * por etapa, conversão/abandono, evolução temporal, alternância
- * agregado/por canal e insights determinísticos. Independente da tabela
- * de lançamento manual abaixo (que continua sendo a forma de entrada de
- * dado, inalterada). */
-function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) {
+ * agregado/por canal e insights determinísticos. A tabela de lançamento
+ * manual abaixo continua sendo a forma de entrada de dado (sem mudança de
+ * UI aqui), mas um período salvo por ela reflete aqui sozinho — ver
+ * `analyticsReloadToken`. */
+function FunnelAnalyticsSection({
+  organizationId,
+  analyticsReloadToken,
+}: {
+  organizationId: string;
+  analyticsReloadToken: number;
+}) {
   const router = useRouter();
   const t = useTranslations("funnel.analytics");
   const tFields = useTranslations("funnel.fields");
@@ -153,7 +160,7 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationId, range.dateFrom, range.dateTo]);
+  }, [organizationId, range.dateFrom, range.dateTo, analyticsReloadToken]);
 
   // "Por canal" busca sob demanda, na primeira vez que o toggle é usado —
   // evita uma chamada que a maioria das visitas (agregado, o padrão) nunca
@@ -189,7 +196,10 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
   }, [view, organizationId, range.dateFrom, range.dateTo]);
 
   // Trocar o período invalida o drill-down por canal já buscado, pra não
-  // mostrar dado de um intervalo diferente do selecionado.
+  // mostrar dado de um intervalo diferente do selecionado. Um período novo
+  // salvo no lançamento manual (analyticsReloadToken) invalida do mesmo
+  // jeito — sem isso, quem já está na aba "Por canal" não veria o dado
+  // recém-lançado sem trocar de aba/período.
   useEffect(() => {
     let cancelled = false;
     void Promise.resolve().then(() => {
@@ -198,7 +208,7 @@ function FunnelAnalyticsSection({ organizationId }: { organizationId: string }) 
     return () => {
       cancelled = true;
     };
-  }, [range.dateFrom, range.dateTo]);
+  }, [range.dateFrom, range.dateTo, analyticsReloadToken]);
 
   const insights = analytics ? computeFunnelInsights(analytics.conversions) : [];
 
@@ -440,6 +450,12 @@ export default function FunnelPage() {
   const [period, setPeriod] = useState(currentMonth());
   const [values, setValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Incrementado apos salvar um periodo, pra FunnelAnalyticsSection buscar de
+  // novo sem esperar o usuario trocar o filtro/recarregar a pagina — mesmo
+  // padrao de channelPerformanceReloadToken em marketing/page.tsx, so que
+  // aqui a mutacao (este componente) e a busca (FunnelAnalyticsSection)
+  // ficam em componentes diferentes, entao o token precisa virar prop.
+  const [analyticsReloadToken, setAnalyticsReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -481,6 +497,7 @@ export default function FunnelPage() {
         const withoutSamePeriod = prev.filter((s) => s.period !== saved.period);
         return [...withoutSamePeriod, saved].sort((a, b) => (a.period < b.period ? 1 : -1));
       });
+      setAnalyticsReloadToken((t) => t + 1);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("saveGenericError"));
     } finally {
@@ -490,7 +507,7 @@ export default function FunnelPage() {
 
   return (
     <div className="animate-fade-in-up py-8">
-      <FunnelAnalyticsSection organizationId={id} />
+      <FunnelAnalyticsSection organizationId={id} analyticsReloadToken={analyticsReloadToken} />
 
       <div className="mt-10 flex items-center gap-2">
         <IconFunnel className="h-4 w-4 text-slate-400" />
