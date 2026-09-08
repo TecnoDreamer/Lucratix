@@ -24,12 +24,9 @@ async function goToFunnel(page: Page, orgName: string): Promise<void> {
 /** Lança um período com dado em toda etapa aplicável — sem isso os
  * gráficos ficam no estado "sem dados suficientes" (RN-003, ver
  * funnel-stages-chart.tsx) e não há nada pra personalizar/inspecionar.
- *
- * A seção de análise (KPIs/gráficos) e a tabela de lançamento manual são
- * independentes: salvar aqui não reflete sozinho lá em cima (a análise só
- * busca de novo quando o período/intervalo de datas muda, não quando uma
- * nova linha é salva) — um reload é o mesmo que um usuário real precisaria
- * fazer para ver o período recém-lançado nos KPIs/gráficos. */
+ * A seção de análise (KPIs/gráficos) busca de novo sozinha assim que o
+ * período é salvo (`analyticsReloadToken` em funnel/page.tsx) — sem
+ * reload manual da página. */
 async function launchPeriodWithData(page: Page): Promise<void> {
   await page.getByLabel("Impressões", { exact: true }).fill("100000");
   await page.getByLabel("Visitas", { exact: true }).fill("20000");
@@ -40,12 +37,8 @@ async function launchPeriodWithData(page: Page): Promise<void> {
   await page.getByLabel("Clientes", { exact: true }).fill("120");
   await page.getByLabel("Recompras", { exact: true }).fill("30");
   await page.getByRole("button", { name: "Salvar período" }).click();
-  // Linha nova na tabela de lançamentos confirma que o PUT terminou, antes
-  // de recarregar (recarregar cedo demais releria o snapshot antigo/nenhum).
+  // Linha nova na tabela de lançamentos confirma que o PUT terminou.
   await expect(page.getByRole("cell", { name: "100.000" })).toBeVisible();
-
-  await page.reload();
-  await page.waitForURL("**/funnel");
   await expect(page.getByRole("img", { name: "Funil" })).toBeVisible();
 }
 
@@ -65,25 +58,29 @@ test.describe("Personalização de gráficos do Funil — persistência (PR3)", 
     await expect(page.getByText("Leads", { exact: true }).first()).toBeVisible();
 
     // Hover no gráfico de Conversão por etapa mostra o tooltip rico (taxa,
-    // valores absolutos, perda — seção 4 do prompt de redesign). A altura
-    // exata de cada barra dentro do Recharts não é previsível a partir só
-    // do bounding box do container (margens internas, gap entre barras) —
-    // tenta várias frações da altura até uma acertar dentro de uma barra,
-    // em vez de um único ponto que pode cair entre duas linhas.
+    // valores absolutos, perda — seção 4 do prompt de redesign). Ancora no
+    // próprio label do eixo de categoria de uma transição específica (mais
+    // preciso que estimar a posição de uma barra a partir de frações da
+    // altura do container).
     const conversionChart = page.getByRole("img", { name: "Conversão por etapa" });
     await expect(conversionChart).toBeVisible();
-    const box = await conversionChart.boundingBox();
-    if (!box) throw new Error("Gráfico de conversão sem bounding box — não renderizou.");
-    const tooltip = page.getByRole("tooltip");
-    let tooltipShown = false;
-    for (const fraction of [0.5, 0.2, 0.35, 0.65, 0.8, 0.1, 0.9]) {
-      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * fraction);
-      if (await tooltip.isVisible().catch(() => false)) {
-        tooltipShown = true;
-        break;
-      }
+    // Sem a etapa de reload que existia antes desta correção (que também
+    // resetava o scroll pro topo da página), o scroll continua onde ficou
+    // depois de preencher o formulário de lançamento manual — bem mais
+    // abaixo do gráfico de conversão. `page.mouse.move` usa coordenadas do
+    // viewport, então precisa do elemento visível na tela antes de calcular
+    // a posição do hover, não só "visível" no sentido de CSS.
+    await conversionChart.scrollIntoViewIfNeeded();
+    const firstRowLabel = conversionChart.getByText("Impressões →Visitas", { exact: true });
+    await expect(firstRowLabel).toBeVisible();
+    const labelBox = await firstRowLabel.boundingBox();
+    const chartBox = await conversionChart.boundingBox();
+    if (!labelBox || !chartBox) {
+      throw new Error("Gráfico de conversão sem bounding box — não renderizou.");
     }
-    expect(tooltipShown, "hover em nenhuma faixa de altura mostrou o tooltip").toBe(true);
+    const tooltip = page.getByRole("tooltip");
+    await page.mouse.move(chartBox.x + chartBox.width * 0.6, labelBox.y + labelBox.height / 2);
+    await expect(tooltip).toBeVisible();
     await expect(tooltip.getByText("Taxa de conversão")).toBeVisible();
     // Tira o mouse de cima antes de continuar, pra não deixar o tooltip
     // aberto atrapalhando os cliques seguintes.
