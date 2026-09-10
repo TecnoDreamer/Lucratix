@@ -1,4 +1,4 @@
-"""Aplicacao da regra de sessao unica por conta (RN-013).
+"""Aplicacao da regra de sessao unica por conta (RN-016).
 
 Cada login cria uma nova linha em `sessions` e revoga toda sessao ativa
 anterior do mesmo usuario. A atomicidade dessa garantia nao depende so da
@@ -80,7 +80,7 @@ def revoke_session(db: DBSession, session_id: uuid.UUID) -> None:
 
 
 def revoke_active_session_for_user(db: DBSession, user_id: uuid.UUID) -> None:
-    """Revoga a sessao ativa do usuario, se houver (no maximo uma, RN-013) —
+    """Revoga a sessao ativa do usuario, se houver (no maximo uma, RN-016) —
     usado apos reset de senha bem-sucedido (auditoria de hardening, 2026-09):
     se a conta estava comprometida (sessao ativa de um atacante), o reset por
     e-mail deve encerra-la na hora, forcando um novo login com a senha nova,

@@ -27,7 +27,7 @@ Não existe seletor de escopo (ex.: `analytics:read` vs. `analytics:write`) porq
 
 ## Por que não reaproveitar o JWT de sessão
 
-Sessão de usuário tem prazo curto (15 min access / 7 dias refresh, RN-013: sessão única) e é revogada a qualquer login em outro dispositivo — uma API key para uma ferramenta de terceiros precisa de um ciclo de vida independente de o usuário estar logado no navegador. Reaproveitar o JWT também obrigaria a chave a ser renovada como um token de sessão, inviável para uma ferramenta de BI que só faz uma chamada agendada de tempos em tempos.
+Sessão de usuário tem prazo curto (15 min access / 7 dias refresh, RN-016: sessão única) e é revogada a qualquer login em outro dispositivo — uma API key para uma ferramenta de terceiros precisa de um ciclo de vida independente de o usuário estar logado no navegador. Reaproveitar o JWT também obrigaria a chave a ser renovada como um token de sessão, inviável para uma ferramenta de BI que só faz uma chamada agendada de tempos em tempos.
 
 ## Isolamento multi-tenant (RNF-002)
 

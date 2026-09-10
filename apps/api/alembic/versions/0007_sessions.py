@@ -1,4 +1,4 @@
-"""sessions table (RN-013 — sessao unica por conta)
+"""sessions table (RN-016 — sessao unica por conta; citada como RN-013 ate 2026-09-10)
 
 Revision ID: 0007_sessions
 Revises: 0006_password_reset_tokens

@@ -1,6 +1,6 @@
 """Rotas de autenticacao.
 
-RN-013 (sessao unica por conta, ver app/core/sessions.py): login cria uma
+RN-016 (sessao unica por conta, ver app/core/sessions.py): login cria uma
 sessao nova e revoga qualquer sessao ativa anterior do mesmo usuario;
 logout e /refresh validam/revogam essa sessao no servidor — os tokens JWT
 continuam stateless quanto a assinatura/expiracao, mas cada um carrega a
@@ -106,7 +106,7 @@ def _set_cookie(response: Response, name: str, value: str, max_age: int) -> None
 
 
 def _set_auth_cookies(response: Response, db: Session, user: User, request: Request) -> None:
-    # RN-013: revoga qualquer sessao ativa anterior do usuario e cria uma
+    # RN-016: revoga qualquer sessao ativa anterior do usuario e cria uma
     # nova; o `sid` da sessao criada aqui e o que fica embutido em ambos os
     # tokens (ver core/sessions.py::create_session). IP/user-agent (auditoria
     # de hardening, 2026-09) sao so forense de incidente, nunca usados em
@@ -211,7 +211,7 @@ def refresh(
     (15 min) mesmo com um `refresh_token` valido (7 dias) ainda no cookie —
     o cookie era emitido no login mas nunca lido em nenhuma rota. Nao rotaciona
     o refresh token (mantem o mesmo ate expirar), mas o `sid` que ele carrega
-    e validado contra a tabela `sessions` a cada chamada (RN-013): um
+    e validado contra a tabela `sessions` a cada chamada (RN-016): um
     refresh_token assinado e nao-expirado nao basta se a sessao foi revogada
     por um login em outro dispositivo.
     """
@@ -264,7 +264,7 @@ def logout(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> None:
-    # Revoga a sessao no servidor imediatamente (RN-013), em vez de so
+    # Revoga a sessao no servidor imediatamente (RN-016), em vez de so
     # limpar os cookies no cliente: um access_token eventualmente vazado
     # antes de expirar (15 min) nao deve continuar valendo apos o logout.
     if access_token is not None:
@@ -372,7 +372,7 @@ def change_password_route(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    # RNF-005: usuario ja autenticado (sessao unica, RN-013) — o risco aqui
+    # RNF-005: usuario ja autenticado (sessao unica, RN-016) — o risco aqui
     # e uma sessao comprometida testando a senha atual em loop; por conta,
     # nao por IP (o atacante ja tem uma sessao valida de algum lugar).
     enforce_rate_limits(

@@ -4,7 +4,7 @@
 
 ## Visão geral
 
-JWT stateless quanto a assinatura/expiração, mas com sessão única validada no servidor (RN-013): access token (15 min) + refresh token (7 dias), ambos em cookies `HttpOnly`/`Secure` (produção)/`SameSite=Lax`. Cada token carrega uma claim `sid` checada contra a tabela `sessions` em toda request autenticada (`app/core/deps.py::get_current_user`) e no `/refresh` (`app/modules/auth/router.py`) — um JWT com assinatura e prazo válidos não basta se a sessão foi revogada.
+JWT stateless quanto a assinatura/expiração, mas com sessão única validada no servidor ([RN-016](../requirements/business-rules.md#rn-016) — citada como `RN-013` no código até 2026-09-10): access token (15 min) + refresh token (7 dias), ambos em cookies `HttpOnly`/`Secure` (produção)/`SameSite=Lax`. Cada token carrega uma claim `sid` checada contra a tabela `sessions` em toda request autenticada (`app/core/deps.py::get_current_user`) e no `/refresh` (`app/modules/auth/router.py`) — um JWT com assinatura e prazo válidos não basta se a sessão foi revogada.
 
 **Login revoga qualquer sessão ativa anterior do mesmo usuário**, com atomicidade garantida por um índice único parcial no banco (`uq_sessions_one_active_per_user`, migration `0007_sessions`), não apenas pela ordem das instruções da aplicação — ver `app/core/sessions.py`. Login em um novo dispositivo desconecta qualquer outro dispositivo já autenticado; a UX correspondente (mensagem "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo.") está em `apps/web/src/lib/api.ts` (`loginRedirectPath`) e na página de login (`?reason=session_revoked`).
 

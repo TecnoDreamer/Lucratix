@@ -51,8 +51,15 @@ Respostas de cadastro, login e recuperação de senha não revelam se um e-mail 
 ### RN-013 — Experimento não declara vencedor automaticamente
 O sistema não marca uma variante como "vencedora" apenas por ter taxa de conversão numericamente maior. A declaração de resultado considera tamanho de amostra mínimo (30 por variante) e, a partir de 2026-08-31, significância estatística real: teste-z de duas proporções (`apps/api/app/modules/experiments/analysis.py`), cada variante comparada contra a Controle, nível de confiança de 95%. Mesmo com o teste implementado, o sistema nunca usa a palavra "vencedor" — devolve `is_significant`/`p_value` por variante e deixa a decisão para quem lê o resultado (ver nota explícita sobre "peeking" e ausência de correção para múltiplas comparações no próprio `note` da resposta).
 
+> **Nota (2026-09-10):** até esta data o código também citava `RN-013` para a regra de **sessão única por conta** (autenticação). Essa regra recebeu código próprio — [RN-016](#rn-016) — e as citações em `apps/api/app/core/*`, `apps/api/app/modules/auth/*`, `apps/api/app/models/session.py` e nos docs de segurança foram reatribuídas. `RN-013` designa **apenas** a regra de experimento.
+
 ### RN-014 — Produto inativo não é excluído fisicamente
 Produtos/serviços marcados como inativos permanecem no histórico (para preservar integridade de registros financeiros/campanhas passadas que os referenciam), apenas deixam de aparecer como opção para novos lançamentos.
 
 ### RN-015 — Auditoria é imutável
 Registros de auditoria não podem ser editados ou excluídos por usuários da aplicação, incluindo `PLATFORM_ADMIN` via API padrão.
+
+### RN-016 — Sessão única por conta
+Uma conta só pode ter uma sessão autenticada ativa por vez. Um login bem-sucedido em qualquer dispositivo revoga imediatamente, no servidor, a sessão anterior do mesmo usuário (`uq_sessions_one_active_per_user WHERE revoked_at IS NULL`). Cada JWT — access (15 min) e refresh (7 dias) — carrega uma claim `sid` validada contra a tabela `sessions` em toda request autenticada (`app/core/deps.py::get_current_user`) e no `/auth/refresh`: assinatura e prazo válidos não bastam se a sessão foi revogada. Reset de senha e logout também revogam a sessão no servidor, não apenas no cliente.
+
+Origem: regra existia desde a Fase de autenticação, citada no código como `RN-013` por engano até 2026-09-10 (ver nota em [RN-013](#rn-013)). Referências: `apps/api/app/core/sessions.py`, `apps/api/app/models/session.py`, `apps/api/alembic/versions/0007_sessions.py`, [AUTHENTICATION.md](../security/AUTHENTICATION.md).

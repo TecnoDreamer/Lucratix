@@ -1,4 +1,4 @@
-"""RN-013 — regra de sessao unica por conta, na camada de servico (sem HTTP)."""
+"""RN-016 — regra de sessao unica por conta, na camada de servico (sem HTTP)."""
 
 import uuid
 from datetime import UTC, datetime, timedelta

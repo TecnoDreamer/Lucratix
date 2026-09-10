@@ -162,7 +162,7 @@ def confirm_password_reset(db: Session, raw_token: str, new_password: str) -> Us
     ou o usuario cuja senha foi trocada, em caso de sucesso (o router usa
     isso para auditar com entity_id/user_id corretos).
 
-    RN-013 + auditoria de hardening (2026-09): reset revoga qualquer sessao
+    RN-016 + auditoria de hardening (2026-09): reset revoga qualquer sessao
     ativa do usuario (`revoke_active_session_for_user`) — se a conta estava
     comprometida, a sessao do atacante nao sobrevive ao reset, em vez de
     valer ate expirar sozinha. Tambem notifica por e-mail que a senha

@@ -1,4 +1,4 @@
-"""RN-013 — login em um novo dispositivo encerra a sessao do dispositivo anterior.
+"""RN-016 — login em um novo dispositivo encerra a sessao do dispositivo anterior.
 
 `client_factory` cria TestClients com cookie jars independentes contra o
 mesmo banco/transacao de teste, simulando dois dispositivos/navegadores

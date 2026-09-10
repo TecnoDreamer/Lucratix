@@ -69,7 +69,7 @@ def test_garbage_token_is_rejected():
 def test_token_without_session_claim_is_rejected():
     # Um token assinado com o mesmo segredo mas sem a claim "sid" (ex.: gerado
     # por uma versao antiga do codigo) nao deve ser aceito como valido -
-    # decode_token exige "sid" tanto quanto exige "sub" (RN-013).
+    # decode_token exige "sid" tanto quanto exige "sub" (RN-016).
     import jwt as pyjwt
 
     from app.core.security import settings as security_settings

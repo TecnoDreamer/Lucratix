@@ -176,7 +176,7 @@ register_ip_rate_limiter = RateLimiter(max_attempts=100, window_seconds=300)
 password_reset_confirm_ip_rate_limiter = RateLimiter(max_attempts=20, window_seconds=300)
 # /auth/verify-email: mesmo raciocinio de password-reset/confirm.
 verify_email_ip_rate_limiter = RateLimiter(max_attempts=20, window_seconds=300)
-# /auth/change-password: usuario ja autenticado (sessao unica, RN-013) — o
+# /auth/change-password: usuario ja autenticado (sessao unica, RN-016) — o
 # risco aqui e uma sessao comprometida testando a senha atual em loop; conta
 # isolada (nao IP, o atacante ja tem uma sessao valida de algum lugar).
 change_password_account_rate_limiter = RateLimiter(max_attempts=10, window_seconds=300)

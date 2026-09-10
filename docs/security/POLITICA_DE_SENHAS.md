@@ -137,7 +137,7 @@ rodada.
   `POST /auth/resend-verification` (5/300s cada) — ver
   [AUTHENTICATION.md](AUTHENTICATION.md#rate-limiting). `/change-password` e
   `/password-reset/confirm` não têm rate limit dedicado: o primeiro exige
-  sessão autenticada (já protegida pela política de sessão única, RN-013); o
+  sessão autenticada (já protegida pela política de sessão única, RN-016); o
   segundo exige um token opaco de 256 bits de entropia
   (`secrets.token_urlsafe(32)`) — inviável de adivinhar por força bruta,
   então um limite de tentativas adicional não muda o perfil de risco.

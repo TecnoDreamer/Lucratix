@@ -13,7 +13,7 @@ export const LAST_ACTIVITY_STORAGE_KEY = "lucratix:last_activity_at";
 // Só arma o watcher em área autenticada — nunca em página pública (evita
 // sequer tentar deslogar quem nao esta logado). Allowlist deliberada (em
 // vez de negar só as rotas públicas conhecidas): a segurança de verdade é
-// sempre imposta pelo backend (cookie HttpOnly/RN-013); esta camada é
+// sempre imposta pelo backend (cookie HttpOnly/RN-016); esta camada é
 // UX/defesa em profundidade, então uma área autenticada nova que esqueça
 // de entrar aqui não é uma regressão de segurança, só uma lacuna de UX a
 // completar depois.
