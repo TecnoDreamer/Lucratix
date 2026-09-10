@@ -10,7 +10,7 @@ from app.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 
 class Session(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
-    """RN-013: uma conta so pode ter uma sessao autenticada ativa por vez.
+    """RN-016: uma conta so pode ter uma sessao autenticada ativa por vez.
 
     Cada login cria uma linha aqui e revoga (`revoked_at`) qualquer sessao
     anterior do mesmo usuario na mesma transacao (ver app/core/sessions.py).

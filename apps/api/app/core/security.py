@@ -81,7 +81,7 @@ class InvalidTokenError(Exception):
 
 
 # Mensagem exibida ao usuario quando a sessao referenciada pelo token existe
-# mas foi revogada por um login em outro dispositivo (RN-013) — distinta da
+# mas foi revogada por um login em outro dispositivo (RN-016) — distinta da
 # mensagem generica de token invalido/expirado, para que o front-end (ver
 # apps/web/src/lib/api.ts) saiba mostrar a explicacao correta em vez de um
 # "sessao expirada" enganoso. O texto e comparado por igualdade exata no

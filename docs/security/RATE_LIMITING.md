@@ -27,7 +27,7 @@ Por isso, todo endpoint sensível agora verifica **3 dimensões independentes** 
 | `POST /auth/register` | — | 100 / 300s | — | Sem "conta" antes de criar uma — só IP, contra criação em massa/automação. Ajustado de 10 para 100 depois que a própria suíte e2e (dezenas de cadastros em minutos, mesma API) foi bloqueada em CI — 10 era baixo demais até pra uso legítimo (evento de onboarding, escritório compartilhado). |
 | `POST /auth/password-reset/confirm` | — | 20 / 300s | — | O token opaco (256 bits) já torna força bruta offline inviável — isto é defesa em profundidade contra um script chamando o endpoint em volume. |
 | `POST /auth/verify-email` | — | 20 / 300s | — | Mesmo raciocínio de password-reset/confirm. |
-| `POST /auth/change-password` | — | — | 10 / 300s | Usuário já autenticado (sessão única, RN-013) — o risco é uma sessão comprometida testando a senha atual; por conta, não por IP. |
+| `POST /auth/change-password` | — | — | 10 / 300s | Usuário já autenticado (sessão única, RN-016) — o risco é uma sessão comprometida testando a senha atual; por conta, não por IP. |
 | `POST /auth/refresh` | — | 60 / 60s | — | Chamado automaticamente por clientes legítimos com frequência; generoso de propósito, mas sem nenhum limite antes desta rodada. |
 | `POST /organizations/{id}/memberships` (convite) | — | 20 / 300s (por IP+admin) | — | Já exige `ORGANIZATION_ADMIN`, mas sem limite contra convite em massa (ex.: sessão de admin comprometida). |
 | `POST /platform/users` (criação administrativa) | — | 20 / 300s (por IP+Super Admin) | — | Mesmo raciocínio, papel de Super Admin. |

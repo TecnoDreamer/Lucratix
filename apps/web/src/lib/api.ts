@@ -15,7 +15,7 @@ export class ApiError extends Error {
 
 // Precisa ser identico ao texto de SESSION_REVOKED_DETAIL em
 // apps/api/app/core/security.py — comparado por igualdade exata para
-// distinguir "sessao encerrada por login em outro dispositivo" (RN-013)
+// distinguir "sessao encerrada por login em outro dispositivo" (RN-016)
 // de qualquer outro 401 generico. Ver loginRedirectPath abaixo.
 export const SESSION_REVOKED_MESSAGE =
   "Sua sessão foi encerrada porque esta conta foi acessada em outro dispositivo.";

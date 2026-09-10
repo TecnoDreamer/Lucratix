@@ -26,13 +26,14 @@ Convenção: cada requisito tem ID único `RF-XXX`, prioridade (`P0` crítico ao
 - **Ator:** Usuário cadastrado.
 - **Pré-condições:** conta ativa.
 - **Fluxo:** usuário informa e-mail e senha → sistema valida credenciais → sistema cria sessão/token → resposta não revela se o erro foi "e-mail inexistente" ou "senha incorreta" (mensagem genérica).
-- **Pós-condições:** sessão autenticada criada.
-- **Regras:** rate limiting em tentativas de login ([RNF-005](non-functional-requirements.md#rnf-005)).
+- **Pós-condições:** sessão autenticada criada; qualquer sessão anterior do mesmo usuário é revogada no servidor ([RN-016](business-rules.md#rn-016)).
+- **Regras:** rate limiting em tentativas de login ([RNF-005](non-functional-requirements.md#rnf-005)); sessão única por conta ([RN-016](business-rules.md#rn-016)).
 - **Prioridade:** P0.
 
 ### RF-003 — Logout
 - **Ator:** Usuário autenticado.
 - **Fluxo:** usuário solicita logout → sessão/token é invalidado no servidor (não apenas removido do cliente).
+- **Regras:** revogação server-side da sessão ([RN-016](business-rules.md#rn-016)).
 - **Prioridade:** P0.
 
 ### RF-004 — Recuperação de senha
