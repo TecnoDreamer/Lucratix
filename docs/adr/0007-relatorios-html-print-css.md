@@ -1,7 +1,9 @@
 # ADR-0007 — Relatórios com impressão/PDF: HTML + Print CSS
 
-- **Status:** Aceito
+- **Status:** Aceito, complementado
 - **Data:** 2026-08-26
+
+> **Atualização (2026-09):** a decisão de HTML + Print CSS continua valendo para a **impressão a partir da tela** (`/organizations/[id]/reports`, botão "Imprimir / Salvar como PDF"). Posteriormente foram adicionados **endpoints de PDF server-side** (`GET /reports/basic/pdf`, `/reports/executive/pdf`, `/reports/funnel/pdf`) gerados com **ReportLab** — a alternativa "geração server-side" antecipada na seção _Consequências_ deste ADR. Racional e detalhes em [`../reports/PDF_INFRAESTRUTURA.md`](../reports/PDF_INFRAESTRUTURA.md). Os dois caminhos coexistem.
 
 ## Contexto
 
