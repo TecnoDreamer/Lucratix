@@ -3,6 +3,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
+from app.modules.metrics import engine
+
 
 class FinancialPeriodUpsert(BaseModel):
     period: date
@@ -28,18 +30,14 @@ class FinancialPeriodRead(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def profit(self) -> float | None:
-        if self.revenue is None:
-            return None
-        costs = self.costs or 0
-        expenses = self.expenses or 0
-        taxes = self.taxes or 0
-        return self.revenue - costs - expenses - taxes
+        """Derivado, nunca armazenado (RF-017). Formula unica em
+        app/modules/metrics/engine.py::profit — RN-004: custo/despesa/imposto
+        ausente conta como 0; receita ausente => nao aplicavel (None)."""
+        return engine.profit(self.revenue, self.costs, self.expenses, self.taxes).value
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def margin(self) -> float | None:
-        """RN-003: sem receita ou receita = 0, margem e 'nao aplicavel' (None)."""
-        profit = self.profit
-        if profit is None or self.revenue is None or self.revenue == 0:
-            return None
-        return profit / self.revenue
+        """RN-003: sem receita ou receita = 0, margem e 'nao aplicavel' (None).
+        Formula unica em app/modules/metrics/engine.py::margin."""
+        return engine.margin(self.revenue, self.profit).value
