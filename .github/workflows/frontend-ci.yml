@@ -44,5 +44,11 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      # Falha o CI se uma chave de i18n existir em um idioma e faltar em
+      # outro — next-intl nao valida isso em build e a chave crua vaza pra
+      # producao silenciosamente (ver docs/i18n/README.md).
+      - name: i18n catalog consistency
+        run: npm run check:i18n
+
       - name: Build
         run: npm run build

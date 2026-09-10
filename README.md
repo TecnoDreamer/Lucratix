@@ -2,13 +2,16 @@
 
 Lucratix é uma plataforma de Business Intelligence, Marketing Analytics, Growth e CRO para consultorias e profissionais de marketing acompanharem, de forma isolada e segura, os dados de cada empresa/cliente atendido — conectando investimento em marketing a resultado financeiro real (faturamento, lucro, margem, CAC, LTV, ROAS, conversão), com baseline histórico e comparação antes × depois.
 
-> **Status atual: fundação técnica, banco de dados, autenticação e multi-tenancy implementados (Fases 4–7).** API FastAPI funcional com cadastro/login/logout, organizações, memberships/RBAC e trilha de auditoria, com isolamento multi-tenant validado por testes automatizados. Front-end Next.js escafoldado, telas de negócio ainda pendentes. Ver [docs/product/roadmap.md](docs/product/roadmap.md).
+> **Status atual: Fases 0–16 do roadmap concluídas.** Produto funcional ponta a ponta — autenticação com sessão única, multi-tenancy validado por testes, empresas (criar/congelar/logo), baseline histórico, produtos, financeiro, marketing (canais/campanhas), funil multicanal, camada de métricas, Dashboard + Visão Executiva (KPIs, séries, metas, correlação), experimentos A/B, relatórios PDF, importação/exportação de planilha, Super Admin e i18n pt-BR/en/es. Fases 17 (integrações externas) e 18 (hardening) não iniciadas. Ver [docs/product/roadmap.md](docs/product/roadmap.md).
 
 ## Por que este projeto existe
 
 Ver [docs/product/vision.md](docs/product/vision.md) e [docs/product/problem.md](docs/product/problem.md).
 
 ## Documentação
+
+- **Comece aqui:** [DOCUMENTACAO_PRINCIPAL_LUCRATIX.md](DOCUMENTACAO_PRINCIPAL_LUCRATIX.md) — guia mestre do produto.
+- **Portal navegável:** [docs/README.md](docs/README.md) — índice de toda a documentação, por área e por público.
 
 - **Produto:** [docs/product/](docs/product/) — visão, problema, proposta de valor, personas, stakeholders, jornada, escopo, MVP, roadmap, riscos, hipóteses.
 - **Ambiente:** [docs/environment.md](docs/environment.md) — ferramentas verificadas na máquina de desenvolvimento.
