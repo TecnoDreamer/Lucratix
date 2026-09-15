@@ -16,14 +16,17 @@ Registro de divergências, código órfão e pontos que pedem decisão, levantad
 
 Nenhum item `CRÍTICO` foi encontrado.
 
+> **Atualização (2026-09-14):** três itens já foram corrigidos desde o levantamento — L-01 ([#132](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/132)), L-04 ([#131](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/131)) e L-09 ([#129](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/129)), todos já em `main`. Marcados `✅ RESOLVIDO` abaixo; o texto original de cada um foi mantido como registro histórico da lacuna.
+
 ---
 
 ## ALTO
 
-### L-01 — `RN-013` nomeia duas regras diferentes
+### L-01 — `RN-013` nomeia duas regras diferentes — ✅ RESOLVIDO ([#132](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/132))
 - **Evidência:** `docs/requirements/business-rules.md` lista `RN-013 — Experimento não declara vencedor automaticamente`. Mas o código cita `RN-013` também para **sessão única por conta**: `apps/api/app/models/session.py:13`, `apps/api/app/core/sessions.py:1`, `apps/api/app/core/security.py:84`, `apps/api/app/modules/auth/router.py:3,109,214`, `apps/api/alembic/versions/0007_sessions.py:1`. E ainda no sentido de experimento em `apps/api/app/modules/experiments/analysis.py:1` e `apps/api/app/seed.py:208`.
 - **Impacto:** a matriz de rastreabilidade fica ambígua; um leitor não sabe qual regra `RN-013` designa.
 - **Ação:** em `business-rules.md`, dar um código próprio para "sessão única por conta" (ex.: `RN-016`) e reatribuir as citações de `apps/api/app/core/*` e `models/session.py`. Manter `RN-013` só para a regra de experimento. Atualizar as docstrings afetadas num PR de follow-up.
+- **Feito:** `business-rules.md` ganhou `RN-016 — Sessão única por conta`; `RN-013` recebeu uma nota de desambiguação. As ~18 citações de sentido "sessão" (código, testes, docs de segurança) foram reatribuídas para `RN-016`; as de sentido "experimento" permanecem `RN-013`.
 
 ### L-02 — `ltv()`, `retention_rate()`, `churn_rate()` são código órfão
 - **Evidência:** definidos em `apps/api/app/modules/metrics/engine.py` (`ltv` linhas ~117-130, `retention_rate` ~169-172, `churn_rate` ~175-179). `grep` por chamadas: nenhuma rota, service, schema ou relatório os invoca. Não existe fonte de dados para `purchase_frequency` nem `retention_time` em nenhum model. `retention_rate` só é usada internamente por `churn_rate`, que também não é exposta.
@@ -39,10 +42,11 @@ Nenhum item `CRÍTICO` foi encontrado.
 
 ## MÉDIO
 
-### L-04 — Fórmula de `profit` duplicada
-- **Evidência:** `apps/api/app/modules/metrics/engine.py::profit()` e `apps/api/app/schemas/financial_period.py::FinancialPeriodRead.profit` (`@computed_field`, linhas ~28-36) implementam `revenue - (costs or 0) - (expenses or 0) - (taxes or 0)` independentemente. O mesmo vale para `margin`.
+### L-04 — Fórmula de `profit` duplicada — ✅ RESOLVIDO ([#131](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/131))
+- **Evidência:** `apps/api/app/modules/metrics/engine.py::profit()` e `apps/api/app/schemas/financial_period.py::FinancialPeriodRead.profit` (`@computed_field`, linhas ~28-36) implementavam `revenue - (costs or 0) - (expenses or 0) - (taxes or 0)` independentemente. O mesmo valia para `margin`.
 - **Impacto:** uma mudança na regra de lucro precisa ser feita em dois lugares; nada garante que fiquem em sincronia.
 - **Ação:** fazer `FinancialPeriodRead.profit`/`margin` chamarem `engine.profit`/`engine.margin` (o motor é puro, sem ORM — importável do schema). Fica como sugestão de refactor num PR próprio.
+- **Feito:** `FinancialPeriodRead.profit`/`margin` agora delegam para `engine.profit`/`engine.margin`, mesmo padrão já usado em `apps/api/app/schemas/marketing.py`. Sem mudança de comportamento; validado por `test_financials.py` (CI e localmente contra Docker).
 
 ### L-05 — Sem validação de faixa em nenhum input numérico
 - **Evidência:** `apps/api/app/schemas/{financial_period,funnel_snapshot,marketing,target}.py` — todos os campos numéricos são `float | None = None` / `int | None = None`, sem `Field(ge=...)` nem `field_validator`. `targets.value` é `float` sem `ge`. Aceita receita negativa, `impressions = -5`, meta zero.
@@ -64,10 +68,11 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Impacto:** todo experimento fica `draft` para sempre; o campo é inútil na prática.
 - **Ação:** adicionar `PATCH /experiments/{id}` que aceite `status`, com auditoria; ou remover a coluna se o ciclo de vida do experimento não for do MVP. Registrar decisão.
 
-### L-09 — `check:i18n` não roda no CI
-- **Evidência:** `apps/web/package.json` tem o script `check:i18n` (`node scripts/check-i18n-keys.mjs`, 773 chaves), mas `.github/workflows/frontend-ci.yml` roda `lint → typegen → tsc → test → build` — não `check:i18n`. Uma chave faltando em `en.json`/`es.json` passa no CI e renderiza a chave crua em produção.
+### L-09 — `check:i18n` não roda no CI — ✅ RESOLVIDO ([#129](https://github.com/AleksGustavo/marketing-intelligence-platform/pull/129))
+- **Evidência:** `apps/web/package.json` tem o script `check:i18n` (`node scripts/check-i18n-keys.mjs`, 773 chaves), mas `.github/workflows/frontend-ci.yml` rodava `lint → typegen → tsc → test → build` — não `check:i18n`. Uma chave faltando em `en.json`/`es.json` passava no CI e renderizava a chave crua em produção.
 - **Impacto:** regressão de i18n silenciosa.
 - **Ação:** adicionar um step `npm run check:i18n` ao job `frontend` do `frontend-ci.yml`. Mudança de 2 linhas — pode ser um PR isolado.
+- **Feito:** step `npm run check:i18n` adicionado ao job `frontend`, depois de "Unit tests" e antes de "Build".
 
 ### L-10 — `docs/architecture/overview.md` lista módulos que não existem
 - **Evidência:** a tabela de módulos de back-end cita `users`, `clients`, `integrations`, `security` como módulos e separa `metrics`/`analytics` de um jeito que não corresponde a `apps/api/app/modules/` (real: `analytics`, `api_keys`, `audit`, `auth`, `baselines`, `chart_preferences`, `experiments`, `exports`, `financials`, `funnels`, `imports`, `marketing`, `memberships`, `metrics`, `organizations`, `platform_admin`, `products`, `reports`, `targets`, `workspace_preferences`).
@@ -137,9 +142,9 @@ Nenhum item `CRÍTICO` foi encontrado.
 | Nível | Itens |
 |---|---|
 | CRÍTICO | — |
-| ALTO | L-01, L-02, L-03 |
-| MÉDIO | L-04, L-05, L-06, L-07, L-08, L-09, L-10 |
+| ALTO | ~~L-01~~ ✅, L-02, L-03 |
+| MÉDIO | ~~L-04~~ ✅, L-05, L-06, L-07, L-08, ~~L-09~~ ✅, L-10 |
 | BAIXO | L-11, L-12, L-13, L-14, L-15, L-16, L-17, L-18 |
 | MELHORIA | L-19, L-20, L-21 |
 
-Nenhuma correção foi aplicada nesta rodada — cada item acima é candidato a uma issue ou PR próprio.
+Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04 e L-09 já foram corrigidos (ver notas "Feito" em cada item); os demais seguem em aberto.
