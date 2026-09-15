@@ -39,3 +39,14 @@ def test_upsert_same_period_updates_not_duplicates(client):
     matching = [s for s in snapshots if s["period"] == "2026-02-01"]
     assert len(matching) == 1
     assert matching[0]["leads"] == 150
+
+
+def test_negative_stage_count_is_rejected(client):
+    # RN-017: as 8 etapas do funil sao contagens, nao existe valor negativo.
+    org_id = _register_login_and_create_org(client, "funnel3@example.com", "Empresa Funil 3")
+
+    resp = client.put(
+        f"/api/v1/organizations/{org_id}/funnel-snapshots",
+        json={"period": "2026-03-01", "leads": -5},
+    )
+    assert resp.status_code == 422
