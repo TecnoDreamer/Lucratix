@@ -86,6 +86,19 @@ def test_delete_nonexistent_target_is_404(client):
     assert resp.status_code == 404
 
 
+def test_negative_target_is_accepted_for_profit_and_margin(client):
+    # RN-017: excecao deliberada — meta de PROFIT/MARGIN pode ser negativa
+    # (ex.: reduzir um prejuizo), entao `value` nao tem `ge=0`.
+    org_id = _register_login_and_create_org(client, "tgt8@example.com", "Empresa Alvo 8")
+
+    resp = client.put(
+        f"/api/v1/organizations/{org_id}/targets",
+        json={"metric": "profit", "period": "2026-06-01", "value": -5000},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["value"] == -5000
+
+
 def test_invalid_metric_is_rejected(client):
     org_id = _register_login_and_create_org(client, "tgt6@example.com", "Empresa Alvo 6")
 

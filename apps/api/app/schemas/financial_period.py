@@ -1,18 +1,23 @@
 import uuid
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.modules.metrics import engine
 
 
 class FinancialPeriodUpsert(BaseModel):
+    """RN-017: os 5 campos sao valores monetarios de periodo (faturamento,
+    custo, despesa, investimento, imposto) — nenhum tem sentido de negocio
+    negativo aqui, entao `ge=0` rejeita entrada absurda com 422 em vez de
+    deixa-la propagar pros KPIs derivados (profit/margin)."""
+
     period: date
-    revenue: float | None = None
-    costs: float | None = None
-    expenses: float | None = None
-    marketing_investment: float | None = None
-    taxes: float | None = None
+    revenue: float | None = Field(default=None, ge=0)
+    costs: float | None = Field(default=None, ge=0)
+    expenses: float | None = Field(default=None, ge=0)
+    marketing_investment: float | None = Field(default=None, ge=0)
+    taxes: float | None = Field(default=None, ge=0)
 
 
 class FinancialPeriodRead(BaseModel):

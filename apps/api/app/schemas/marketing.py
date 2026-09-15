@@ -21,17 +21,23 @@ class MarketingChannelRead(BaseModel):
     created_at: datetime
 
 
+# RN-017: investimento e as 5 contagens nao tem sentido de negocio negativo
+# (`ge=0` rejeita com 422). `attributed_revenue` fica de fora deliberadamente
+# — um estorno/chargeback atribuido a campanha e um cenario legitimo de
+# receita atribuida negativa.
+
+
 class CampaignCreate(BaseModel):
     channel_id: uuid.UUID
     name: str = Field(min_length=1, max_length=255)
     start_date: date | None = None
     end_date: date | None = None
-    investment: float | None = None
-    impressions: int | None = None
-    clicks: int | None = None
-    leads: int | None = None
-    opportunities: int | None = None
-    customers: int | None = None
+    investment: float | None = Field(default=None, ge=0)
+    impressions: int | None = Field(default=None, ge=0)
+    clicks: int | None = Field(default=None, ge=0)
+    leads: int | None = Field(default=None, ge=0)
+    opportunities: int | None = Field(default=None, ge=0)
+    customers: int | None = Field(default=None, ge=0)
     attributed_revenue: float | None = None
 
 
@@ -39,12 +45,12 @@ class CampaignUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     start_date: date | None = None
     end_date: date | None = None
-    investment: float | None = None
-    impressions: int | None = None
-    clicks: int | None = None
-    leads: int | None = None
-    opportunities: int | None = None
-    customers: int | None = None
+    investment: float | None = Field(default=None, ge=0)
+    impressions: int | None = Field(default=None, ge=0)
+    clicks: int | None = Field(default=None, ge=0)
+    leads: int | None = Field(default=None, ge=0)
+    opportunities: int | None = Field(default=None, ge=0)
+    customers: int | None = Field(default=None, ge=0)
     attributed_revenue: float | None = None
 
 

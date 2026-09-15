@@ -63,3 +63,12 @@ Registros de auditoria não podem ser editados ou excluídos por usuários da ap
 Uma conta só pode ter uma sessão autenticada ativa por vez. Um login bem-sucedido em qualquer dispositivo revoga imediatamente, no servidor, a sessão anterior do mesmo usuário (`uq_sessions_one_active_per_user WHERE revoked_at IS NULL`). Cada JWT — access (15 min) e refresh (7 dias) — carrega uma claim `sid` validada contra a tabela `sessions` em toda request autenticada (`app/core/deps.py::get_current_user`) e no `/auth/refresh`: assinatura e prazo válidos não bastam se a sessão foi revogada. Reset de senha e logout também revogam a sessão no servidor, não apenas no cliente.
 
 Origem: regra existia desde a Fase de autenticação, citada no código como `RN-013` por engano até 2026-09-10 (ver nota em [RN-013](#rn-013)). Referências: `apps/api/app/core/sessions.py`, `apps/api/app/models/session.py`, `apps/api/alembic/versions/0007_sessions.py`, [AUTHENTICATION.md](../security/AUTHENTICATION.md).
+
+### RN-017 — Contagens e valores monetários de entrada não aceitam negativo, salvo exceção documentada
+Campos numéricos de entrada que representam uma contagem (impressões, visitas, leads, MQLs, SQLs, oportunidades, clientes, recompras, cliques) ou um valor monetário de período/campanha (receita, custo, despesa, investimento de marketing, imposto, investimento de campanha) rejeitam valor negativo (`Field(ge=0)`, HTTP 422) — nenhum desses tem significado de negócio abaixo de zero.
+
+**Exceções deliberadas**, onde negativo é um cenário de negócio legítimo:
+- `campaigns.attributed_revenue` — um estorno/chargeback atribuído à campanha é receita atribuída negativa.
+- `targets.value` — o significado de "negativo" depende de `metric`: uma meta de `PROFIT`/`MARGIN` pode ser negativa (ex.: reduzir um prejuízo), enquanto `REVENUE`/`CAC`/`CONVERSION_RATE`/`AVERAGE_TICKET`/`RECURRENCE_RATE` não fariam sentido negativos. Um limite condicional por métrica não foi implementado nesta rodada (ver `docs/governanca/LACUNAS_ENCONTRADAS.md`, L-05).
+
+Referências: `apps/api/app/schemas/{financial_period,funnel_snapshot,marketing,target}.py`.

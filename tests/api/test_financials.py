@@ -56,3 +56,26 @@ def test_margin_not_applicable_when_revenue_is_zero(client):
         json={"period": "2026-03-01", "revenue": 0, "costs": 100},
     )
     assert resp.json()["margin"] is None  # RN-003: sem divisao por zero
+
+
+def test_negative_revenue_is_rejected(client):
+    # RN-017: nenhum dos 5 campos monetarios do periodo financeiro tem
+    # sentido de negocio negativo.
+    org_id = _register_login_and_create_org(client, "fin4@example.com", "Empresa Fin 4")
+
+    resp = client.put(
+        f"/api/v1/organizations/{org_id}/financials",
+        json={"period": "2026-04-01", "revenue": -100},
+    )
+    assert resp.status_code == 422
+
+
+def test_negative_costs_expenses_investment_and_taxes_are_rejected(client):
+    org_id = _register_login_and_create_org(client, "fin5@example.com", "Empresa Fin 5")
+
+    for field in ("costs", "expenses", "marketing_investment", "taxes"):
+        resp = client.put(
+            f"/api/v1/organizations/{org_id}/financials",
+            json={"period": "2026-05-01", field: -1},
+        )
+        assert resp.status_code == 422, field
