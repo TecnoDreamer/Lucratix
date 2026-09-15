@@ -20,6 +20,7 @@ Ver [docs/product/vision.md](docs/product/vision.md) e [docs/product/problem.md]
 - **Diagramas:** [docs/diagrams/](docs/diagrams/) (casos de uso, classes, ER, sequência — Mermaid).
 - **Segurança:** [docs/security/](docs/security/) — threat model, requisitos OWASP, classificação de dados, LGPD, resposta a incidentes, testes de segurança.
 - **Analytics / catálogo de métricas:** [docs/analytics/metrics-catalog.md](docs/analytics/metrics-catalog.md).
+- **Governança / lacunas conhecidas:** [docs/governanca/LACUNAS_ENCONTRADAS.md](docs/governanca/LACUNAS_ENCONTRADAS.md) — divergências entre código e documentação levantadas em auditoria, com evidência e status de correção.
 
 ## Stack
 
