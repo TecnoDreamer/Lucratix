@@ -147,7 +147,7 @@ PDF gerado com **ReportLab** (server-side, wheel puro) — [`docs/reports/PDF_IN
 - **API key:** papel resolvido **ao vivo** pela membership de quem criou a chave; escopo = leitura de 6 endpoints de analytics.
 - **Rate limiting:** 18 limiters em 3 dimensões (IP isolado, conta isolada, IP+conta), in-memory / single-replica — [`docs/security/RATE_LIMITING.md`](docs/security/RATE_LIMITING.md).
 - **Headers:** `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `CSP: default-src 'none'; frame-ancestors 'none'`. CORS restrito por ambiente.
-- **Auditoria:** append-only por convenção de código (sem trigger no banco — [L-19](docs/governanca/LACUNAS_ENCONTRADAS.md)); ~45 ações registradas.
+- **Auditoria:** append-only por convenção de código (sem trigger no banco — [L-19](docs/governanca/LACUNAS_ENCONTRADAS.md)); 50 identificadores de ação registrados (inclui bloqueios por rate limit).
 - Modelo de ameaças, OWASP, LGPD, classificação de dados, resposta a incidente: [`docs/security/`](docs/security/README.md).
 
 ## 12. Integrações reais

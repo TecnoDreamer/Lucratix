@@ -46,6 +46,8 @@ Todo número que o portfólio citar deve vir desta tabela (ou ser remedido). Nen
 | ADRs | **9** | `ls docs/adr` | 2026-09-18 |
 | Documentos `.md` em `docs/` | **100** | `find docs -name '*.md'` | 2026-09-18 |
 | Workflows de CI | **4** (`backend-ci`, `security-ci`, `frontend-ci`, `e2e-ci`) → **5 jobs** | `.github/workflows/` | 2026-09-18 |
+| Histórico do repositório | **155 commits** em `main`, ~**80 PRs** squash-merged, de **2026-08-21 a 2026-09-18 (~4 semanas)** | `git rev-list --count`, `git log` | 2026-09-18 |
+| Assistência de IA no desenvolvimento | Trailers `Co-Authored-By: Claude` presentes no histórico (173 ocorrências em mensagens de commit) | `git log --format=%B` | 2026-09-18 |
 
 Cobertura de código: o CI executa `pytest --cov=app --cov-report=term-missing` (`.github/workflows/backend-ci.yml`), mas **não impõe limite mínimo** e o percentual **não foi capturado** nesta auditoria → `NÃO VERIFICADO`. Não citar percentual de cobertura.
 
@@ -107,7 +109,7 @@ Só controles **verificados** entram no portfólio (regra do prompt mestre §7.1
 | Sessão única por conta, revogada no servidor a cada login | "Conforme LGPD" / "certificado" / "auditado por terceiros" |
 | Isolamento entre empresas **comprovado por teste automatizado** (404 para não-membro) | "Impossível vazar dado entre empresas" |
 | Rate limiting em 3 dimensões (IP, conta, combinada) em endpoints sensíveis | "Proteção contra DDoS" (é limitador in-memory, réplica única) |
-| Trilha de auditoria de ~45 ações | "Auditoria imutável" (é append-only por convenção, sem trigger — L-19) |
+| Trilha de auditoria com 50 identificadores de ação (inclui bloqueios por rate limit) | "Auditoria imutável" (é append-only por convenção, sem trigger — L-19) |
 | Varredura automática de dependências e SAST no CI (`bandit`, `pip-audit`, `npm audit`) | "Sem vulnerabilidades" (um advisory crítico do Next.js foi encontrado e corrigido em 2026-09-10 — [#130](https://github.com/TecnoDreamer/Lucratix/pull/130); o histórico é parte do processo, não algo a esconder) |
 | Aviso de escopo: projeto em pré-produção | Qualquer número de usuários, clientes ou empresas atendidas |
 
