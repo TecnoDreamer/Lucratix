@@ -40,7 +40,7 @@ Todos `IMPLEMENTADO`. Papel mínimo para **escrever**; leitura é liberada para 
 |---|---|---|---|
 | **auth** | cadastro, login, refresh, logout, recuperação/troca de senha, verificação de e-mail, idioma | — | [`docs/security/AUTHENTICATION.md`](docs/security/AUTHENTICATION.md) |
 | **organizations** | criar/editar empresa, congelar/reativar, logotipo, resumo de KPIs por card | `ORGANIZATION_ADMIN` | [`docs/organizations/`](docs/organizations/README.md) |
-| **memberships** | convidar usuário (cria a conta na hora), trocar papel, revogar | `ORGANIZATION_ADMIN` | [`docs/security/ACCESS_CONTROL.md`](docs/security/ACCESS_CONTROL.md) |
+| **memberships** | convidar usuário (cria a conta na hora), trocar papel, revogar — **API completa; a interface existe só para o Super Admin** (`/admin/organizations/[id]`), não há tela de equipe para o admin da própria empresa | `ORGANIZATION_ADMIN` | [`docs/security/ACCESS_CONTROL.md`](docs/security/ACCESS_CONTROL.md) |
 | **api_keys** | chave de API por organização para BI externo (Power BI/Looker), leitura de analytics | `ORGANIZATION_ADMIN` | [`docs/security/API_KEYS.md`](docs/security/API_KEYS.md), [`docs/analytics/POWER_BI.md`](docs/analytics/POWER_BI.md) |
 | **audit** | consultar trilha de auditoria (append-only) | leitura: `ORGANIZATION_ADMIN` | [`docs/security/LOGS_E_AUDITORIA.md`](docs/security/LOGS_E_AUDITORIA.md) |
 | **baselines** | registrar snapshot da situação da empresa (histórico, nunca editável) | `ANALYST` | [ADR-0005](docs/adr/0005-baseline-append-only.md) |
@@ -114,7 +114,7 @@ Fórmula exata de cada KPI, campos de origem e condição de "não aplicável": 
 
 Import por planilha aceita cabeçalhos em português e variações (aliases) — a lista completa por domínio está em `apps/api/app/modules/imports/domains.py` e resumida em [`docs/data-import-export/IMPORT_FORMATS.md`](docs/data-import-export/IMPORT_FORMATS.md). Dado de exemplo determinístico: [`test-data/demo-company/`](test-data/demo-company/README.md).
 
-> Hoje não há validação de faixa (negativos são aceitos) e alguns campos coletados não influenciam nenhum KPI — ver [L-05](docs/governanca/LACUNAS_ENCONTRADAS.md), [L-06](docs/governanca/LACUNAS_ENCONTRADAS.md), [L-07](docs/governanca/LACUNAS_ENCONTRADAS.md).
+> Contagens e valores monetários de entrada rejeitam negativo (422) — [RN-017](docs/requirements/business-rules.md#rn-017), corrigido em L-05. Exceções deliberadas: `campaigns.attributed_revenue` (estorno) e `targets.value` (meta de lucro/margem). Alguns campos coletados ainda não influenciam nenhum KPI — ver [L-06](docs/governanca/LACUNAS_ENCONTRADAS.md), [L-07](docs/governanca/LACUNAS_ENCONTRADAS.md).
 
 ## 9. Como interpretar
 
@@ -188,7 +188,7 @@ API em `http://localhost:8000` (`/health`, `/docs`), front em `http://localhost:
 - **Backend:** pytest — `tests/unit` (sem banco), `tests/integration`, `tests/api`, `tests/security` (com Postgres). Teste estrutural parametrizado cobre todo endpoint de escrita org-scoped.
 - **Frontend:** Vitest + Testing Library (`apps/web/src/**/*.spec.*`).
 - **E2E:** Playwright (`tests/e2e/`, chromium).
-- **CI (5 gates obrigatórios):** `backend` (ruff, mypy, migrations, pytest), `backend-security` (bandit, pip-audit), `frontend` (eslint, tsc, vitest, build), `frontend-security` (npm audit), `e2e`.
+- **CI (5 jobs, executados em toda PR):** `backend` (ruff, mypy, migrations, pytest com cobertura reportada, sem limite mínimo), `backend-security` (bandit, pip-audit), `frontend` (eslint, tsc, vitest, `check:i18n`, build), `frontend-security` (npm audit), `e2e`. O merge é condicionado ao resultado **por processo** ([`CONTRIBUTING.md`](CONTRIBUTING.md)); a proteção técnica de branch não está disponível no plano atual do GitHub para repositório privado.
 - Estratégia e cobertura: [`docs/testing/strategy.md`](docs/testing/strategy.md) *(números em atualização — ver [L-11](docs/governanca/LACUNAS_ENCONTRADAS.md))*.
 
 ## 16. Índice completo da documentação

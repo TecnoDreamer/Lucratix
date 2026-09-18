@@ -13,8 +13,15 @@ Portal navegável de toda a documentação do projeto. Para uma visão geral do 
 
 ## Governança
 
-- [governanca/LACUNAS_ENCONTRADAS.md](governanca/LACUNAS_ENCONTRADAS.md) — divergências implementação × documentação, código órfão e pontos que pedem decisão, classificados por severidade (auditoria 2026-09-10).
+- [governanca/LACUNAS_ENCONTRADAS.md](governanca/LACUNAS_ENCONTRADAS.md) — divergências implementação × documentação, código órfão e pontos que pedem decisão, classificados por severidade (auditoria 2026-09-10; itens já corrigidos marcados `✅ RESOLVIDO`).
 - [environment.md](environment.md) — ferramentas verificadas na máquina de desenvolvimento (Fase 0).
+
+## Portfólio
+
+Base de evidências para apresentar o produto sem exagero (o que pode e o que não pode ser dito).
+
+- [portfolio/01-MATRIZ-DE-MATURIDADE.md](portfolio/01-MATRIZ-DE-MATURIDADE.md) — status real de cada módulo e capacidade, com evidência, testes e números verificados.
+- [portfolio/02-INVENTARIO-DE-EVIDENCIAS.md](portfolio/02-INVENTARIO-DE-EVIDENCIAS.md) — o que serve de prova em material público, o que precisa ser anonimizado e o que falta produzir.
 - [`../CHANGELOG.md`](../CHANGELOG.md) — histórico datado de tudo que entrou (fonte primária de "o que shipou quando").
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — workflow de branch, Conventional Commits, Definition of Ready/Done.
 
@@ -27,7 +34,7 @@ Portal navegável de toda a documentação do projeto. Para uma visão geral do 
 
 ## Requisitos ([`requirements/`](requirements/))
 
-- [business-rules.md](requirements/business-rules.md) — RN-001 a RN-015 (regras de negócio). *(RN-013 nomeia duas regras — ver [L-01](governanca/LACUNAS_ENCONTRADAS.md).)*
+- [business-rules.md](requirements/business-rules.md) — RN-001 a RN-017 (regras de negócio). RN-016 (sessão única) e RN-017 (faixa numérica) vieram das correções L-01 e L-05.
 - [functional-requirements.md](requirements/functional-requirements.md) — RF-001 a RF-027.
 - [non-functional-requirements.md](requirements/non-functional-requirements.md) — RNF-001 a RNF-020.
 - [acceptance-criteria.md](requirements/acceptance-criteria.md), [user-stories.md](requirements/user-stories.md).
