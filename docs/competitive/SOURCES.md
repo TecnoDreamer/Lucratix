@@ -26,6 +26,9 @@
 | S14 | Conta Azul | Página inicial | https://contaazul.com/ | Oficial | — | ERP financeiro para micro/pequenas/médias empresas e contadores; planos e trial existem (valores **não** transcritos: extração ambígua) | Média |
 | S15 | WiseData Agency | Blog: "Os 15 melhores sistemas para agências" | https://blog.wisedataagency.com/ferramentas-para-agencias/melhores-sistemas-agencias-marketing/ | Fornecedor (blog) | 2026-01-03 (atual. 2026-07-27) | Existência de um SaaS brasileiro de gestão de agências; preços declarados pelo próprio fornecedor (Free/Basic/Pro/Enterprise) — **não** conferidos em página de preços | Baixa |
 | S28 | Wikipédia | Reportei | https://pt.wikipedia.org/wiki/Reportei | Secundária | — | Lançamento em fevereiro de 2015 | Baixa |
+| S31 | Reportei | Central de ajuda — primeiros passos / como gerar meu primeiro relatório | https://reportei.com/central-de-ajuda/como-gerar-meu-primeiro-relatorio/ | Oficial | — | Fluxo de onboarding: criar **projeto** (cliente/marca; nome e idioma) → integrar contas → escolher template ("Padrão") → definir período (padrão de 30 dias). *Conteúdo obtido via busca restrita ao domínio (resumo do resultado), não por leitura integral da página* | Baixa |
+| S32 | mLabs | Central de ajuda — Como criar um Dashboard | https://ajuda.mlabs.com.br/pt-BR/articles/8224719-como-criar-um-dashboard | Oficial | — | Dashboard criado com **nome, modelo (template) e cliente**; acessível ao cliente final por **login e senha** via Portal do Cliente. *Via busca restrita ao domínio* | Baixa |
+| S33 | mLabs | Central de ajuda — Como personalizar o Portal do Cliente | https://ajuda.mlabs.com.br/pt-BR/articles/8228619-como-personalizar-o-portal-do-cliente | Oficial | — | Portal com **nome da agência, endereço web próprio, logo e cor** da agência. *Via busca restrita ao domínio* | Baixa |
 
 ## B. Recorte regional e local
 
