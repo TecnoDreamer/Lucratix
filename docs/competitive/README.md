@@ -7,12 +7,22 @@
 
 | Arquivo | Conteúdo |
 |---|---|
+| [`RELATORIO-EXECUTIVO.md`](RELATORIO-EXECUTIVO.md) | **Comece aqui** — resumo para decisão |
 | [`01-CONCORRENTES-IDENTIFICADOS.md`](01-CONCORRENTES-IDENTIFICADOS.md) | Cadastro de soluções e serviços, por categoria e recorte |
 | [`02-MATRIZ-COMPETITIVA.md`](02-MATRIZ-COMPETITIVA.md) | Comparação de funcionalidades (✓ / △ / — / ?) |
+| [`03-BENCHMARK-UX-UI.md`](03-BENCHMARK-UX-UI.md) | Padrões de UX observados em páginas públicas e o que não foi observável |
+| [`04-BENCHMARK-FUNCIONAL.md`](04-BENCHMARK-FUNCIONAL.md) | Classificação funcional (essencial, paridade, diferenciador, emergente) |
 | [`05-PRECOS-E-MONETIZACAO.md`](05-PRECOS-E-MONETIZACAO.md) | Preços públicos e modelos de cobrança |
 | [`06-MERCADO-LEME-E-REGIAO.md`](06-MERCADO-LEME-E-REGIAO.md) | Leme e entorno: quem realmente está lá, dados do IBGE, hipóteses |
 | [`07-ROTEIRO-DISCOVERY-MERCADO.md`](07-ROTEIRO-DISCOVERY-MERCADO.md) | Roteiro de entrevistas para validar o que a web não prova |
+| [`08-SWOT.md`](08-SWOT.md) | Forças, fraquezas, oportunidades e ameaças com evidência |
+| [`09-GAP-ANALYSIS.md`](09-GAP-ANALYSIS.md) | Gaps G-01…G-18 |
+| [`10-OPORTUNIDADES.md`](10-OPORTUNIDADES.md) | Oportunidades avaliadas sem pressupor |
+| [`11-POSICIONAMENTO.md`](11-POSICIONAMENTO.md) | Diferencial comprovado × potencial × paridade × gap; hipóteses P-A/P-B/P-C |
+| [`12-HIPOTESES-DE-PLANOS.md`](12-HIPOTESES-DE-PLANOS.md) | Hipóteses de pacotes e modularização, **sem preço** |
 | [`SOURCES.md`](SOURCES.md) | Todas as fontes, com URL, data e o que sustentam |
+
+Derivados em `docs/product/`: [`COMPETITIVE-OPPORTUNITY-BACKLOG.md`](../product/COMPETITIVE-OPPORTUNITY-BACKLOG.md) · [`ROADMAP-COMPETITIVO.md`](../product/ROADMAP-COMPETITIVO.md) · [`EPIC-PORTFOLIO-COMPETITIVE-INTELLIGENCE.md`](../product/EPIC-PORTFOLIO-COMPETITIVE-INTELLIGENCE.md).
 
 ## 1. Em que mercado o Lucratix compete (definido *antes* dos nomes)
 
@@ -61,4 +71,4 @@ Municípios (IBGE, [S25](SOURCES.md)): Região Imediata de Araras = Araras, Conc
 
 ## 5. Como isto se conecta ao produto
 
-Esta pasta gera **hipóteses**, não decisões. Toda descoberta segue o funil do prompt: **descartar → investigar → validar com usuário → planejar → implementar** (§21). O backlog e o roadmap derivados ficam em `docs/product/` (PR seguinte).
+Esta pasta gera **hipóteses**, não decisões. Toda descoberta segue o funil do prompt: **descartar → investigar → validar com usuário → planejar → implementar** (§21). O backlog e o roadmap derivados ficam em `docs/product/`.
