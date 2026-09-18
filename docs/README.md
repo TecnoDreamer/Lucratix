@@ -22,6 +22,15 @@ Base de evidências para apresentar o produto sem exagero (o que pode e o que n�
 
 - [portfolio/01-MATRIZ-DE-MATURIDADE.md](portfolio/01-MATRIZ-DE-MATURIDADE.md) — status real de cada módulo e capacidade, com evidência, testes e números verificados.
 - [portfolio/02-INVENTARIO-DE-EVIDENCIAS.md](portfolio/02-INVENTARIO-DE-EVIDENCIAS.md) — o que serve de prova em material público, o que precisa ser anonimizado e o que falta produzir.
+- [portfolio/PORTFOLIO-LUCRATIX.md](portfolio/PORTFOLIO-LUCRATIX.md) — portfólio principal e versões derivadas (executiva, técnica, case study, pitches, LinkedIn, showcase, demo, capturas, diagramas).
+
+## Inteligência competitiva
+
+Mercado, concorrentes, substitutos, preços e a região de Leme — **com fonte e data em cada afirmação** e limites explícitos.
+
+- [competitive/README.md](competitive/README.md) — método, definição do mercado, critério geográfico e índice.
+- [competitive/RELATORIO-EXECUTIVO.md](competitive/RELATORIO-EXECUTIVO.md) — resumo para decisão.
+- [product/COMPETITIVE-OPPORTUNITY-BACKLOG.md](product/COMPETITIVE-OPPORTUNITY-BACKLOG.md) — backlog priorizado (ICE) · [product/ROADMAP-COMPETITIVO.md](product/ROADMAP-COMPETITIVO.md) — horizontes · [product/EPIC-PORTFOLIO-COMPETITIVE-INTELLIGENCE.md](product/EPIC-PORTFOLIO-COMPETITIVE-INTELLIGENCE.md) — épica, histórias e sprints.
 - [`../CHANGELOG.md`](../CHANGELOG.md) — histórico datado de tudo que entrou (fonte primária de "o que shipou quando").
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — workflow de branch, Conventional Commits, Definition of Ready/Done.
 

@@ -33,7 +33,7 @@ Consultorias e profissionais de marketing que atendem várias empresas costumam:
 5. tratar **dado ausente como zero**, distorcendo indicadores;
 6. declarar testes A/B "vencedores" **sem significância estatística**.
 
-> **Base desta descrição:** é uma hipótese de produto, derivada da experiência profissional do autor em marketing. O próprio projeto registra que **não há pesquisa de mercado formal** que a valide ([`docs/product/problem.md`](../product/problem.md)); o roteiro para validar com entrevistas será `docs/competitive/07-ROTEIRO-DISCOVERY-MERCADO.md` *(previsto na Parte B deste plano; ainda não existe)*.
+> **Base desta descrição:** é uma hipótese de produto, derivada da experiência profissional do autor em marketing. O próprio projeto registra que **não há pesquisa de mercado formal** que a valide ([`docs/product/problem.md`](../product/problem.md)); o roteiro para validar com entrevistas está em [`docs/competitive/07-ROTEIRO-DISCOVERY-MERCADO.md`](../competitive/07-ROTEIRO-DISCOVERY-MERCADO.md) (**nenhuma entrevista foi realizada ainda**).
 
 ## 4. Público-alvo
 
@@ -242,7 +242,7 @@ Só o que é observável no código e nos testes — **sem comparação com conc
 | Tela de equipe para o admin da empresa | `PLANEJADO` | API pronta, UI ausente |
 | Observabilidade, performance, acessibilidade auditada, backup | `PLANEJADO` | Fase 18 (hardening) |
 | LTV, retenção, churn, MRR | `PLANEJADO` | Decisão de produto pendente (L-02, L-21) |
-| Priorização com base em análise de mercado | `EM DESENVOLVIMENTO` | `docs/product/COMPETITIVE-OPPORTUNITY-BACKLOG.md` *(Partes B/C deste plano; ainda não existe)* |
+| Priorização com base em análise de mercado | `PROPOSTO` | Backlog e roadmap documentados em [`COMPETITIVE-OPPORTUNITY-BACKLOG.md`](../product/COMPETITIVE-OPPORTUNITY-BACKLOG.md) e [`ROADMAP-COMPETITIVO.md`](../product/ROADMAP-COMPETITIVO.md); dependem de validação com usuários (discovery ainda não realizado) |
 
 ## 21. Galeria de telas
 
