@@ -118,7 +118,7 @@ Mercado, concorrentes, substitutos, preços e a região de Leme — **com fonte 
 ## Qualidade
 
 - [testing/strategy.md](testing/strategy.md) — pirâmide de testes, qual camada roda em qual pipeline. *(Números em atualização — ver [L-11](governanca/LACUNAS_ENCONTRADAS.md).)*
-- Auditorias pré-implementação: [auditoria/AUDITORIA_BI_RELATORIOS.md](auditoria/AUDITORIA_BI_RELATORIOS.md), [auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md](auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md), [auditoria/AUDITORIA_METRICAS_GLOSSARIO_SESSAO.md](auditoria/AUDITORIA_METRICAS_GLOSSARIO_SESSAO.md).
+- Auditorias pré-implementação: [auditoria/AUDITORIA_BI_RELATORIOS.md](auditoria/AUDITORIA_BI_RELATORIOS.md), [auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md](auditoria/AUDITORIA_LAYOUT_PERFORMANCE.md), [auditoria/AUDITORIA_ACESSIBILIDADE_UX.md](auditoria/AUDITORIA_ACESSIBILIDADE_UX.md) (axe-core, 2026-09-21), [auditoria/AUDITORIA_METRICAS_GLOSSARIO_SESSAO.md](auditoria/AUDITORIA_METRICAS_GLOSSARIO_SESSAO.md).
 
 ## Design e i18n
 
