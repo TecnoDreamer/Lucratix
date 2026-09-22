@@ -157,9 +157,9 @@ export function TargetsPanel({
 
       <div className="mt-5">
         {loading ? (
-          <p className="text-sm text-slate-400">{t("loading")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("loading")}</p>
         ) : targets.length === 0 ? (
-          <p className="text-sm text-slate-400">{t("empty")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("empty")}</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
             {targets.map((tgt) => (
@@ -169,7 +169,7 @@ export function TargetsPanel({
               >
                 <span>
                   <span className="font-medium text-slate-700 dark:text-slate-200">{metricLabel(tgt.metric)}</span>
-                  <span className="text-slate-400"> · {formatMonthYear(tgt.period)} · </span>
+                  <span className="text-slate-500 dark:text-slate-400"> · {formatMonthYear(tgt.period)} · </span>
                   <span className="text-slate-600 dark:text-slate-300">
                     {isPercentMetric(tgt.metric) ? formatPercentage(tgt.value) : formatCompactNumber(tgt.value)}
                   </span>

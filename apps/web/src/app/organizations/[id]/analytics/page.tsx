@@ -79,7 +79,7 @@ function ComparisonBadge({
 }) {
   const t = useTranslations("analytics");
   if (comparison.percent_change === null) {
-    return <p className="mt-1 text-xs text-slate-400 dark:text-slate-600">{t("vsPreviousPeriodNa")}</p>;
+    return <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("vsPreviousPeriodNa")}</p>;
   }
   // Direção desejável importa: para CAC/CPC/CPM/CPL/CPA (lower_is_better),
   // uma queda é a notícia boa — nunca pintar todo aumento de verde sem
@@ -93,12 +93,12 @@ function ComparisonBadge({
   return (
     <p
       className={`mt-1 flex items-center gap-1 text-xs font-medium ${
-        positive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+        positive ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
       }`}
     >
       <Icon className="h-3 w-3" />
       {formatPercentChange(comparison, t("notApplicable"))}
-      <span className="font-normal text-slate-400 dark:text-slate-600">{t("vsPreviousPeriod")}</span>
+      <span className="font-normal text-slate-500 dark:text-slate-400">{t("vsPreviousPeriod")}</span>
     </p>
   );
 }
@@ -151,7 +151,7 @@ function MetricGrid<T extends object>({
               {formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
             </p>
             {!metric.current.is_applicable && metric.current.reason && (
-              <p className="mt-1 text-xs text-slate-400">{metric.current.reason}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.current.reason}</p>
             )}
             {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
             {progress && <TargetProgressLine progress={progress} />}

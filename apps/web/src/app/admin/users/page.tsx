@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
                   return (
                     <tr key={u.id} className={tableRow}>
                       <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-50">
-                        {u.name} {isSelf && <span className="text-xs text-slate-400">{t("you")}</span>}
+                        {u.name} {isSelf && <span className="text-xs text-slate-500 dark:text-slate-400">{t("you")}</span>}
                       </td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{u.email}</td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{u.organization_count}</td>

@@ -104,7 +104,7 @@ export default function DashboardPage() {
                       {formatMetric(metric, { percent, notApplicableLabel: t("notApplicable") })}
                     </p>
                     {!metric.is_applicable && metric.reason && (
-                      <p className="mt-1 text-xs text-slate-400">{metric.reason}</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.reason}</p>
                     )}
                   </Card>
                 );
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                     <span
                       className={`font-medium ${
                         (revenueComparison.percent_change ?? 0) >= 0
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-emerald-700 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400"
                       }`}
                     >
@@ -143,7 +143,7 @@ export default function DashboardPage() {
               ) : (
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("noBaselineToCompare")}</p>
               )}
-              <p className="mt-3 text-xs text-slate-400">{t("variationDisclaimer")}</p>
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{t("variationDisclaimer")}</p>
             </Card>
           </>
         )

@@ -152,9 +152,9 @@ export function CorrelationPanel({
               ) : (
                 // reason vem do backend (fora do escopo de tradução desta PR — ver ADR-0009);
                 // só o fallback "não aplicável" é cópia autoral do frontend.
-                <p className="text-slate-400">{data.correlation.reason ?? tCommon("notApplicable")}</p>
+                <p className="text-slate-500 dark:text-slate-400">{data.correlation.reason ?? tCommon("notApplicable")}</p>
               )}
-              <p className="mt-1 text-xs text-slate-400">{t("monthsUsed", { count: data.months_used })}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("monthsUsed", { count: data.months_used })}</p>
             </div>
           </>
         )

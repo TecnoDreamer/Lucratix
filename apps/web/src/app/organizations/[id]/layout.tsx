@@ -244,7 +244,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
       </nav>
 
       <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
-        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+        <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {t("accountSectionTitle")}
         </p>
         <nav aria-label={t("accountSectionTitle")} className="mt-2 flex flex-col gap-0.5">

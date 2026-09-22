@@ -188,7 +188,7 @@ export function FunnelStagesChart({
       <div
         role="img"
         aria-label={t("labelNoData", { chartLabel })}
-        className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
+        className="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400"
         style={{ height }}
       >
         {t("noData")}

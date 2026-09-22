@@ -228,7 +228,7 @@ function GlossaryItem({
           )}
         </span>
         <span className="flex shrink-0 items-center gap-2">
-          <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline dark:bg-slate-800 dark:text-slate-400">
+          <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 sm:inline dark:bg-slate-800 dark:text-slate-400">
             {categoryLabel}
           </span>
           <IconChevronDown

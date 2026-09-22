@@ -431,7 +431,7 @@ describe("AnalyticsPage", () => {
       expect(screen.getByText("+12,4%")).toBeInTheDocument();
     });
     // Receita subir é bom (higher_is_better) → verde.
-    expect(screen.getByText("+12,4%").closest("p")).toHaveClass("text-emerald-600");
+    expect(screen.getByText("+12,4%").closest("p")).toHaveClass("text-emerald-700");
     // Lucro cair é ruim (higher_is_better) → vermelho.
     expect(screen.getByText("-5%").closest("p")).toHaveClass("text-rose-600");
     // CAC subir é ruim (lower_is_better) mesmo com percent_change positivo

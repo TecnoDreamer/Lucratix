@@ -43,7 +43,7 @@ export function ChannelBarChart({
       <div
         role="img"
         aria-label={label}
-        className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
+        className="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400"
         style={{ height: HEIGHT }}
       >
         {t("noData")}
