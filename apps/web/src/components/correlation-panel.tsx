@@ -83,7 +83,9 @@ export function CorrelationPanel({
     <Card className="p-5">
       <div className="flex items-center gap-2">
         <IconScatter className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>{t("title")}</h2>
+        {/* h3: este painel só é usado dentro da seção "Diagnóstico" da
+            Visão Executiva (h2) — ver organizations/[id]/analytics/page.tsx. */}
+        <h3 className={sectionTitle}>{t("title")}</h3>
       </div>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("description")}</p>
 

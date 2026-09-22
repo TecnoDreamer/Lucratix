@@ -666,4 +666,91 @@ describe("AnalyticsPage", () => {
     });
     expect(screen.getByText("Google Ads")).toBeInTheDocument();
   });
+
+  describe("narrativa da Visão Executiva", () => {
+    it("mostra a navegação por âncoras com as 6 seções, na ordem da narrativa", async () => {
+      mockApiByUrl();
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByRole("navigation", { name: "Navegar pelas seções da Visão Executiva" })).toBeInTheDocument();
+      });
+      const nav = screen.getByRole("navigation", { name: "Navegar pelas seções da Visão Executiva" });
+      const links = within(nav).getAllByRole("link");
+      expect(links.map((l) => l.textContent)).toEqual([
+        "Situação atual",
+        "Evolução",
+        "Diagnóstico",
+        "Insights",
+        "Próxima análise",
+        "Marketing",
+      ]);
+      expect(links.map((l) => l.getAttribute("href"))).toEqual([
+        "#situation",
+        "#evolution",
+        "#diagnosis",
+        "#insights",
+        "#nextAnalysis",
+        "#marketing",
+      ]);
+    });
+
+    it("'Próxima análise' recomenda o insight negativo mais relevante do período", async () => {
+      mockApiByUrl();
+      renderPage();
+
+      // Fixture padrão: CAC subindo é a pior notícia do período (maior
+      // |variação| entre as de tom negativo) — vira a sugestão única, não
+      // uma repetição de todos os CTAs já mostrados em Insights.
+      await waitFor(() => {
+        expect(screen.getByText("Sugestão:")).toBeInTheDocument();
+      });
+      const nextAnalysis = screen.getByText("Sugestão:").closest("section");
+      expect(nextAnalysis).not.toBeNull();
+      expect(within(nextAnalysis!).getByText(/Veja a evolução mensal abaixo para investigar a causa\./)).toBeInTheDocument();
+    });
+
+    it("'Próxima análise' tem atalhos para Funil e Financeiro da mesma empresa", async () => {
+      mockApiByUrl();
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByRole("link", { name: /Analisar o Funil/ })).toBeInTheDocument();
+      });
+      expect(screen.getByRole("link", { name: /Analisar o Funil/ })).toHaveAttribute(
+        "href",
+        "/organizations/org-123/funnel"
+      );
+      expect(screen.getByRole("link", { name: /Ver o Financeiro/ })).toHaveAttribute(
+        "href",
+        "/organizations/org-123/financials"
+      );
+    });
+
+    it("sem insight nenhum, seção Insights mostra o texto de 'nenhum achado' e 'Próxima análise' cai no texto genérico", async () => {
+      mockApiByUrl({
+        dashboard: {
+          ...FAKE_DASHBOARD,
+          revenue: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          profit: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          margin: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          cac: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          conversion_rate: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          average_ticket: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+          recurrence_rate: { current: { value: null, is_applicable: false, reason: "Sem dado" }, comparison: { baseline_value: null, current_value: null, absolute_change: null, percent_change: null } },
+        },
+      });
+      renderPage();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Nenhum achado de destaque neste período — os indicadores estão dentro do esperado.")
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.getByText(/Nenhum achado exige atenção imediata neste período\./)
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Sugestão:")).not.toBeInTheDocument();
+    });
+  });
 });

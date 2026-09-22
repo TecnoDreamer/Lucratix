@@ -692,6 +692,26 @@
         "context": "Only {available} of {total} selected months have financial data recorded — totals reflect only the months with records.",
         "cta": "Record the missing months' financials in Financials."
       }
+    },
+    "navAriaLabel": "Navigate the Executive View sections",
+    "nav": {
+      "situation": "Current situation",
+      "evolution": "Evolution",
+      "diagnosis": "Diagnosis",
+      "insights": "Insights",
+      "nextAnalysis": "Next analysis",
+      "marketing": "Marketing"
+    },
+    "situationTitle": "Current situation",
+    "diagnosisTitle": "Diagnosis",
+    "insightsTitle": "Insights",
+    "insightsEmpty": "No notable findings this period — indicators are within the expected range.",
+    "nextAnalysisTitle": "Next analysis",
+    "nextAnalysis": {
+      "priorityLabel": "Suggestion:",
+      "noPriority": "No finding needs immediate attention this period. Still, it's worth digging into other screens:",
+      "exploreFunnel": "Analyze the Funnel",
+      "exploreFinancials": "See Financials"
     }
   },
   "metricFields": {
