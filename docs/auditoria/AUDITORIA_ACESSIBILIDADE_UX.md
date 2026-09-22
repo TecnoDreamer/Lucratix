@@ -1,7 +1,24 @@
 # Auditoria de acessibilidade e UX — 2026-09-21
 
-> Primeira medição automatizada de acessibilidade do Lucratix (item **B-05** do [backlog](../product/COMPETITIVE-OPPORTUNITY-BACKLOG.md); lacuna **G-11** da [gap analysis](../competitive/09-GAP-ANALYSIS.md)). Estes são **achados**, não correções: nenhum código foi alterado nesta rodada.
+> Primeira medição automatizada de acessibilidade do Lucratix (item **B-05** do [backlog](../product/COMPETITIVE-OPPORTUNITY-BACKLOG.md); lacuna **G-11** da [gap analysis](../competitive/09-GAP-ANALYSIS.md)). Estes eram **achados**, não correções: nenhum código foi alterado nesta rodada — ver seção 8 pras correções aplicadas depois, em PR separada.
 > **Conformidade WCAG continua `NÃO VERIFICADA`.** Ferramenta automática cobre só parte dos critérios (ver seção 6).
+
+## 8. Correções aplicadas (2026-09-22)
+
+PR de redesenho UX/UI + acessibilidade (`feat/redesign-ux-decisao-a11y`) corrigiu os itens 1–6 e parte do 8 da ordem de correção sugerida (seção 5). Não houve reteste automatizado com axe depois da correção (sessão salva do Playwright não estava disponível nesta rodada) — a validação foi `next build` + suíte de testes (73 arquivos), não uma nova medição do mesmo instrumento. Reteste com axe fica como próximo passo.
+
+| # | Item da seção 5 | Status |
+|:-:|---|---|
+| 1 | `suppressHydrationWarning` no `<html>` | ✅ Corrigido |
+| 2 | Acentos/textos em `pt-BR.json`; caminho de arquivo removido do disclaimer | ✅ Corrigido |
+| 3 | `<main>` nos layouts + `aria-label` nas 2 `<nav>` + `h1` no celular | ✅ Corrigido |
+| 4 | Rótulo nos 4 campos sem label | ✅ Corrigido |
+| 5 | `tabindex`/`role` na área rolável (estendido às 11 tabelas com rolagem do produto, não só o Funil) | ✅ Corrigido |
+| 6 | Traduzir/ocultar nomes internos em "dado ausente: …" | ✅ Corrigido (`lib/metric-reason.ts`) — cobre os 2 formatos do motor de métricas; frases já prontas de correlação/metas continuam sem i18n (debito à parte) |
+| 7 | Rótulos de eixo dos gráficos | ⏳ Não abordado nesta PR |
+| 8 | Contraste (tokens de cor) claro e escuro | 🟡 Parcial — as combinações concretamente medidas pelo axe (seção 3.2) foram corrigidas nó a nó; não houve migração para token de design nem varredura de todo `text-slate-400`/`text-slate-500` do código (179+118 usos, a maioria em ícones decorativos fora do escopo da regra `color-contrast`) |
+
+Além da lista acima, essa PR também endereçou, fora da ordem de correção original: hierarquia visual dos KPIs do Dashboard (achado de UX, não do axe) e sinalização de tendência que não depende só de cor (achado de UX + reforço do princípio WCAG 1.4.1 que gerou o achado 3.2).
 
 ## 1. Método
 
