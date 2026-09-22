@@ -692,6 +692,26 @@
         "context": "Solo {available} de {total} meses seleccionados tienen dato financiero registrado — los totales reflejan solo los meses con registro.",
         "cta": "Registre el financiero de los meses faltantes en Financiero."
       }
+    },
+    "navAriaLabel": "Navegar por las secciones de la Visión Ejecutiva",
+    "nav": {
+      "situation": "Situación actual",
+      "evolution": "Evolución",
+      "diagnosis": "Diagnóstico",
+      "insights": "Insights",
+      "nextAnalysis": "Próximo análisis",
+      "marketing": "Marketing"
+    },
+    "situationTitle": "Situación actual",
+    "diagnosisTitle": "Diagnóstico",
+    "insightsTitle": "Insights",
+    "insightsEmpty": "Ningún hallazgo destacado en este período — los indicadores están dentro de lo esperado.",
+    "nextAnalysisTitle": "Próximo análisis",
+    "nextAnalysis": {
+      "priorityLabel": "Sugerencia:",
+      "noPriority": "Ningún hallazgo exige atención inmediata en este período. Aun así, vale la pena profundizar en otras pantallas:",
+      "exploreFunnel": "Analizar el Embudo",
+      "exploreFinancials": "Ver Financiero"
     }
   },
   "metricFields": {

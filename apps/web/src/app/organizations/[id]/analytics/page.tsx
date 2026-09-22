@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -37,6 +38,7 @@ import { computeExecutiveInsights, type ExecutiveInsightCopy } from "@/lib/insig
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
 import {
+  IconChevronRight,
   IconDollar,
   IconDownload,
   IconGrid,
@@ -46,6 +48,20 @@ import {
   IconTrendingDown,
   IconTrendingUp,
 } from "@/components/icons";
+
+// A narrativa da Visão Executiva (prompt de redesenho UX/UI): Situação
+// atual → Evolução → Diagnóstico → Insights → Próxima análise, com
+// Marketing como drill-down à parte no fim. Mesma ordem usada pela nav de
+// âncoras e pelas seções abaixo — uma única lista, pra nunca desalinhar.
+const NARRATIVE_SECTIONS = [
+  "situation",
+  "evolution",
+  "diagnosis",
+  "insights",
+  "nextAnalysis",
+  "marketing",
+] as const;
+type NarrativeSectionId = (typeof NARRATIVE_SECTIONS)[number];
 
 type CardConfig<T> = { key: keyof T & string; labelKey: string; percent?: boolean; icon: typeof IconDollar };
 
@@ -356,6 +372,11 @@ export default function AnalyticsPage() {
   const insights = data
     ? computeExecutiveInsights(data, targets, executiveInsightCopy, formatPeriodRange(data.date_from, data.date_to))
     : [];
+  // "Próxima análise" recomenda 1 CTA, não repete os de todos os cartões de
+  // Insights — prioriza um achado negativo (o que mais precisa de atenção);
+  // sem nenhum negativo, usa o primeiro insight disponível (ex.: meta
+  // batida ainda é uma ação válida, "definir a próxima meta").
+  const priorityInsight = insights.find((i) => i.tone === "negative") ?? insights[0];
 
   // MetricGrid também é usado pra Marketing (MARKETING_CARDS), cujas chaves
   // (roas, cpc, ...) não existem em ExecutiveTargets — por isso a prop é um
@@ -388,6 +409,8 @@ export default function AnalyticsPage() {
     triggerBrowserDownload(new Blob([BOM + content], { type: "text/csv;charset=utf-8" }), filename);
   }
 
+  const navLabel = (section: NarrativeSectionId) => t(`nav.${section}`);
+
   return (
     <div className="animate-fade-in-up py-8">
       <div className="flex items-center gap-2">
@@ -405,90 +428,174 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      ) : (
-        data && <MetricGrid data={data} cards={CARDS} targetProgress={targetProgress} />
-      )}
+      {/* Nav de âncoras — a mesma ordem das seções abaixo (NARRATIVE_SECTIONS),
+          nunca listada 2x separadamente pra não desalinhar com o JSX real. */}
+      <nav aria-label={t("navAriaLabel")} className="mt-6 flex flex-wrap gap-1.5">
+        {NARRATIVE_SECTIONS.map((section) => (
+          <a
+            key={section}
+            href={`#${section}`}
+            className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            {navLabel(section)}
+          </a>
+        ))}
+      </nav>
 
-      {!loading && <InsightsPanel insights={insights} />}
+      {/* 1. Situação atual — os 7 KPIs do período selecionado. */}
+      <section id="situation" className="mt-8 scroll-mt-6">
+        <h2 className={sectionTitle}>{t("situationTitle")}</h2>
+        {loading ? (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        ) : (
+          data && <MetricGrid data={data} cards={CARDS} targetProgress={targetProgress} />
+        )}
+      </section>
 
-      <div className="mt-10">
-        <TargetsPanel organizationId={id} onSaved={refetchTargets} />
-      </div>
-
-      <div className="mt-6">
-        <CorrelationPanel organizationId={id} dateFrom={range.dateFrom} dateTo={range.dateTo} />
-      </div>
-
-      <div className="mt-10 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <IconTrendingUp className="h-4 w-4 text-slate-400" />
-          <h2 className={sectionTitle}>{t("monthlyEvolutionTitle")}</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {series && (
-            <button
-              type="button"
-              onClick={handleExportSeries}
-              className={`${buttonSecondary} px-3 py-1.5 text-xs`}
-            >
-              <IconDownload className="h-3.5 w-3.5" />
-              {t("exportCsv")}
-            </button>
-          )}
-          <GeneratePdfReportButton
-            path={`/api/v1/organizations/${id}/reports/executive/pdf?date_from=${range.dateFrom}&date_to=${range.dateTo}`}
-            label={t("generatePdfReport")}
-          />
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 w-full" />
-          ))}
-        </div>
-      ) : (
-        series && <SeriesGrid series={series} targets={targets} />
-      )}
-
-      <div className="mt-10 flex items-center gap-2">
-        <IconMegaphone className="h-4 w-4 text-slate-400" />
-        <h2 className={sectionTitle}>{t("marketingTitle")}</h2>
-      </div>
-
-      {marketing && !loading && marketing.campaign_count === 0 && (
-        <div className="mt-4">
-          <Alert tone="warning">{t("noCampaignsWarning")}</Alert>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      ) : (
-        marketing && <MetricGrid data={marketing} cards={MARKETING_CARDS} />
-      )}
-
-      {!loading && marketingByChannel && marketingByChannel.channels.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {t("byChannel")}
-          </h3>
-          <div className="mt-2">
-            <MarketingByChannelTable channels={marketingByChannel.channels} />
+      {/* 2. Evolução — mesmos 7 KPIs, série mensal (antes vinha depois do
+          Diagnóstico; a narrativa pede "o que aconteceu ao longo do tempo"
+          logo depois de "onde estamos agora", antes de diagnosticar o porquê). */}
+      <section id="evolution" className="mt-10 scroll-mt-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <IconTrendingUp className="h-4 w-4 text-slate-400" />
+            <h2 className={sectionTitle}>{t("monthlyEvolutionTitle")}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {series && (
+              <button
+                type="button"
+                onClick={handleExportSeries}
+                className={`${buttonSecondary} px-3 py-1.5 text-xs`}
+              >
+                <IconDownload className="h-3.5 w-3.5" />
+                {t("exportCsv")}
+              </button>
+            )}
+            <GeneratePdfReportButton
+              path={`/api/v1/organizations/${id}/reports/executive/pdf?date_from=${range.dateFrom}&date_to=${range.dateTo}`}
+              label={t("generatePdfReport")}
+            />
           </div>
         </div>
-      )}
+
+        {loading ? (
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full" />
+            ))}
+          </div>
+        ) : (
+          series && <SeriesGrid series={series} targets={targets} />
+        )}
+      </section>
+
+      {/* 3. Diagnóstico — Metas (progresso vs. objetivo) e Correlação
+          (duas métricas se movem juntas?) são as duas ferramentas que
+          ajudam a entender o "porquê" antes dos Insights sintetizarem o
+          que decorre daí. Cada painel mantém seu próprio heading (h3,
+          aninhado sob este h2) e busca seu próprio dado. */}
+      <section id="diagnosis" className="mt-10 scroll-mt-6">
+        <h2 className={sectionTitle}>{t("diagnosisTitle")}</h2>
+        <div className="mt-4">
+          <TargetsPanel organizationId={id} onSaved={refetchTargets} />
+        </div>
+        <div className="mt-6">
+          <CorrelationPanel organizationId={id} dateFrom={range.dateFrom} dateTo={range.dateTo} />
+        </div>
+      </section>
+
+      {/* 4. Insights — síntese estruturada (lib/insights.ts): nunca uma
+          caixa vazia quando não há loading, mas também nunca omite a seção
+          por completo — "nenhum achado" é, em si, um diagnóstico válido. */}
+      <section id="insights" className="mt-10 scroll-mt-6">
+        <h2 className={sectionTitle}>{t("insightsTitle")}</h2>
+        {loading ? (
+          <Skeleton className="mt-4 h-20 w-full" />
+        ) : insights.length > 0 ? (
+          <InsightsPanel insights={insights} />
+        ) : (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{t("insightsEmpty")}</p>
+        )}
+      </section>
+
+      {/* 5. Próxima análise — fecha a narrativa com 1 recomendação (não
+          repete os CTAs de cada cartão de Insight) + atalhos pras telas de
+          aprofundamento que não estão nesta página. */}
+      <section id="nextAnalysis" className="mt-10 scroll-mt-6">
+        <h2 className={sectionTitle}>{t("nextAnalysisTitle")}</h2>
+        {loading ? (
+          <Skeleton className="mt-4 h-24 w-full" />
+        ) : (
+          <Card className="mt-4 p-4">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {priorityInsight ? (
+                <>
+                  <span className="font-semibold">{t("nextAnalysis.priorityLabel")}</span> {priorityInsight.cta}
+                </>
+              ) : (
+                t("nextAnalysis.noPriority")
+              )}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href={`/organizations/${id}/funnel`}
+                className={`${buttonSecondary} px-3 py-1.5 text-xs`}
+              >
+                {t("nextAnalysis.exploreFunnel")}
+                <IconChevronRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href={`/organizations/${id}/financials`}
+                className={`${buttonSecondary} px-3 py-1.5 text-xs`}
+              >
+                {t("nextAnalysis.exploreFinancials")}
+                <IconChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </Card>
+        )}
+      </section>
+
+      {/* 6. Marketing — drill-down por canal/campanha, fora da narrativa
+          principal (é outro domínio, não outro passo da mesma história). */}
+      <section id="marketing" className="mt-10 scroll-mt-6">
+        <div className="flex items-center gap-2">
+          <IconMegaphone className="h-4 w-4 text-slate-400" />
+          <h2 className={sectionTitle}>{t("marketingTitle")}</h2>
+        </div>
+
+        {marketing && !loading && marketing.campaign_count === 0 && (
+          <div className="mt-4">
+            <Alert tone="warning">{t("noCampaignsWarning")}</Alert>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        ) : (
+          marketing && <MetricGrid data={marketing} cards={MARKETING_CARDS} />
+        )}
+
+        {!loading && marketingByChannel && marketingByChannel.channels.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {t("byChannel")}
+            </h3>
+            <div className="mt-2">
+              <MarketingByChannelTable channels={marketingByChannel.channels} />
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
