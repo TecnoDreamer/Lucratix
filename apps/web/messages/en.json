@@ -1,5 +1,8 @@
 {
   "common": {
+    "trendImproved": "improvement",
+    "trendWorsened": "worsening",
+    "trendStable": "stable",
     "scrollableTable": "Horizontally scrollable table",
     "save": "Save",
     "cancel": "Cancel",
@@ -654,6 +657,8 @@
     "generatePdfReport": "Download PDF report"
   },
   "dashboard": {
+    "primaryHeading": "Key indicators",
+    "secondaryHeading": "Other indicators",
     "periodLabel": "Reference month",
     "title": "Dashboard",
     "notApplicable": "not applicable",
