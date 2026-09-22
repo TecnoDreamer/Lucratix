@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { currentMonthPeriod, formatMetric, formatPercentChange, type Dashboard } from "@/lib/metrics";
 import { formatDecimal } from "@/lib/formatters";
 import { comparisonToneClass, getComparisonTone, useComparisonToneLabel } from "@/lib/kpi";
+import { useMetricReasonLabel } from "@/lib/metric-reason";
 import { hasMinimumRole } from "@/lib/roles";
 import { input, sectionTitle } from "@/lib/ui";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -49,6 +50,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const tMetricLabels = useTranslations("dashboard.metricLabels");
   const toneLabel = useComparisonToneLabel();
+  const reasonLabel = useMetricReasonLabel();
   // /reports/basic/pdf exige ANALYST+ (mesmo nivel de /reports/basic) mas o
   // Dashboard continua visivel a VIEWER (RN-010) — sem essa checagem, VIEWER
   // veria um botao que sempre resulta em 403. Mesmo helper de lib/roles.ts
@@ -109,7 +111,7 @@ export default function DashboardPage() {
                     metricHelpKey={key}
                     icon={Icon}
                     value={formatMetric(metric, { percent, notApplicableLabel: t("notApplicable") })}
-                    reason={!metric.is_applicable ? metric.reason : null}
+                    reason={!metric.is_applicable ? reasonLabel(metric.reason) : null}
                   />
                 );
               })}
@@ -130,7 +132,7 @@ export default function DashboardPage() {
                     metricHelpKey={key}
                     icon={Icon}
                     value={formatMetric(metric, { percent, notApplicableLabel: t("notApplicable") })}
-                    reason={!metric.is_applicable ? metric.reason : null}
+                    reason={!metric.is_applicable ? reasonLabel(metric.reason) : null}
                   />
                 );
               })}

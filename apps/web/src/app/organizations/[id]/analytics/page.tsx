@@ -18,6 +18,7 @@ import {
   type TargetProgress,
 } from "@/lib/metrics";
 import { comparisonToneClass, getComparisonTone, useComparisonToneLabel } from "@/lib/kpi";
+import { useMetricReasonLabel } from "@/lib/metric-reason";
 import { formatPercentage } from "@/lib/formatters";
 import { sectionTitle, buttonSecondary } from "@/lib/ui";
 import { useOrganization } from "@/contexts/organization-context";
@@ -129,6 +130,7 @@ function MetricGrid<T extends object>({
 }) {
   const t = useTranslations("analytics");
   const tMetricLabels = useTranslations("analytics.metricLabels");
+  const reasonLabel = useMetricReasonLabel();
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {cards.map(({ key, labelKey, percent, icon: Icon }, i) => {
@@ -150,7 +152,7 @@ function MetricGrid<T extends object>({
               {formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
             </p>
             {!metric.current.is_applicable && metric.current.reason && (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.current.reason}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{reasonLabel(metric.current.reason)}</p>
             )}
             {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
             {progress && <TargetProgressLine progress={progress} />}

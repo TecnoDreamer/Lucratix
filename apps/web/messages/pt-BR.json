@@ -1,5 +1,7 @@
 {
   "common": {
+    "missingData": "Dado ausente: {field}",
+    "divisionByZero": "Divisão por zero: {field}",
     "trendImproved": "melhora",
     "trendWorsened": "piora",
     "trendStable": "estável",
@@ -655,6 +657,35 @@
       "deleteError": "Não foi possível remover a meta."
     },
     "generatePdfReport": "Baixar relatório em PDF"
+  },
+  "metricFields": {
+    "revenue": "receita",
+    "profit": "lucro",
+    "investment": "investimento",
+    "marketing_investment": "investimento em marketing",
+    "conversions": "conversões",
+    "clicks": "cliques",
+    "impressions": "impressões",
+    "leads": "leads",
+    "new_customers": "novos clientes",
+    "total_customers": "total de clientes",
+    "repeat_customers": "clientes recorrentes",
+    "attributed_revenue": "receita atribuída",
+    "average_ticket": "ticket médio",
+    "purchase_frequency": "frequência de compra",
+    "retention_time": "tempo de retenção",
+    "active_start": "clientes ativos no início do período",
+    "active_end": "clientes ativos no fim do período",
+    "base": "base de cálculo",
+    "count": "contagem",
+    "target": "meta",
+    "current": "valor atual",
+    "visits": "visitas",
+    "mqls": "MQLs",
+    "sqls": "SQLs",
+    "opportunities": "oportunidades",
+    "customers": "clientes",
+    "repeat_purchases": "recompras"
   },
   "dashboard": {
     "primaryHeading": "Principais indicadores",

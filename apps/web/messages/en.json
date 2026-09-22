@@ -1,5 +1,7 @@
 {
   "common": {
+    "missingData": "Missing data: {field}",
+    "divisionByZero": "Division by zero: {field}",
     "trendImproved": "improvement",
     "trendWorsened": "worsening",
     "trendStable": "stable",
@@ -655,6 +657,35 @@
       "deleteError": "Could not remove the target."
     },
     "generatePdfReport": "Download PDF report"
+  },
+  "metricFields": {
+    "revenue": "revenue",
+    "profit": "profit",
+    "investment": "investment",
+    "marketing_investment": "marketing investment",
+    "conversions": "conversions",
+    "clicks": "clicks",
+    "impressions": "impressions",
+    "leads": "leads",
+    "new_customers": "new customers",
+    "total_customers": "total customers",
+    "repeat_customers": "repeat customers",
+    "attributed_revenue": "attributed revenue",
+    "average_ticket": "average ticket",
+    "purchase_frequency": "purchase frequency",
+    "retention_time": "retention time",
+    "active_start": "active customers at period start",
+    "active_end": "active customers at period end",
+    "base": "calculation base",
+    "count": "count",
+    "target": "target",
+    "current": "current value",
+    "visits": "visits",
+    "mqls": "MQLs",
+    "sqls": "SQLs",
+    "opportunities": "opportunities",
+    "customers": "customers",
+    "repeat_purchases": "repeat purchases"
   },
   "dashboard": {
     "primaryHeading": "Key indicators",
