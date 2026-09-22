@@ -17,7 +17,8 @@ import {
   type MonthlyMetrics,
   type TargetProgress,
 } from "@/lib/metrics";
-import { getMetricById } from "@/domain/metrics/metric-utils";
+import { comparisonToneClass, getComparisonTone, useComparisonToneLabel } from "@/lib/kpi";
+import { useMetricReasonLabel } from "@/lib/metric-reason";
 import { formatPercentage } from "@/lib/formatters";
 import { sectionTitle, buttonSecondary } from "@/lib/ui";
 import { useOrganization } from "@/contexts/organization-context";
@@ -78,27 +79,26 @@ function ComparisonBadge({
   metricId: string;
 }) {
   const t = useTranslations("analytics");
+  const toneLabel = useComparisonToneLabel();
   if (comparison.percent_change === null) {
-    return <p className="mt-1 text-xs text-slate-400 dark:text-slate-600">{t("vsPreviousPeriodNa")}</p>;
+    return <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("vsPreviousPeriodNa")}</p>;
   }
   // Direção desejável importa: para CAC/CPC/CPM/CPL/CPA (lower_is_better),
   // uma queda é a notícia boa — nunca pintar todo aumento de verde sem
-  // checar a métrica (ver domain/metrics/metric-types.ts::MetricDirection).
-  // O ícone segue o sentido literal do número (subiu/desceu); a cor segue
-  // o que é bom ou ruim para essa métrica especificamente.
+  // checar a métrica (ver domain/metrics/metric-types.ts::MetricDirection,
+  // lib/kpi.ts::getComparisonTone). O ícone segue o sentido literal do
+  // número (subiu/desceu); a cor E a palavra visível ("melhora"/"piora")
+  // seguem o que é bom ou ruim pra essa métrica — cor nunca é a única pista
+  // (WCAG 1.4.1).
   const wentUp = comparison.percent_change >= 0;
-  const lowerIsBetter = getMetricById(metricId)?.direction === "lower_is_better";
-  const positive = lowerIsBetter ? !wentUp : wentUp;
+  const tone = getComparisonTone(metricId, comparison) ?? "neutral";
   const Icon = wentUp ? IconTrendingUp : IconTrendingDown;
   return (
-    <p
-      className={`mt-1 flex items-center gap-1 text-xs font-medium ${
-        positive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-      }`}
-    >
-      <Icon className="h-3 w-3" />
+    <p className={`mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs font-medium ${comparisonToneClass(tone)}`}>
+      <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
       {formatPercentChange(comparison, t("notApplicable"))}
-      <span className="font-normal text-slate-400 dark:text-slate-600">{t("vsPreviousPeriod")}</span>
+      <span>({toneLabel(tone)})</span>
+      <span className="font-normal text-slate-500 dark:text-slate-400">{t("vsPreviousPeriod")}</span>
     </p>
   );
 }
@@ -130,6 +130,7 @@ function MetricGrid<T extends object>({
 }) {
   const t = useTranslations("analytics");
   const tMetricLabels = useTranslations("analytics.metricLabels");
+  const reasonLabel = useMetricReasonLabel();
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
       {cards.map(({ key, labelKey, percent, icon: Icon }, i) => {
@@ -151,7 +152,7 @@ function MetricGrid<T extends object>({
               {formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
             </p>
             {!metric.current.is_applicable && metric.current.reason && (
-              <p className="mt-1 text-xs text-slate-400">{metric.current.reason}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{reasonLabel(metric.current.reason)}</p>
             )}
             {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
             {progress && <TargetProgressLine progress={progress} />}

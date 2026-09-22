@@ -1,5 +1,11 @@
 {
   "common": {
+    "missingData": "Dato ausente: {field}",
+    "divisionByZero": "División por cero: {field}",
+    "trendImproved": "mejora",
+    "trendWorsened": "empeora",
+    "trendStable": "estable",
+    "scrollableTable": "Tabla con desplazamiento horizontal",
     "save": "Guardar",
     "cancel": "Cancelar",
     "loading": "Cargando...",
@@ -652,7 +658,39 @@
     },
     "generatePdfReport": "Descargar informe en PDF"
   },
+  "metricFields": {
+    "revenue": "ingresos",
+    "profit": "ganancia",
+    "investment": "inversión",
+    "marketing_investment": "inversión en marketing",
+    "conversions": "conversiones",
+    "clicks": "clics",
+    "impressions": "impresiones",
+    "leads": "leads",
+    "new_customers": "nuevos clientes",
+    "total_customers": "total de clientes",
+    "repeat_customers": "clientes recurrentes",
+    "attributed_revenue": "ingresos atribuidos",
+    "average_ticket": "ticket promedio",
+    "purchase_frequency": "frecuencia de compra",
+    "retention_time": "tiempo de retención",
+    "active_start": "clientes activos al inicio del período",
+    "active_end": "clientes activos al final del período",
+    "base": "base de cálculo",
+    "count": "conteo",
+    "target": "meta",
+    "current": "valor actual",
+    "visits": "visitas",
+    "mqls": "MQLs",
+    "sqls": "SQLs",
+    "opportunities": "oportunidades",
+    "customers": "clientes",
+    "repeat_purchases": "recompras"
+  },
   "dashboard": {
+    "primaryHeading": "Indicadores principales",
+    "secondaryHeading": "Otros indicadores",
+    "periodLabel": "Mes de referencia",
     "title": "Dashboard",
     "notApplicable": "no aplicable",
     "baselineComparisonTitle": "Ingresos: baseline vs. período seleccionado",
@@ -660,7 +698,7 @@
     "current": "Actual",
     "variation": "Variación",
     "noBaselineToCompare": "Aún no hay ningún baseline registrado para comparar.",
-    "variationDisclaimer": "Esta variación es solo observada — no afirma haber sido causada por las acciones de marketing realizadas (ver docs/product/user-journey.md).",
+    "variationDisclaimer": "Esta variación es solo observada — no afirma haber sido causada por las acciones de marketing realizadas.",
     "metricLabels": {
       "revenue": "Ingresos",
       "profit": "Ganancia",
@@ -771,6 +809,7 @@
     "bestChannelNote": "Mayor ROAS observado en el período: {channel} ({value})"
   },
   "reports": {
+    "periodLabel": "Mes de referencia",
     "title": "Informe ejecutivo",
     "printOrSavePdf": "Imprimir / Guardar como PDF",
     "generatedFor": "{name} — generado el {date}",
@@ -791,6 +830,7 @@
       "reasonPrefix": "Motivo"
     },
     "logo": {
+      "fileLabel": "Archivo del logotipo (PNG, JPG o WEBP)",
       "uploadGenericError": "No se pudo enviar la imagen.",
       "removeGenericError": "No se pudo eliminar el logotipo.",
       "previewAlt": "Vista previa del logotipo",
@@ -959,6 +999,7 @@
   },
   "centralDeDados": {
     "importWizard": {
+      "fileLabel": "Archivo para importar (CSV, XLSX o JSON)",
       "title": "Importar datos",
       "domainLabel": "Dominio",
       "acceptedFormats": "Formatos aceptados: CSV, Excel (.xlsx) o JSON, hasta 5 MB.",

@@ -51,8 +51,14 @@ describe("OrganizationLayout — sidebar", () => {
       </OrganizationLayout>
     );
 
+    // O nome da empresa aparece como <h1> duas vezes no DOM: uma na sidebar
+    // desktop, outra na topbar mobile (correção de acessibilidade — mobile
+    // precisa de h1 visível, "page-has-heading-one"). Em telas reais só uma
+    // fica acessível por vez (a outra tem `display:none` via Tailwind
+    // responsivo); o jsdom não computa isso, então ambas aparecem aqui.
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Empresa Teste" })).toBeInTheDocument();
+      const headings = screen.getAllByRole("heading", { name: "Empresa Teste" });
+      expect(headings.length).toBeGreaterThan(0);
     });
     expect(screen.getByText("Seu papel: Proprietário")).toBeInTheDocument();
   });
@@ -254,7 +260,7 @@ describe("OrganizationLayout — sidebar", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Empresa nao encontrada ou voce nao tem acesso a ela.")
+        screen.getByText("Empresa não encontrada ou você não tem acesso a ela.")
       ).toBeInTheDocument();
     });
     expect(screen.queryByText("conteudo")).not.toBeInTheDocument();

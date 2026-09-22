@@ -241,7 +241,7 @@ export default function OrganizationsPage() {
 
   if (loadError && !loading) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-600/30 animate-scale-in">
           <IconAlertCircle className="h-7 w-7" />
         </div>
@@ -252,12 +252,12 @@ export default function OrganizationsPage() {
         <button onClick={() => void loadFirstPage(debouncedQuery, statusFilter)} className={`${buttonPrimary} mt-1`}>
           {t("retry")}
         </button>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className={pageContainer}>
+    <main className={pageContainer}>
       <div className="flex items-start justify-between gap-4">
         <div className="animate-fade-in-up">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
@@ -430,6 +430,6 @@ export default function OrganizationsPage() {
           </button>
         </form>
       </div>
-    </div>
+    </main>
   );
 }

@@ -46,7 +46,7 @@ export function PasswordRequirementsChecklist({ password }: { password: string }
               key={key}
               className={`flex items-center gap-1.5 text-xs ${
                 met
-                  ? "text-emerald-600 dark:text-emerald-400"
+                  ? "text-emerald-700 dark:text-emerald-400"
                   : "text-slate-400 dark:text-slate-500"
               }`}
             >

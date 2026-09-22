@@ -1,5 +1,11 @@
 {
   "common": {
+    "missingData": "Dado ausente: {field}",
+    "divisionByZero": "Divisão por zero: {field}",
+    "trendImproved": "melhora",
+    "trendWorsened": "piora",
+    "trendStable": "estável",
+    "scrollableTable": "Tabela com rolagem horizontal",
     "save": "Salvar",
     "cancel": "Cancelar",
     "loading": "Carregando...",
@@ -498,7 +504,7 @@
       "newOrganizationPlaceholder": "Nome da empresa/cliente",
       "creating": "Criando...",
       "create": "Criar",
-      "createGenericError": "Nao foi possivel criar a empresa.",
+      "createGenericError": "Não foi possível criar a empresa.",
       "loadErrorTitle": "Não foi possível carregar suas empresas",
       "retry": "Tentar novamente",
       "connectionError": "Não foi possível conectar ao servidor."
@@ -544,17 +550,17 @@
       "cac": "CAC"
     },
     "registerNewBaselineTitle": "Registrar novo baseline",
-    "blankFieldsHint": "Campos deixados em branco ficam registrados como \"nao disponivel\", nunca como zero.",
+    "blankFieldsHint": "Campos deixados em branco ficam registrados como \"não disponível\", nunca como zero.",
     "saving": "Salvando...",
     "registerBaseline": "Registrar baseline",
     "monthSummaryTitle": "Resumo do mês",
     "seeFullIndicators": "Ver indicadores completos, com filtro de período",
     "attention": "Atenção",
     "revenueDropAlert": "Receita caiu {percent}% em relação ao baseline neste mês.",
-    "baselineGenericError": "Nao foi possivel registrar o baseline."
+    "baselineGenericError": "Não foi possível registrar o baseline."
   },
   "organizationLayout": {
-    "notFound": "Empresa nao encontrada ou voce nao tem acesso a ela.",
+    "notFound": "Empresa não encontrada ou você não tem acesso a ela.",
     "yourCompanies": "Suas empresas",
     "yourRole": "Seu papel: {role}",
     "nav": {
@@ -652,23 +658,55 @@
     },
     "generatePdfReport": "Baixar relatório em PDF"
   },
+  "metricFields": {
+    "revenue": "receita",
+    "profit": "lucro",
+    "investment": "investimento",
+    "marketing_investment": "investimento em marketing",
+    "conversions": "conversões",
+    "clicks": "cliques",
+    "impressions": "impressões",
+    "leads": "leads",
+    "new_customers": "novos clientes",
+    "total_customers": "total de clientes",
+    "repeat_customers": "clientes recorrentes",
+    "attributed_revenue": "receita atribuída",
+    "average_ticket": "ticket médio",
+    "purchase_frequency": "frequência de compra",
+    "retention_time": "tempo de retenção",
+    "active_start": "clientes ativos no início do período",
+    "active_end": "clientes ativos no fim do período",
+    "base": "base de cálculo",
+    "count": "contagem",
+    "target": "meta",
+    "current": "valor atual",
+    "visits": "visitas",
+    "mqls": "MQLs",
+    "sqls": "SQLs",
+    "opportunities": "oportunidades",
+    "customers": "clientes",
+    "repeat_purchases": "recompras"
+  },
   "dashboard": {
+    "primaryHeading": "Principais indicadores",
+    "secondaryHeading": "Outros indicadores",
+    "periodLabel": "Mês de referência",
     "title": "Dashboard",
     "notApplicable": "não aplicável",
-    "baselineComparisonTitle": "Receita: baseline vs. periodo selecionado",
+    "baselineComparisonTitle": "Receita: baseline vs. período selecionado",
     "baseline": "Baseline",
     "current": "Atual",
-    "variation": "Variacao",
+    "variation": "Variação",
     "noBaselineToCompare": "Nenhum baseline registrado ainda para comparar.",
-    "variationDisclaimer": "Esta variacao e apenas observada — nao afirma que foi causada pelas acoes de marketing realizadas (ver docs/product/user-journey.md).",
+    "variationDisclaimer": "Esta variação é apenas observada — não afirma que foi causada pelas ações de marketing realizadas.",
     "metricLabels": {
       "revenue": "Receita",
       "profit": "Lucro",
       "margin": "Margem",
       "cac": "CAC",
-      "conversionRate": "Conversao",
-      "averageTicket": "Ticket medio",
-      "recurrenceRate": "Recorrencia"
+      "conversionRate": "Conversão",
+      "averageTicket": "Ticket médio",
+      "recurrenceRate": "Recorrência"
     },
     "generatePdfReport": "Baixar relatório em PDF"
   },
@@ -771,6 +809,7 @@
     "bestChannelNote": "Maior ROAS observado no período: {channel} ({value})"
   },
   "reports": {
+    "periodLabel": "Mês de referência",
     "title": "Relatório executivo",
     "printOrSavePdf": "Imprimir / Salvar como PDF",
     "generatedFor": "{name} — gerado em {date}",
@@ -791,6 +830,7 @@
       "reasonPrefix": "Motivo"
     },
     "logo": {
+      "fileLabel": "Arquivo do logotipo (PNG, JPG ou WEBP)",
       "uploadGenericError": "Não foi possível enviar a imagem.",
       "removeGenericError": "Não foi possível remover o logotipo.",
       "previewAlt": "Pré-visualização do logotipo",
@@ -880,7 +920,7 @@
       "submitting": "Entrando...",
       "submit": "Entrar",
       "sessionProtected": "Sua sessão fica protegida e você continua conectado com segurança.",
-      "noAccountPrefix": "Ainda nao tem conta?",
+      "noAccountPrefix": "Ainda não tem conta?",
       "signUp": "Cadastre-se",
       "learnMorePrefix": "Ainda não conhece a Lucratix?",
       "learnMoreLink": "Conheça a aplicação",
@@ -899,7 +939,7 @@
       "devModeContinue": "Continuar para confirmar o e-mail →",
       "submitting": "Enviando...",
       "submit": "Cadastrar",
-      "hasAccountPrefix": "Ja tem conta?",
+      "hasAccountPrefix": "Já tem conta?",
       "signIn": "Entrar",
       "learnMorePrefix": "Quer entender melhor antes de cadastrar?",
       "learnMoreLink": "Conheça a aplicação"
@@ -959,6 +999,7 @@
   },
   "centralDeDados": {
     "importWizard": {
+      "fileLabel": "Arquivo para importar (CSV, XLSX ou JSON)",
       "title": "Importar dados",
       "domainLabel": "Domínio",
       "acceptedFormats": "Formatos aceitos: CSV, Excel (.xlsx) ou JSON, até 5 MB.",

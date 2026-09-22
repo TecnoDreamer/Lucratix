@@ -8,8 +8,8 @@ import { findBottleneck } from "@/lib/funnel-insights";
 import type { FunnelStages, StageConversion, StageConversionWithComparison } from "@/lib/funnel-metrics";
 import { DEFAULT_STAGE_CONVERSION_SETTINGS, type StageConversionChartSettings } from "@/lib/chart-settings";
 import { tableHead, tableRow } from "@/lib/ui";
-import { Card } from "@/components/ui";
 import { ChartTooltip, type ChartTooltipItem } from "@/components/chart-tooltip";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 // Densidade (personalização, PR2) — "compacta" só aperta a altura de cada
 // linha, nunca esconde transição nenhuma.
@@ -181,7 +181,7 @@ export function StageConversionChart({
         <div
           role="img"
           aria-label={t("labelNoData")}
-          className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-600"
+          className="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400"
           style={{ height: minHeight }}
         >
           {t("noData")}
@@ -198,7 +198,7 @@ export function StageConversionChart({
         </p>
       )}
 
-      <Card className="mt-3 overflow-x-auto p-0">
+      <ScrollableCard className="mt-3 p-0">
         <table className="w-full text-sm">
           <thead>
             <tr className={tableHead}>
@@ -229,7 +229,7 @@ export function StageConversionChart({
             ))}
           </tbody>
         </table>
-      </Card>
+      </ScrollableCard>
     </div>
   );
 }

@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="mt-6 flex flex-col gap-0.5">
+        <nav aria-label={t("title")} className="mt-6 flex flex-col gap-0.5">
           {NAV_ITEMS.map(({ href, key, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
@@ -126,7 +126,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {t("exitPanel")}
             </Link>
           </div>
-          <nav className="flex gap-1 border-b border-slate-200 px-4 py-2 dark:border-slate-800">
+          <nav aria-label={t("title")} className="flex gap-1 border-b border-slate-200 px-4 py-2 dark:border-slate-800">
             {NAV_ITEMS.map(({ href, key }) => (
               <Link
                 key={href}
@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
         </div>
-        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">{children}</div>
+        <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">{children}</main>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { formatPercentage } from "@/lib/formatters";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconPackage } from "@/components/icons";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 async function fetchProducts(id: string): Promise<Product[]> {
   return api.get<Product[]>(`/api/v1/organizations/${id}/products?include_inactive=true`);
@@ -108,7 +109,7 @@ export default function ProductsPage() {
             description={t("emptyDescription")}
           />
         ) : (
-          <Card className="overflow-x-auto">
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -136,7 +137,7 @@ export default function ProductsPage() {
                         className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
                           p.active
                             ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
                         }`}
                       >
                         {p.active ? t("active") : t("inactive")}
@@ -146,7 +147,7 @@ export default function ProductsPage() {
                 ))}
               </tbody>
             </table>
-          </Card>
+          </ScrollableCard>
         )}
       </div>
 

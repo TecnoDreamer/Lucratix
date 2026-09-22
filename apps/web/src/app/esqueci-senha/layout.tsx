@@ -4,5 +4,5 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = { title: "Esqueci minha senha" };
 
 export default function ForgotPasswordLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <main className="flex flex-1 flex-col">{children}</main>;
 }

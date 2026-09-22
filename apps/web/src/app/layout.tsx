@@ -40,6 +40,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
+      // O THEME_INIT_SCRIPT adiciona a classe `dark` antes da hidratacao; sem isso o
+      // React acusa divergencia de atributos no <html> (auditoria de acessibilidade 4.1).
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>

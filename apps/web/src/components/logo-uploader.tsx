@@ -88,6 +88,7 @@ export function LogoUploader({
         <p className="text-xs text-slate-500 dark:text-slate-400">{t("formatHint")}</p>
         <input
           type="file"
+          aria-label={t("fileLabel")}
           accept=".png,.jpg,.jpeg,.webp"
           onChange={handleFileChange}
           className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:text-slate-300 dark:file:bg-blue-500/10 dark:file:text-blue-300"

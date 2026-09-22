@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import { formatMetric, type ChannelMarketing, type MetricResult } from "@/lib/metrics";
 import { tableHead, tableRow } from "@/lib/ui";
-import { Card } from "@/components/ui";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 const COLUMN_KEYS: { key: keyof ChannelMarketing & string; percent?: boolean }[] = [
   { key: "roas" },
@@ -25,7 +25,7 @@ export function MarketingByChannelTable({ channels }: { channels: ChannelMarketi
   if (channels.length === 0) return null;
 
   return (
-    <Card className="mt-4 overflow-x-auto">
+    <ScrollableCard className="mt-4">
       <table className="w-full text-sm">
         <thead>
           <tr className={tableHead}>
@@ -57,6 +57,6 @@ export function MarketingByChannelTable({ channels }: { channels: ChannelMarketi
           ))}
         </tbody>
       </table>
-    </Card>
+    </ScrollableCard>
   );
 }

@@ -163,7 +163,7 @@ export default function OrganizationDetailPage() {
       <div className={`${card} p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {t("youAreIn")}
             </p>
             {orgLoading ? (
