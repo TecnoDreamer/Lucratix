@@ -10,6 +10,7 @@ import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconDollar } from "@/components/icons";
 import { SeriesChart, type SeriesPoint } from "@/components/series-chart";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 /** `FinancialPeriod[]` (já buscado por `fetchPeriods`) → `SeriesPoint[]`
  * para `SeriesChart` — nenhuma chamada de API nova: a série mensal já está
@@ -142,7 +143,7 @@ export default function FinancialsPage() {
             description={t("emptyDescription")}
           />
         ) : (
-          <Card className="overflow-x-auto">
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -167,7 +168,7 @@ export default function FinancialsPage() {
                 ))}
               </tbody>
             </table>
-          </Card>
+          </ScrollableCard>
         )}
       </div>
 

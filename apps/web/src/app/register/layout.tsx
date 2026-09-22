@@ -4,5 +4,5 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = { title: "Criar conta" };
 
 export default function RegisterLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <main className="flex flex-1 flex-col">{children}</main>;
 }

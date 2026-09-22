@@ -5,8 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { buttonSecondary, sectionTitle, tableHead, tableRow } from "@/lib/ui";
-import { Alert, Card, Skeleton } from "@/components/ui";
+import { Alert, Skeleton } from "@/components/ui";
 import { IconShieldCheck } from "@/components/icons";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 interface AuditLogEntry {
   id: string;
@@ -116,7 +117,7 @@ export default function AuditPage() {
             <Skeleton className="h-40 w-full" />
           ) : (
             <>
-              <Card className="overflow-x-auto">
+              <ScrollableCard>
                 <table className="w-full text-sm">
                   <thead>
                     <tr className={tableHead}>
@@ -146,7 +147,7 @@ export default function AuditPage() {
                     )}
                   </tbody>
                 </table>
-              </Card>
+              </ScrollableCard>
 
               {logs.length > 0 && (
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">

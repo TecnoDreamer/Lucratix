@@ -9,6 +9,7 @@ import { formatPercentage } from "@/lib/formatters";
 import { buttonPrimary, input, label, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Card, EmptyState, Skeleton } from "@/components/ui";
 import { IconPackage } from "@/components/icons";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 async function fetchProducts(id: string): Promise<Product[]> {
   return api.get<Product[]>(`/api/v1/organizations/${id}/products?include_inactive=true`);
@@ -108,7 +109,7 @@ export default function ProductsPage() {
             description={t("emptyDescription")}
           />
         ) : (
-          <Card className="overflow-x-auto">
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -146,7 +147,7 @@ export default function ProductsPage() {
                 ))}
               </tbody>
             </table>
-          </Card>
+          </ScrollableCard>
         )}
       </div>
 

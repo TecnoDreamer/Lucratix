@@ -9,6 +9,7 @@ import { Alert, Badge, EmptyState, Skeleton } from "@/components/ui";
 import { IconUser } from "@/components/icons";
 import type { PlatformUser, PlatformUserCreateResponse } from "@/lib/platform-admin";
 import type { User } from "@/lib/types";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 export default function AdminUsersPage() {
   const t = useTranslations("admin.users");
@@ -95,7 +96,7 @@ export default function AdminUsersPage() {
         ) : users.length === 0 ? (
           <EmptyState icon={<IconUser className="h-5 w-5" />} title={t("empty")} />
         ) : (
-          <div className={`${card} overflow-x-auto`}>
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -150,7 +151,7 @@ export default function AdminUsersPage() {
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollableCard>
         )}
       </div>
 

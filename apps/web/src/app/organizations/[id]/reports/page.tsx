@@ -141,6 +141,7 @@ export default function ReportPage() {
         <div className="flex items-center gap-2 print:hidden">
           <input
             type="month"
+            aria-label={t("periodLabel")}
             value={period.slice(0, 7)}
             onChange={(e) => setPeriod(`${e.target.value}-01`)}
             className={`${input} w-auto`}

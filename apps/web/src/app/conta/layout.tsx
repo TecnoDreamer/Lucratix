@@ -102,11 +102,11 @@ function AccountLayoutInner({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+      <main className="mx-auto w-full max-w-3xl px-4 sm:px-6">
         <AccountProvider value={{ organizations, activeOrganization, loading, error }}>
           {children}
         </AccountProvider>
-      </div>
+      </main>
     </div>
   );
 }

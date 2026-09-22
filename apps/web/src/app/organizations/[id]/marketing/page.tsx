@@ -23,6 +23,7 @@ import { IconMegaphone, IconPlus } from "@/components/icons";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
 import { ChannelBarChart, type ChannelBarChartDatum } from "@/components/channel-bar-chart";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 async function fetchChannelPerformance(id: string, range: DateRange): Promise<ChannelMarketing[]> {
   const result = await api.get<MarketingByChannel>(
@@ -242,7 +243,7 @@ export default function MarketingPage() {
           ) : campaigns.length === 0 ? (
             <EmptyState title={t("noCampaigns")} />
           ) : (
-            <Card className="overflow-x-auto">
+            <ScrollableCard>
               <table className="w-full text-sm">
                 <thead>
                   <tr className={tableHead}>
@@ -271,7 +272,7 @@ export default function MarketingPage() {
                   ))}
                 </tbody>
               </table>
-            </Card>
+            </ScrollableCard>
           )}
         </div>
 

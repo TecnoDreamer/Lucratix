@@ -10,6 +10,7 @@ import { Alert, EmptyState, Skeleton } from "@/components/ui";
 import { IconArrowLeft, IconTrash, IconUser } from "@/components/icons";
 import { useRoleLabel } from "@/lib/roles";
 import type { Membership, MembershipRole } from "@/lib/types";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 const ROLE_OPTIONS: MembershipRole[] = ["ORGANIZATION_OWNER", "ORGANIZATION_ADMIN", "ANALYST", "VIEWER"];
 
@@ -117,7 +118,7 @@ export default function AdminOrganizationMembersPage() {
         ) : members.length === 0 ? (
           <EmptyState icon={<IconUser className="h-5 w-5" />} title={t("empty")} />
         ) : (
-          <div className={`${card} overflow-x-auto`}>
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -160,7 +161,7 @@ export default function AdminOrganizationMembersPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollableCard>
         )}
       </div>
 

@@ -7,6 +7,7 @@ import { useDataDomains } from "@/lib/data-domains";
 import { buttonPrimary, buttonSecondary, select as selectClass, sectionTitle, tableHead, tableRow } from "@/lib/ui";
 import { Alert, Badge, Card } from "@/components/ui";
 import { IconUpload } from "@/components/icons";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 type Step = "upload" | "sheet" | "mapping" | "preview" | "done";
 type DuplicateStrategy = "skip" | "update";
@@ -381,6 +382,7 @@ export function ImportWizard({
           <p className="text-sm text-slate-500 dark:text-slate-400">{t("acceptedFormats")}</p>
           <input
             type="file"
+            aria-label={t("fileLabel")}
             accept=".csv,.xlsx,.json"
             onChange={(e: ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null)}
             className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:text-slate-300 dark:file:bg-blue-500/10 dark:file:text-blue-300"
@@ -519,7 +521,7 @@ export function ImportWizard({
             {summary.invalid > 0 && <Badge tone="slate">{t("invalidSuffix", { count: summary.invalid })}</Badge>}
           </div>
 
-          <Card className="overflow-x-auto">
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -546,7 +548,7 @@ export function ImportWizard({
                 ))}
               </tbody>
             </table>
-          </Card>
+          </ScrollableCard>
 
           {previewRows.length < previewTotal && (
             <button
@@ -617,7 +619,7 @@ export function ImportWizard({
           )}
 
           {rowErrors && (
-            <Card className="overflow-x-auto">
+            <ScrollableCard>
               <table className="w-full text-sm">
                 <thead>
                   <tr className={tableHead}>
@@ -636,7 +638,7 @@ export function ImportWizard({
                   ))}
                 </tbody>
               </table>
-            </Card>
+            </ScrollableCard>
           )}
 
           <button type="button" onClick={resetWizard} className={`${buttonPrimary} self-start`}>

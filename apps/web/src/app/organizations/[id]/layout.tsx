@@ -215,7 +215,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         )}
       </div>
 
-      <nav className="mt-6 flex flex-col gap-0.5">
+      <nav aria-label={t("navMenuLabel")} className="mt-6 flex flex-col gap-0.5">
         {visibleNavItems.map(({ href, key, icon: Icon }) => {
           const target = href ? `/organizations/${id}/${href}` : `/organizations/${id}`;
           const active = pathname === target;
@@ -247,7 +247,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-600">
           {t("accountSectionTitle")}
         </p>
-        <nav className="mt-2 flex flex-col gap-0.5">
+        <nav aria-label={t("accountSectionTitle")} className="mt-2 flex flex-col gap-0.5">
           <Link
             href={`/conta/configuracoes?from=${encodeURIComponent(id)}`}
             className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
@@ -278,9 +278,9 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
           >
             <IconMenu className="h-5 w-5" />
           </button>
-          <span className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+          <h1 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
             {loading ? tCommon("loading") : organization?.name}
-          </span>
+          </h1>
         </header>
 
         {mobileNavOpen && (
@@ -310,7 +310,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <main className="min-w-0 flex-1">
         <div className="mx-auto w-full max-w-5xl px-4 print:max-w-none print:px-0 sm:px-6">
           {organization?.status === "frozen" && (
             <div className="pt-4">
@@ -323,7 +323,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
             {children}
           </OrganizationProvider>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

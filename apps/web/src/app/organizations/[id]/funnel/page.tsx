@@ -37,6 +37,7 @@ import { InsightsPanel } from "@/components/insights-panel";
 import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
 import { ChartSettingsDialog } from "@/components/chart-settings-dialog";
 import { useChartSettings } from "@/hooks/use-chart-settings";
+import { ScrollableCard } from "@/components/scrollable-card";
 
 async function fetchSnapshots(id: string): Promise<FunnelSnapshot[]> {
   return api.get<FunnelSnapshot[]>(`/api/v1/organizations/${id}/funnel-snapshots`);
@@ -529,7 +530,7 @@ export default function FunnelPage() {
             title={t("emptyTitle")}
           />
         ) : (
-          <Card className="overflow-x-auto">
+          <ScrollableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className={tableHead}>
@@ -556,7 +557,7 @@ export default function FunnelPage() {
                 ))}
               </tbody>
             </table>
-          </Card>
+          </ScrollableCard>
         )}
       </div>
 

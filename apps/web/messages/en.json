@@ -1,5 +1,6 @@
 {
   "common": {
+    "scrollableTable": "Horizontally scrollable table",
     "save": "Save",
     "cancel": "Cancel",
     "loading": "Loading...",
@@ -653,6 +654,7 @@
     "generatePdfReport": "Download PDF report"
   },
   "dashboard": {
+    "periodLabel": "Reference month",
     "title": "Dashboard",
     "notApplicable": "not applicable",
     "baselineComparisonTitle": "Revenue: baseline vs. selected period",
@@ -660,7 +662,7 @@
     "current": "Current",
     "variation": "Variation",
     "noBaselineToCompare": "No baseline recorded yet to compare against.",
-    "variationDisclaimer": "This variation is only observed — it does not claim to have been caused by the marketing actions taken (see docs/product/user-journey.md).",
+    "variationDisclaimer": "This variation is only observed — it does not claim to have been caused by the marketing actions taken.",
     "metricLabels": {
       "revenue": "Revenue",
       "profit": "Profit",
@@ -771,6 +773,7 @@
     "bestChannelNote": "Highest ROAS observed in the period: {channel} ({value})"
   },
   "reports": {
+    "periodLabel": "Reference month",
     "title": "Executive report",
     "printOrSavePdf": "Print / Save as PDF",
     "generatedFor": "{name} — generated on {date}",
@@ -791,6 +794,7 @@
       "reasonPrefix": "Reason"
     },
     "logo": {
+      "fileLabel": "Logo file (PNG, JPG or WEBP)",
       "uploadGenericError": "Could not upload the image.",
       "removeGenericError": "Could not remove the logo.",
       "previewAlt": "Logo preview",
@@ -959,6 +963,7 @@
   },
   "centralDeDados": {
     "importWizard": {
+      "fileLabel": "File to import (CSV, XLSX or JSON)",
       "title": "Import data",
       "domainLabel": "Domain",
       "acceptedFormats": "Accepted formats: CSV, Excel (.xlsx), or JSON, up to 5 MB.",
