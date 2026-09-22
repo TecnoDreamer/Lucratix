@@ -39,3 +39,16 @@
 ## Revisão antes de usar qualquer imagem
 
 Checklist obrigatório: (1) sem UUID visível; (2) sem e-mail/nome reais; (3) sem chave/token/cookie; (4) sem caminho local; (5) dados 100 % fictícios; (6) legenda não promete resultado; (7) metadados removidos.
+
+## Execução de 2026-09-21
+
+As capturas SS-02 a SS-18 foram geradas localmente (24 imagens: desktop, tema escuro, `en`/`es`, celular) com **Playwright**, usando uma sessão salva pelo próprio usuário — o login **não** foi digitado por automação. As imagens **não** estão versionadas (decisão sobre o destino público pendente) e ficaram fora do repositório.
+
+Lições para repetir a execução:
+
+- **Usar meses com dados.** O seed cria jun–ago/2026; o mês corrente aparece como "não aplicável". No Dashboard e em Relatórios, fixar o mês em `2026-08`; no Funil e na Visão Executiva, usar "Últimos 6 meses".
+- **Esconder o indicador de desenvolvimento do Next** (`nextjs-portal`) e tirar o foco dos campos antes de capturar — ambos aparecem por padrão.
+- **Capturar só a área da página** (sem barra de endereço) evita expor o UUID da empresa na URL.
+- **Sessão única (RN-016):** um novo login do mesmo usuário em qualquer navegador derruba a sessão salva; o acesso dura 15 minutos e é renovado pelo `refresh_token`.
+- **Não salvar o arquivo de sessão dentro do repositório** (contém cookie) e não digitar `%TEMP%` em PowerShell — use `$env:TEMP`.
+- Achados de UX vistos nas capturas (textos sem acento, nomes internos de campo, eixos cortados) estão em [`AUDITORIA_ACESSIBILIDADE_UX.md`](../auditoria/AUDITORIA_ACESSIBILIDADE_UX.md) §4.2 — corrigir **antes** de usar as imagens publicamente.
