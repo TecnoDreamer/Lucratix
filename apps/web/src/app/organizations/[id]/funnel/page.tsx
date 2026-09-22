@@ -15,7 +15,8 @@ import {
   type FunnelSeries,
   type FunnelStageKey,
 } from "@/lib/funnel-metrics";
-import { computeFunnelInsights } from "@/lib/funnel-insights";
+import { computeFunnelInsights, type FunnelInsightCopy } from "@/lib/funnel-insights";
+import { formatPeriodRange } from "@/lib/formatters";
 import { funnelStagesSettingsForPreset, stageConversionSettingsForPreset } from "@/lib/chart-settings";
 import {
   saveFunnelStagesPreferences,
@@ -92,6 +93,25 @@ function FunnelAnalyticsSection({
   const t = useTranslations("funnel.analytics");
   const tFields = useTranslations("funnel.fields");
   const tCommon = useTranslations("common");
+  const tInsights = useTranslations("funnel.insights");
+  const funnelInsightCopy: FunnelInsightCopy = {
+    stageLabel: (stage) => tFields(stage),
+    biggestLeak: {
+      title: tInsights("biggestLeak.title"),
+      context: (from, to) => tInsights("biggestLeak.context", { from, to }),
+      cta: (from, to) => tInsights("biggestLeak.cta", { from, to }),
+    },
+    biggestGrowth: {
+      title: tInsights("biggestGrowth.title"),
+      context: (from, to) => tInsights("biggestGrowth.context", { from, to }),
+      cta: tInsights("biggestGrowth.cta"),
+    },
+    biggestDrop: {
+      title: tInsights("biggestDrop.title"),
+      context: (from, to) => tInsights("biggestDrop.context", { from, to }),
+      cta: tInsights("biggestDrop.cta"),
+    },
+  };
 
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [view, setView] = useState<AnalyticsView>("aggregated");
@@ -211,7 +231,9 @@ function FunnelAnalyticsSection({
     };
   }, [range.dateFrom, range.dateTo, analyticsReloadToken]);
 
-  const insights = analytics ? computeFunnelInsights(analytics.conversions) : [];
+  const insights = analytics
+    ? computeFunnelInsights(analytics.conversions, funnelInsightCopy, formatPeriodRange(analytics.date_from, analytics.date_to))
+    : [];
 
   return (
     <div>

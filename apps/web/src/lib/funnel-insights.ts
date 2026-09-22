@@ -1,7 +1,7 @@
-/** Observações determinísticas sobre o funil do período — mesmo espírito
- * de `lib/insights.ts` (nunca inventa causalidade nem dado novo, só lê o
- * que o backend já calculou). Strings em pt-BR direto no código, mesma
- * escolha já feita em `insights.ts` (que também não passa por i18n).
+/** Observações estruturadas sobre o funil do período — mesmo espírito de
+ * `lib/insights.ts` (nunca inventa causalidade nem dado novo, só lê o que o
+ * backend já calculou). Pura, sem `useTranslations` (textos entram prontos
+ * via `copy`, montado pelo componente — ver `lib/insights.ts` pro porquê).
  */
 
 import { formatPercentage } from "@/lib/formatters";
@@ -19,26 +19,33 @@ export function findBottleneck<T extends StageConversion>(conversions: T[]): T |
   return applicable.reduce((min, curr) => (curr.conversion_rate.value! < min.conversion_rate.value! ? curr : min));
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  impressions: "Impressões",
-  visits: "Visitas",
-  leads: "Leads",
-  mqls: "MQLs",
-  sqls: "SQLs",
-  opportunities: "Oportunidades",
-  customers: "Clientes",
-  repeat_purchases: "Recompras",
-};
+export interface FunnelInsightCopy {
+  stageLabel(stage: string): string;
+  biggestLeak: { title: string; context: (from: string, to: string) => string; cta: (from: string, to: string) => string };
+  biggestGrowth: { title: string; context: (from: string, to: string) => string; cta: string };
+  biggestDrop: { title: string; context: (from: string, to: string) => string; cta: string };
+}
 
-export function computeFunnelInsights(conversions: StageConversionWithComparison[]): Insight[] {
+export function computeFunnelInsights(
+  conversions: StageConversionWithComparison[],
+  copy: FunnelInsightCopy,
+  period?: string
+): Insight[] {
   const insights: Insight[] = [];
 
   const bottleneck = findBottleneck(conversions);
   if (bottleneck) {
+    const from = copy.stageLabel(bottleneck.from_stage);
+    const to = copy.stageLabel(bottleneck.to_stage);
     insights.push({
       id: "funnel-bottleneck",
-      text: `A menor taxa de conversão do período está entre ${STAGE_LABELS[bottleneck.from_stage]} e ${STAGE_LABELS[bottleneck.to_stage]}: ${formatPercentage(bottleneck.conversion_rate.value!)}.`,
-      tone: "neutral",
+      kind: "biggest_leak",
+      tone: "negative",
+      title: copy.biggestLeak.title,
+      evidence: `${from} → ${to}: ${formatPercentage(bottleneck.conversion_rate.value!)}`,
+      period,
+      context: copy.biggestLeak.context(from, to),
+      cta: copy.biggestLeak.cta(from, to),
     });
   }
 
@@ -53,10 +60,18 @@ export function computeFunnelInsights(conversions: StageConversionWithComparison
         : max
     );
     const pct = biggest.conversion_rate_comparison.percent_change!;
+    const from = copy.stageLabel(biggest.from_stage);
+    const to = copy.stageLabel(biggest.to_stage);
+    const positive = pct > 0;
     insights.push({
       id: "funnel-biggest-mover",
-      text: `A conversão de ${STAGE_LABELS[biggest.from_stage]} para ${STAGE_LABELS[biggest.to_stage]} teve a maior variação do período: ${formatPercentage(pct, { signed: true })} vs. o período anterior.`,
-      tone: pct > 0 ? "positive" : pct < 0 ? "negative" : "neutral",
+      kind: positive ? "biggest_growth" : "biggest_drop",
+      tone: pct === 0 ? "neutral" : positive ? "positive" : "negative",
+      title: positive ? copy.biggestGrowth.title : copy.biggestDrop.title,
+      evidence: `${from} → ${to} ${formatPercentage(pct, { signed: true })}`,
+      period,
+      context: positive ? copy.biggestGrowth.context(from, to) : copy.biggestDrop.context(from, to),
+      cta: positive ? copy.biggestGrowth.cta : copy.biggestDrop.cta,
     });
   }
 

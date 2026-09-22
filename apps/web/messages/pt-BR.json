@@ -590,7 +590,6 @@
     "vsPreviousPeriod": "vs. período anterior",
     "vsPreviousPeriodNa": "vs. período anterior: n/d",
     "ofTarget": "da meta",
-    "incompleteDataWarning": "Dados financeiros disponíveis para {available} de {total} meses do período selecionado — os totais refletem só os meses com registro.",
     "monthlyEvolutionTitle": "Evolução mensal",
     "exportCsv": "Exportar CSV",
     "marketingTitle": "Marketing",
@@ -656,7 +655,44 @@
       "saveError": "Não foi possível salvar a meta.",
       "deleteError": "Não foi possível remover a meta."
     },
-    "generatePdfReport": "Baixar relatório em PDF"
+    "generatePdfReport": "Baixar relatório em PDF",
+    "insights": {
+      "biggestGrowth": {
+        "title": "Maior crescimento do período",
+        "context": "{metric} foi o indicador que mais avançou entre os acompanhados.",
+        "cta": "Veja a evolução mensal abaixo para confirmar a tendência."
+      },
+      "biggestDrop": {
+        "title": "Maior queda do período",
+        "context": "{metric} foi o indicador que mais piorou entre os acompanhados.",
+        "cta": "Veja a evolução mensal abaixo para investigar a causa."
+      },
+      "marginDeteriorating": {
+        "title": "Margem em deterioração",
+        "context": "A margem caiu em relação ao período anterior — pode indicar custo crescendo mais rápido que receita.",
+        "cta": "Confira o Financeiro para detalhar custos e despesas do período."
+      },
+      "cacUpConversionDown": {
+        "title": "Aquisição mais cara e menos eficiente",
+        "context": "O CAC subiu e a taxa de conversão caiu no mesmo período — sinal de funil perdendo eficiência.",
+        "cta": "Veja o Funil para identificar em qual etapa a conversão piorou."
+      },
+      "targetHit": {
+        "title": "Meta batida",
+        "context": "{metric} atingiu ou superou a meta somada do período.",
+        "cta": "Defina a meta do próximo período abaixo, em Metas."
+      },
+      "targetMissed": {
+        "title": "Meta não atingida",
+        "context": "{metric} ficou abaixo da meta somada do período.",
+        "cta": "Revise a meta ou o plano de ação abaixo, em Metas."
+      },
+      "incompleteData": {
+        "title": "Dado incompleto no período",
+        "context": "Só {available} de {total} meses selecionados têm dado financeiro registrado — os totais refletem só os meses com registro.",
+        "cta": "Registre o financeiro dos meses faltantes em Financeiro."
+      }
+    }
   },
   "metricFields": {
     "revenue": "receita",
@@ -759,6 +795,23 @@
       "customizeConversionTitle": "Personalizar gráfico de conversão",
       "funnelChartTypeFunnel": "Funil",
       "funnelChartTypeBars": "Barras horizontais"
+    },
+    "insights": {
+      "biggestLeak": {
+        "title": "Maior vazamento do funil",
+        "context": "Menor taxa de conversão entre etapas consecutivas no período — o ponto que mais perde volume.",
+        "cta": "Revise a etapa {from} → {to} para reduzir o abandono."
+      },
+      "biggestGrowth": {
+        "title": "Etapa com maior avanço",
+        "context": "A conversão de {from} para {to} teve a maior alta do período, vs. o período anterior.",
+        "cta": "Veja o que mudou nessa etapa para tentar replicar em outras."
+      },
+      "biggestDrop": {
+        "title": "Etapa com maior queda",
+        "context": "A conversão de {from} para {to} teve a maior queda do período, vs. o período anterior.",
+        "cta": "Investigue o que mudou nessa etapa."
+      }
     }
   },
   "products": {
@@ -806,7 +859,13 @@
     "channelPerformanceTitle": "Desempenho por Canal",
     "noChannelPerformanceData": "Nenhum canal com campanha neste período",
     "roasByChannel": "ROAS por Canal",
-    "bestChannelNote": "Maior ROAS observado no período: {channel} ({value})"
+    "insights": {
+      "channelContribution": {
+        "title": "Canal com melhor retorno",
+        "context": "{channel} teve o maior ROAS entre os canais com investimento no período.",
+        "cta": "Veja o desempenho por canal abaixo para comparar com os demais."
+      }
+    }
   },
   "reports": {
     "periodLabel": "Mês de referência",

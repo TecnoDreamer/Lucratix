@@ -8,6 +8,7 @@ import { resolvePreset, type DateRange } from "@/lib/date-ranges";
 import {
   formatMetric,
   formatPercentChange,
+  useExecutiveMetricOptions,
   type ExecutiveDashboard,
   type ExecutiveSeries,
   type ExecutiveTargets,
@@ -15,11 +16,12 @@ import {
   type MarketingByChannel,
   type MetricWithComparison,
   type MonthlyMetrics,
+  type TargetMetricKey,
   type TargetProgress,
 } from "@/lib/metrics";
 import { comparisonToneClass, getComparisonTone, useComparisonToneLabel } from "@/lib/kpi";
 import { useMetricReasonLabel } from "@/lib/metric-reason";
-import { formatPercentage } from "@/lib/formatters";
+import { formatPercentage, formatPeriodRange } from "@/lib/formatters";
 import { sectionTitle, buttonSecondary } from "@/lib/ui";
 import { useOrganization } from "@/contexts/organization-context";
 import { Alert, Card, Skeleton } from "@/components/ui";
@@ -31,7 +33,7 @@ import { TargetsPanel } from "@/components/targets-panel";
 import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
 import { CorrelationPanel } from "@/components/correlation-panel";
 import { GeneratePdfReportButton } from "@/components/generate-pdf-report-button";
-import { computeExecutiveInsights } from "@/lib/insights";
+import { computeExecutiveInsights, type ExecutiveInsightCopy } from "@/lib/insights";
 import { buildExecutiveSeriesCsv } from "@/lib/analytics-export";
 import { triggerBrowserDownload } from "@/lib/browser-download";
 import {
@@ -209,6 +211,51 @@ export default function AnalyticsPage() {
   const { organization } = useOrganization();
   const t = useTranslations("analytics");
   const tCommon = useTranslations("common");
+  const tInsights = useTranslations("analytics.insights");
+  const metricOptions = useExecutiveMetricOptions();
+  const metricLabel = (key: TargetMetricKey) => metricOptions.find((m) => m.key === key)?.label ?? key;
+  // Textos completos por tipo de insight, montados aqui (i18n real) e
+  // passados prontos pra `computeExecutiveInsights`, que continua pura e
+  // testável sem `<NextIntlClientProvider>` (mesmo padrão de
+  // `formatPercentChange`, que recebe `notApplicableLabel` de fora).
+  const executiveInsightCopy: ExecutiveInsightCopy = {
+    metricLabel,
+    biggestGrowth: {
+      title: tInsights("biggestGrowth.title"),
+      context: (metric) => tInsights("biggestGrowth.context", { metric }),
+      cta: tInsights("biggestGrowth.cta"),
+    },
+    biggestDrop: {
+      title: tInsights("biggestDrop.title"),
+      context: (metric) => tInsights("biggestDrop.context", { metric }),
+      cta: tInsights("biggestDrop.cta"),
+    },
+    marginDeteriorating: {
+      title: tInsights("marginDeteriorating.title"),
+      context: tInsights("marginDeteriorating.context"),
+      cta: tInsights("marginDeteriorating.cta"),
+    },
+    cacUpConversionDown: {
+      title: tInsights("cacUpConversionDown.title"),
+      context: tInsights("cacUpConversionDown.context"),
+      cta: tInsights("cacUpConversionDown.cta"),
+    },
+    targetHit: {
+      title: tInsights("targetHit.title"),
+      context: (metric) => tInsights("targetHit.context", { metric }),
+      cta: tInsights("targetHit.cta"),
+    },
+    targetMissed: {
+      title: tInsights("targetMissed.title"),
+      context: (metric) => tInsights("targetMissed.context", { metric }),
+      cta: tInsights("targetMissed.cta"),
+    },
+    incompleteData: {
+      title: tInsights("incompleteData.title"),
+      context: (available, total) => tInsights("incompleteData.context", { available, total }),
+      cta: tInsights("incompleteData.cta"),
+    },
+  };
 
   const [range, setRange] = useState<DateRange>(() => resolvePreset("current_month")!);
   const [data, setData] = useState<ExecutiveDashboard | null>(null);
@@ -306,10 +353,9 @@ export default function AnalyticsPage() {
     }
   }
 
-  const incomplete =
-    data && (data.months_with_financial_data < data.months_in_range || data.months_with_funnel_data < data.months_in_range);
-
-  const insights = data ? computeExecutiveInsights(data) : [];
+  const insights = data
+    ? computeExecutiveInsights(data, targets, executiveInsightCopy, formatPeriodRange(data.date_from, data.date_to))
+    : [];
 
   // MetricGrid também é usado pra Marketing (MARKETING_CARDS), cujas chaves
   // (roas, cpc, ...) não existem em ExecutiveTargets — por isso a prop é um
@@ -356,17 +402,6 @@ export default function AnalyticsPage() {
       {error && (
         <div className="mt-4">
           <Alert>{error}</Alert>
-        </div>
-      )}
-
-      {incomplete && !loading && (
-        <div className="mt-4">
-          <Alert tone="warning">
-            {t("incompleteDataWarning", {
-              available: data!.months_with_financial_data,
-              total: data!.months_in_range,
-            })}
-          </Alert>
         </div>
       )}
 

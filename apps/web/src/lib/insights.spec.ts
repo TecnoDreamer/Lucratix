@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { computeExecutiveInsights } from "./insights";
-import type { ExecutiveDashboard, MetricWithComparison } from "./metrics";
+import { computeExecutiveInsights, type ExecutiveInsightCopy } from "./insights";
+import type { ExecutiveDashboard, ExecutiveTargets, MetricWithComparison, TargetMetricKey } from "./metrics";
 
 function metric(value: number | null, percentChange: number | null): MetricWithComparison {
   return {
@@ -31,8 +31,47 @@ const BASE: ExecutiveDashboard = {
   recurrence_rate: metric(0.333, 0.01),
 };
 
+function notSummable(): ExecutiveTargets["revenue"] {
+  return { target_value: null, percent_of_target: { value: null, is_applicable: false, reason: "meta não agregável" } };
+}
+
+const NO_TARGETS: ExecutiveTargets = {
+  date_from: "2026-08-01",
+  date_to: "2026-08-31",
+  revenue: notSummable(),
+  profit: notSummable(),
+  margin: notSummable(),
+  cac: notSummable(),
+  conversion_rate: notSummable(),
+  average_ticket: notSummable(),
+  recurrence_rate: notSummable(),
+  monthly: [],
+};
+
+// Copy de teste: cada campo devolve algo que dá pra reconhecer no assert
+// (nome do template + parâmetro), sem depender do catálogo i18n de verdade
+// — a tradução real é testada pelos testes de página (analytics.spec.tsx),
+// esta função só precisa provar que monta o Insight certo com os dados
+// certos (RN-003, MetricDirection, agregação de meta).
+const COPY: ExecutiveInsightCopy = {
+  metricLabel: (key: TargetMetricKey) => key,
+  biggestGrowth: { title: "growth-title", context: (m) => `growth-context:${m}`, cta: "growth-cta" },
+  biggestDrop: { title: "drop-title", context: (m) => `drop-context:${m}`, cta: "drop-cta" },
+  marginDeteriorating: { title: "margin-title", context: "margin-context", cta: "margin-cta" },
+  cacUpConversionDown: { title: "cac-title", context: "cac-context", cta: "cac-cta" },
+  targetHit: { title: "hit-title", context: (m) => `hit-context:${m}`, cta: "hit-cta" },
+  targetMissed: { title: "missed-title", context: (m) => `missed-context:${m}`, cta: "missed-cta" },
+  incompleteData: { title: "incomplete-title", context: (a, t) => `incomplete-context:${a}/${t}`, cta: "incomplete-cta" },
+};
+
+const PERIOD = "ago/2026";
+
+function compute(dashboard: ExecutiveDashboard, targets: ExecutiveTargets | null = NO_TARGETS) {
+  return computeExecutiveInsights(dashboard, targets, COPY, PERIOD);
+}
+
 describe("computeExecutiveInsights", () => {
-  it("sem nenhuma comparação aplicável, não gera insight nenhum", () => {
+  it("sem nenhuma comparação aplicável, não gera insight de variação nenhum", () => {
     const dashboard: ExecutiveDashboard = {
       ...BASE,
       revenue: metric(null, null),
@@ -43,72 +82,115 @@ describe("computeExecutiveInsights", () => {
       average_ticket: metric(null, null),
       recurrence_rate: metric(null, null),
     };
-    expect(computeExecutiveInsights(dashboard)).toEqual([]);
+    const insights = compute(dashboard);
+    expect(insights.find((i) => i.kind === "biggest_growth")).toBeUndefined();
+    expect(insights.find((i) => i.kind === "biggest_drop")).toBeUndefined();
   });
 
-  it("aponta o KPI de maior variação absoluta do período", () => {
-    const dashboard: ExecutiveDashboard = {
-      ...BASE,
-      revenue: metric(58200, 0.05),
-      cac: metric(133.33, -0.417), // maior |variação|
-    };
-    const insights = computeExecutiveInsights(dashboard);
-    const biggest = insights.find((i) => i.id === "biggest-mover");
-    expect(biggest?.text).toContain("Custo de Aquisição de Cliente");
-    expect(biggest?.text).toContain("-41,7%");
+  it("aponta o KPI que mais melhorou e o que mais piorou, cada um com seu próprio insight", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, revenue: metric(58200, 0.05), cac: metric(133.33, -0.417) };
+    const insights = compute(dashboard);
+    const growth = insights.find((i) => i.kind === "biggest_growth");
+    const drop = insights.find((i) => i.kind === "biggest_drop");
+    // CAC caindo é a melhor notícia do período (lower_is_better) -> growth.
+    expect(growth?.evidence).toContain("-41,7%");
+    expect(growth?.tone).toBe("positive");
+    // Todas as variações do fixture são boas notícias (nenhuma métrica
+    // piorou) — não sobra candidato nenhum pro insight de queda.
+    expect(drop).toBeUndefined();
   });
 
-  it("maior variação de uma métrica lower_is_better que caiu é tom positivo", () => {
-    const dashboard: ExecutiveDashboard = { ...BASE, cac: metric(133.33, -0.417) };
-    const biggest = computeExecutiveInsights(dashboard).find((i) => i.id === "biggest-mover");
-    expect(biggest?.tone).toBe("positive");
+  it("CAC subir é 'queda' (má notícia) mesmo sendo uma variação numericamente positiva", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, cac: metric(200, 0.417), revenue: metric(58200, 0) };
+    const drop = compute(dashboard).find((i) => i.kind === "biggest_drop");
+    expect(drop?.tone).toBe("negative");
+    expect(drop?.evidence).toContain("+41,7%");
   });
 
-  it("maior variação de uma métrica lower_is_better que subiu é tom negativo", () => {
-    const dashboard: ExecutiveDashboard = { ...BASE, cac: metric(200, 0.417) };
-    const biggest = computeExecutiveInsights(dashboard).find((i) => i.id === "biggest-mover");
-    expect(biggest?.tone).toBe("negative");
-  });
-
-  it("receita subiu e CAC caiu no mesmo período: insight positivo dedicado", () => {
-    const dashboard: ExecutiveDashboard = {
-      ...BASE,
-      revenue: metric(58200, 0.124),
-      cac: metric(100, -0.1),
-    };
-    const insight = computeExecutiveInsights(dashboard).find((i) => i.id === "revenue-up-cac-down");
-    expect(insight?.tone).toBe("positive");
-    expect(insight?.text).toContain("+12,4%");
-    expect(insight?.text).toContain("10%");
-  });
-
-  it("receita subiu e CAC também subiu: não gera o insight de combinação", () => {
-    const dashboard: ExecutiveDashboard = {
-      ...BASE,
-      revenue: metric(58200, 0.124),
-      cac: metric(200, 0.05),
-    };
-    expect(computeExecutiveInsights(dashboard).find((i) => i.id === "revenue-up-cac-down")).toBeUndefined();
-  });
-
-  it("receita subiu mas margem caiu: insight de alerta, sem afirmar causa", () => {
-    const dashboard: ExecutiveDashboard = {
-      ...BASE,
-      revenue: metric(58200, 0.124),
-      margin: metric(0.3, -0.05),
-    };
-    const insight = computeExecutiveInsights(dashboard).find((i) => i.id === "revenue-up-margin-down");
+  it("margem caindo dispara o insight mesmo com receita subindo", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, revenue: metric(58200, 0.124), margin: metric(0.3, -0.05) };
+    const insight = compute(dashboard).find((i) => i.kind === "margin_deteriorating");
     expect(insight?.tone).toBe("negative");
-    expect(insight?.text).not.toMatch(/porque|causad[ao]|devido/i);
+    expect(insight?.evidence).toContain("-5%");
   });
 
-  it("nunca gera mais de 3 insights", () => {
+  it("margem subindo não dispara o insight de deterioração", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, margin: metric(0.4, 0.05) };
+    expect(compute(dashboard).find((i) => i.kind === "margin_deteriorating")).toBeUndefined();
+  });
+
+  it("CAC subindo e conversão caindo no mesmo período: insight composto dedicado", () => {
     const dashboard: ExecutiveDashboard = {
       ...BASE,
-      revenue: metric(58200, 0.124),
-      cac: metric(100, -0.1),
-      margin: metric(0.3, -0.3), // maior |variação| + combinação de alerta
+      cac: metric(150, 0.1),
+      conversion_rate: metric(0.05, -0.2),
     };
-    expect(computeExecutiveInsights(dashboard).length).toBeLessThanOrEqual(3);
+    const insight = compute(dashboard).find((i) => i.kind === "cac_up_conversion_down");
+    expect(insight?.tone).toBe("negative");
+    expect(insight?.evidence).toContain("+10%");
+    expect(insight?.evidence).toContain("-20%");
+  });
+
+  it("CAC subindo mas conversão também subindo: não gera o insight composto", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, cac: metric(150, 0.1), conversion_rate: metric(0.08, 0.05) };
+    expect(compute(dashboard).find((i) => i.kind === "cac_up_conversion_down")).toBeUndefined();
+  });
+
+  it("sem meta definida, não gera nem meta batida nem meta perdida", () => {
+    const insights = compute(BASE, NO_TARGETS);
+    expect(insights.find((i) => i.kind === "target_hit")).toBeUndefined();
+    expect(insights.find((i) => i.kind === "target_missed")).toBeUndefined();
+  });
+
+  it("meta de receita atingida (>= 100%) dispara 'target_hit'", () => {
+    const targets: ExecutiveTargets = {
+      ...NO_TARGETS,
+      revenue: { target_value: 50000, percent_of_target: { value: 1.12, is_applicable: true, reason: null } },
+    };
+    const insight = compute(BASE, targets).find((i) => i.kind === "target_hit");
+    expect(insight?.tone).toBe("positive");
+    expect(insight?.evidence).toContain("112%");
+  });
+
+  it("meta de lucro não atingida (< 100%) dispara 'target_missed'", () => {
+    const targets: ExecutiveTargets = {
+      ...NO_TARGETS,
+      profit: { target_value: 30000, percent_of_target: { value: 0.7, is_applicable: true, reason: null } },
+    };
+    const insight = compute(BASE, targets).find((i) => i.kind === "target_missed");
+    expect(insight?.tone).toBe("negative");
+    expect(insight?.evidence).toContain("70%");
+  });
+
+  it("meta definida só pras 5 métricas não-agregáveis (conversion_rate etc.) nunca dispara — sem checagem especial no frontend", () => {
+    // As 5 sempre vêm com target_value null do backend (targets_service.py);
+    // aqui só confirma que o frontend não tenta inventar hit/missed pra elas.
+    expect(compute(BASE, NO_TARGETS).filter((i) => i.kind === "target_hit" || i.kind === "target_missed")).toEqual([]);
+  });
+
+  it("dado incompleto (financeiro) dispara o insight, com a contagem certa", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, months_in_range: 3, months_with_financial_data: 1 };
+    const insight = compute(dashboard).find((i) => i.kind === "incomplete_data");
+    expect(insight?.tone).toBe("neutral");
+    expect(insight?.evidence).toBe("1/3");
+    expect(insight?.context).toContain("1/3");
+  });
+
+  it("dado incompleto (funil) também dispara o insight", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, months_in_range: 3, months_with_funnel_data: 2 };
+    expect(compute(dashboard).find((i) => i.kind === "incomplete_data")).toBeDefined();
+  });
+
+  it("período completo não dispara o insight de dado incompleto", () => {
+    expect(compute(BASE).find((i) => i.kind === "incomplete_data")).toBeUndefined();
+  });
+
+  it("todo insight carrega o período recebido", () => {
+    const dashboard: ExecutiveDashboard = { ...BASE, revenue: metric(58200, 0.3) };
+    const insights = compute(dashboard);
+    expect(insights.length).toBeGreaterThan(0);
+    for (const insight of insights) {
+      expect(insight.period).toBe(PERIOD);
+    }
   });
 });
