@@ -6,6 +6,7 @@ import {
   formatInteger,
   formatMonthYear,
   formatPercentage,
+  formatPeriodRange,
 } from "./formatters";
 
 describe("formatDecimal", () => {
@@ -63,5 +64,15 @@ describe("formatMonthYear", () => {
 
   it("não sofre deslocamento de fuso horário (parse por índice, não Date)", () => {
     expect(formatMonthYear("2026-01-01")).toBe("jan/26");
+  });
+});
+
+describe("formatPeriodRange", () => {
+  it("mesmo mês em dateFrom/dateTo vira um único rótulo", () => {
+    expect(formatPeriodRange("2026-08-01", "2026-08-31")).toBe("ago/26");
+  });
+
+  it("meses diferentes viram um intervalo", () => {
+    expect(formatPeriodRange("2026-07-01", "2026-08-31")).toBe("jul/26 – ago/26");
   });
 });

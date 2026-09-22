@@ -65,3 +65,12 @@ export function formatMonthYear(period: string): string {
   const monthIndex = Number(period.slice(5, 7)) - 1;
   return `${MONTH_ABBREVIATIONS[monthIndex] ?? "?"}/${year}`;
 }
+
+/** Rótulo de período pro campo "período" dos insights estruturados
+ * (`lib/insights.ts`, `lib/funnel-insights.ts`) — um único mês quando
+ * `dateFrom`/`dateTo` caem no mesmo mês, um intervalo quando não. */
+export function formatPeriodRange(dateFrom: string, dateTo: string): string {
+  const from = formatMonthYear(dateFrom);
+  const to = formatMonthYear(dateTo);
+  return from === to ? from : `${from} – ${to}`;
+}

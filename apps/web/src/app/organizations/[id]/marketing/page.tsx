@@ -6,8 +6,9 @@ import { useTranslations } from "next-intl";
 import { api, ApiError, loginRedirectPath } from "@/lib/api";
 import { formatValue, type Campaign, type MarketingChannel } from "@/lib/business";
 import { resolvePreset, type DateRange } from "@/lib/date-ranges";
-import { formatDecimal } from "@/lib/formatters";
+import { formatDecimal, formatPeriodRange } from "@/lib/formatters";
 import type { ChannelMarketing, MarketingByChannel } from "@/lib/metrics";
+import { computeMarketingInsights } from "@/lib/marketing-insights";
 import {
   buttonPrimary,
   buttonSecondary,
@@ -23,6 +24,7 @@ import { IconMegaphone, IconPlus } from "@/components/icons";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { MarketingByChannelTable } from "@/components/marketing-by-channel-table";
 import { ChannelBarChart, type ChannelBarChartDatum } from "@/components/channel-bar-chart";
+import { InsightsPanel } from "@/components/insights-panel";
 import { ScrollableCard } from "@/components/scrollable-card";
 
 async function fetchChannelPerformance(id: string, range: DateRange): Promise<ChannelMarketing[]> {
@@ -48,6 +50,7 @@ export default function MarketingPage() {
   const router = useRouter();
   const t = useTranslations("marketing");
   const tCommon = useTranslations("common");
+  const tInsights = useTranslations("marketing.insights");
 
   const [channels, setChannels] = useState<MarketingChannel[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -417,17 +420,19 @@ export default function MarketingPage() {
                 label: c.channel_name,
                 value: c.roas.is_applicable ? c.roas.value : null,
               }));
-              const best = channelPerformance
-                .filter((c) => c.roas.is_applicable && c.roas.value !== null)
-                .sort((a, b) => b.roas.value! - a.roas.value!)[0];
+              const channelInsights = computeMarketingInsights(
+                channelPerformance,
+                {
+                  title: tInsights("channelContribution.title"),
+                  context: (channel) => tInsights("channelContribution.context", { channel }),
+                  cta: tInsights("channelContribution.cta"),
+                },
+                formatPeriodRange(range.dateFrom, range.dateTo)
+              );
               return (
                 <>
                   <ChannelBarChart data={chartData} valueFormatter={formatDecimal} label={t("roasByChannel")} />
-                  {best && (
-                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                      {t("bestChannelNote", { channel: best.channel_name, value: formatDecimal(best.roas.value!) })}
-                    </p>
-                  )}
+                  <InsightsPanel insights={channelInsights} />
                   <MarketingByChannelTable channels={channelPerformance} />
                 </>
               );

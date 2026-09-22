@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, ApiError } from "@/lib/api";
 import { OrganizationProvider, type OrganizationContextValue } from "@/contexts/organization-context";
@@ -439,7 +439,7 @@ describe("AnalyticsPage", () => {
     expect(screen.getByText("+8,3%").closest("p")).toHaveClass("text-rose-600");
   });
 
-  it("mostra observações determinísticas quando o dado sustenta (receita subiu, CAC caiu)", async () => {
+  it("mostra o insight estruturado de maior crescimento quando o dado sustenta (receita subiu mais que o resto)", async () => {
     mockApiByUrl({
       dashboard: {
         ...FAKE_DASHBOARD,
@@ -450,8 +450,16 @@ describe("AnalyticsPage", () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText(/Receita cresceu \+12,4% enquanto o CAC caiu 10%/)).toBeInTheDocument();
+      expect(screen.getByText("Maior crescimento do período")).toBeInTheDocument();
     });
+    // Insight estruturado: título curto + evidência numérica + período +
+    // contexto + próxima ação — nunca só uma frase solta. Escopado ao
+    // cartão certo porque o lucro caindo também gera um segundo insight
+    // ("maior queda") na mesma tela, com seu próprio período.
+    const card = screen.getByText("Maior crescimento do período").closest<HTMLElement>(".rounded-xl");
+    expect(card).not.toBeNull();
+    expect(within(card!).getByText("Receita +12,4%")).toBeInTheDocument();
+    expect(within(card!).getByText("ago/26")).toBeInTheDocument();
   });
 
   it("sem nenhuma comparação aplicável, não mostra painel de observações", async () => {
@@ -472,7 +480,8 @@ describe("AnalyticsPage", () => {
     await waitFor(() => {
       expect(screen.getAllByText("não aplicável").length).toBeGreaterThan(0);
     });
-    expect(screen.queryByText(/teve a maior variação do período/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Maior crescimento do período")).not.toBeInTheDocument();
+    expect(screen.queryByText("Maior queda do período")).not.toBeInTheDocument();
   });
 
   it("botão 'Exportar CSV' baixa a série com metadado de empresa, período e fuso horário", async () => {
@@ -516,10 +525,13 @@ describe("AnalyticsPage", () => {
     });
     renderPage();
 
+    // Texto exato (não regex solta) porque a meta perdida agora também gera
+    // um insight estruturado que menciona "97%"/"meta" — este assert
+    // continua verificando especificamente a linha de progresso do card de
+    // KPI, não o insight (checado à parte no describe de insights abaixo).
     await waitFor(() => {
-      expect(screen.getByText(/97%/)).toBeInTheDocument();
+      expect(screen.getByText("97% da meta")).toBeInTheDocument();
     });
-    expect(screen.getByText(/da meta/)).toBeInTheDocument();
   });
 
   it("métrica sem progresso agregado de meta (razão, ex.: margem) não mostra '% da meta'", async () => {

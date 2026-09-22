@@ -590,7 +590,6 @@
     "vsPreviousPeriod": "vs. previous period",
     "vsPreviousPeriodNa": "vs. previous period: n/a",
     "ofTarget": "of target",
-    "incompleteDataWarning": "Financial data available for {available} of {total} months in the selected period — totals reflect only the recorded months.",
     "monthlyEvolutionTitle": "Monthly evolution",
     "exportCsv": "Export CSV",
     "marketingTitle": "Marketing",
@@ -656,7 +655,44 @@
       "saveError": "Could not save the target.",
       "deleteError": "Could not remove the target."
     },
-    "generatePdfReport": "Download PDF report"
+    "generatePdfReport": "Download PDF report",
+    "insights": {
+      "biggestGrowth": {
+        "title": "Biggest growth this period",
+        "context": "{metric} was the indicator that advanced the most among those tracked.",
+        "cta": "See the monthly evolution below to confirm the trend."
+      },
+      "biggestDrop": {
+        "title": "Biggest drop this period",
+        "context": "{metric} was the indicator that worsened the most among those tracked.",
+        "cta": "See the monthly evolution below to investigate the cause."
+      },
+      "marginDeteriorating": {
+        "title": "Margin deteriorating",
+        "context": "Margin fell compared to the previous period — may indicate costs growing faster than revenue.",
+        "cta": "Check Financials to break down costs and expenses for the period."
+      },
+      "cacUpConversionDown": {
+        "title": "More expensive, less efficient acquisition",
+        "context": "CAC went up and the conversion rate went down in the same period — a sign the funnel is losing efficiency.",
+        "cta": "See the Funnel to find which stage's conversion worsened."
+      },
+      "targetHit": {
+        "title": "Target hit",
+        "context": "{metric} reached or exceeded the period's aggregate target.",
+        "cta": "Set next period's target below, in Targets."
+      },
+      "targetMissed": {
+        "title": "Target missed",
+        "context": "{metric} fell short of the period's aggregate target.",
+        "cta": "Review the target or action plan below, in Targets."
+      },
+      "incompleteData": {
+        "title": "Incomplete data this period",
+        "context": "Only {available} of {total} selected months have financial data recorded — totals reflect only the months with records.",
+        "cta": "Record the missing months' financials in Financials."
+      }
+    }
   },
   "metricFields": {
     "revenue": "revenue",
@@ -759,6 +795,23 @@
       "customizeConversionTitle": "Customize conversion chart",
       "funnelChartTypeFunnel": "Funnel",
       "funnelChartTypeBars": "Horizontal bars"
+    },
+    "insights": {
+      "biggestLeak": {
+        "title": "Biggest leak in the funnel",
+        "context": "Lowest conversion rate between consecutive stages this period — the point that loses the most volume.",
+        "cta": "Review the {from} → {to} stage to reduce drop-off."
+      },
+      "biggestGrowth": {
+        "title": "Stage with the biggest gain",
+        "context": "Conversion from {from} to {to} had the biggest increase this period, vs. the previous period.",
+        "cta": "See what changed in this stage to try to replicate it elsewhere."
+      },
+      "biggestDrop": {
+        "title": "Stage with the biggest drop",
+        "context": "Conversion from {from} to {to} had the biggest drop this period, vs. the previous period.",
+        "cta": "Investigate what changed in this stage."
+      }
     }
   },
   "products": {
@@ -806,7 +859,13 @@
     "channelPerformanceTitle": "Channel Performance",
     "noChannelPerformanceData": "No channel with a campaign in this period",
     "roasByChannel": "ROAS by Channel",
-    "bestChannelNote": "Highest ROAS observed in the period: {channel} ({value})"
+    "insights": {
+      "channelContribution": {
+        "title": "Channel with the best return",
+        "context": "{channel} had the highest ROAS among channels with investment this period.",
+        "cta": "See performance by channel below to compare with the others."
+      }
+    }
   },
   "reports": {
     "periodLabel": "Reference month",
