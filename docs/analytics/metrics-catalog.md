@@ -43,6 +43,7 @@ Toda métrica abaixo segue o mesmo contrato (RN-003, RN-004, RNF-011, RNF-012): 
 
 ## LTV (Lifetime Value)
 
+- **Status: calculável no motor, ainda sem tela nem entrada de dado.** `engine.py::ltv` existe e é testado isoladamente, mas nenhuma rota/tela o chama — o produto não tem de onde vir `frequencia_de_compra`/`tempo_de_retencao` (exigiria um modelo de vendas/clientes individual, que não existe hoje). Decisão registrada em `docs/product/out-of-scope.md` (achado L-02 de `docs/governanca/LACUNAS_ENCONTRADAS.md`).
 - **Fórmula (versão inicial, simplificada):** `ticket_medio * frequencia_de_compra_estimada * tempo_de_retencao_estimado`.
 - **Unidade:** moeda.
 - **Não aplicável quando:** qualquer um dos três fatores está ausente. Modelo mais sofisticado (LTV preditivo) é explicitamente fora de escopo do MVP (ver [out-of-scope.md](../product/out-of-scope.md)).
@@ -87,15 +88,21 @@ Toda métrica abaixo segue o mesmo contrato (RN-003, RN-004, RNF-011, RNF-012): 
 
 ## Retenção
 
+- **Status: calculável no motor, ainda sem tela nem entrada de dado.** `engine.py::retention_rate` existe e é testado isoladamente, mas nenhuma rota/tela o chama — não há de onde vir "clientes ativos no início/fim do período" (mesma raiz do LTV: exigiria identidade de cliente individual, que o produto não modela hoje, só contagens agregadas por mês). Decisão registrada em `docs/product/out-of-scope.md` (achado L-02 de `docs/governanca/LACUNAS_ENCONTRADAS.md`).
 - **Fórmula:** `clientes_ativos_fim_periodo / clientes_ativos_inicio_periodo`.
 - **Unidade:** percentual.
 - **Não aplicável quando:** dado de clientes ativos no início do período ausente ou igual a zero.
 
 ## Churn
 
+- **Status: mesmo caso de Retenção** (`engine.py::churn_rate` deriva de `retention_rate` — calculável, sem tela nem dado de origem).
 - **Fórmula:** `1 - retenção` (ou `clientes_perdidos / clientes_ativos_inicio_periodo`).
 - **Unidade:** percentual.
 - **Não aplicável quando:** mesma condição de Retenção.
+
+## MRR e taxa de crescimento mensal
+
+- **Status: fora de escopo por ora — nenhum código, campo ou rota existe hoje**, nem como órfão. Decisão registrada em `docs/product/out-of-scope.md` (achado L-21 de `docs/governanca/LACUNAS_ENCONTRADAS.md`).
 
 ## Recorrência
 

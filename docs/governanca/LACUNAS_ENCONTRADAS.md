@@ -28,10 +28,11 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Ação:** em `business-rules.md`, dar um código próprio para "sessão única por conta" (ex.: `RN-016`) e reatribuir as citações de `apps/api/app/core/*` e `models/session.py`. Manter `RN-013` só para a regra de experimento. Atualizar as docstrings afetadas num PR de follow-up.
 - **Feito:** `business-rules.md` ganhou `RN-016 — Sessão única por conta`; `RN-013` recebeu uma nota de desambiguação. As ~18 citações de sentido "sessão" (código, testes, docs de segurança) foram reatribuídas para `RN-016`; as de sentido "experimento" permanecem `RN-013`.
 
-### L-02 — `ltv()`, `retention_rate()`, `churn_rate()` são código órfão
+### L-02 — `ltv()`, `retention_rate()`, `churn_rate()` são código órfão — ✅ DECISÃO REGISTRADA (2026-09-23)
 - **Evidência:** definidos em `apps/api/app/modules/metrics/engine.py` (`ltv` linhas ~117-130, `retention_rate` ~169-172, `churn_rate` ~175-179). `grep` por chamadas: nenhuma rota, service, schema ou relatório os invoca. Não existe fonte de dados para `purchase_frequency` nem `retention_time` em nenhum model. `retention_rate` só é usada internamente por `churn_rate`, que também não é exposta.
 - **Impacto:** `docs/analytics/metrics-catalog.md` apresenta LTV, Retenção e Churn como métricas do produto (com seção própria). Um usuário/cliente espera vê-las na tela.
 - **Ação:** decidir e registrar num ADR — (a) remover as três funções do `engine.py` e a seção correspondente do catálogo, marcando LTV/Churn como `PLANEJADO` em `docs/product/out-of-scope.md`; ou (b) manter como base para uma rodada futura e marcar explicitamente no catálogo como "definido no motor, ainda sem tela nem entrada de dados".
+- **Decidido:** opção (b) — código mantido (serve de base pronta pra quando existir um modelo de vendas/clientes). `docs/analytics/metrics-catalog.md` (seções LTV/Retenção/Churn) e `docs/product/out-of-scope.md` atualizados com o status real; `engine.py` ganhou comentário apontando as duas fontes. Nenhuma linha de lógica mudou.
 
 ### L-03 — `docs/analytics/metrics-catalog.md` é da era de planejamento
 - **Evidência:** o arquivo diz `"a decidir em ADR na Fase 13"` (CAC), chama Margem/ROI/CTR de `"percentual"` (são razões 0–1, `×100` só na renderização — `apps/api/app/core/formatting.py::format_percentage`), lista LTV/Retenção/Churn como implementadas (ver L-02) e não menciona o `MetricResult` nem o arquivo real `apps/api/app/modules/metrics/engine.py`.
@@ -132,9 +133,10 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Evidência:** é o único limiter chamado direto via `.check()` (`apps/api/app/modules/organizations/router.py`), não via `enforce_rate_limits` — então o 429 não traz header `Retry-After` e não gera linha `rate_limit` na auditoria, ao contrário dos outros 17.
 - **Ação:** padronizar via `enforce_rate_limits` (com `action="auth.rate_limited.logo_upload"`), ou documentar a exceção em `docs/security/RATE_LIMITING.md`.
 
-### L-21 — Sem MRR / taxa de crescimento
+### L-21 — Sem MRR / taxa de crescimento — ✅ DECISÃO REGISTRADA (2026-09-23)
 - **Evidência:** `grep` por `mrr`, `growth` no `engine.py` e services: nada. Para um produto de BI de receita, MRR e crescimento MoM são KPIs esperados.
 - **Ação:** avaliar se entram numa rodada futura; registrar em `docs/product/out-of-scope.md` se for decisão de não fazer agora.
+- **Decidido:** fora de escopo por ora — nenhum código construído agora. Registrado em `docs/product/out-of-scope.md`, com a nota de que "MRR" de verdade primeiro exige decidir o que conta como receita recorrente no dado atual (não há modelo de assinatura/plano hoje).
 
 ---
 
@@ -143,9 +145,9 @@ Nenhum item `CRÍTICO` foi encontrado.
 | Nível | Itens |
 |---|---|
 | CRÍTICO | — |
-| ALTO | ~~L-01~~ ✅, L-02, L-03 |
+| ALTO | ~~L-01~~ ✅, ~~L-02~~ ✅, L-03 |
 | MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07, L-08, ~~L-09~~ ✅, L-10 |
 | BAIXO | L-11, L-12, L-13, L-14, L-15, L-16, L-17, L-18 |
-| MELHORIA | L-19, L-20, L-21 |
+| MELHORIA | L-19, L-20, ~~L-21~~ ✅ |
 
-Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05 e L-09 já foram corrigidos (ver notas "Feito" em cada item); os demais seguem em aberto — L-06, L-07 e L-08 (decisão de produto pendente) e L-02/L-21 (idem).
+Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — os demais seguem em aberto, L-06, L-07 e L-08 (decisão de produto pendente).
