@@ -5,10 +5,11 @@ import { MetricHelp } from "@/components/metric-help";
 /**
  * Cartão de KPI com hierarquia visual: `size="primary"` (maior, valor em
  * destaque) para os poucos indicadores que decidem se o período foi bom ou
- * ruim; `size="secondary"` (menor) para o resto. Usado hoje pelo Dashboard
- * (`organizations/[id]/dashboard/page.tsx`) — candidato a substituir também
- * o grid de Analytics (`MetricGrid`) num PR futuro, sem mudar seu contrato
- * hoje pra não arriscar os testes já existentes daquela tela.
+ * ruim; `size="secondary"` (menor) para o resto. Usado pelo Dashboard
+ * (`organizations/[id]/dashboard/page.tsx`) e pelo `MetricGrid` da Visão
+ * Executiva/Marketing (`organizations/[id]/analytics/page.tsx`) — mesmo
+ * componente nas 3 telas que mostram KPI, único lugar pra mudar o visual
+ * do cartão.
  */
 export function KpiCard({
   size,

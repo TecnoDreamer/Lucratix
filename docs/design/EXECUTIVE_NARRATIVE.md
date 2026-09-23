@@ -72,7 +72,8 @@ vez de dois `<h2>` irmãos dentro de uma sub-seção.
   `SeriesGrid`, `TargetsPanel`, `CorrelationPanel`, `InsightsPanel` e a
   tabela de Marketing continuam exatamente como eram, só reposicionados.
 - `MetricGrid`/`SeriesGrid` continuam sem hierarquia visual
-  primário/secundário (diferente do Dashboard, que já tem — ver
-  `KPI_HIERARCHY_AND_TONE.md` seção 3). Unificar os dois componentes de
-  KPI continua sendo dívida registrada, não fechada nesta PR — o escopo
-  aqui foi a narrativa, não a reforma do cartão de KPI.
+  primário/secundário nesta PR (diferente do Dashboard, que já tem — ver
+  `KPI_HIERARCHY_AND_TONE.md` seção 3); o escopo aqui foi a narrativa, não
+  a reforma do cartão de KPI. Fechado depois, em `feat/unify-kpi-card`:
+  `MetricGrid` passou a usar `KpiCard` (`SeriesGrid` continua de fora —
+  motivo na seção 3 daquele doc).

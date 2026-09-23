@@ -712,7 +712,9 @@
       "noPriority": "Nenhum achado exige atenção imediata neste período. Ainda assim, vale aprofundar em outras telas:",
       "exploreFunnel": "Analisar o Funil",
       "exploreFinancials": "Ver o Financeiro"
-    }
+    },
+    "primaryHeading": "Principais indicadores",
+    "secondaryHeading": "Outros indicadores"
   },
   "metricFields": {
     "revenue": "receita",
