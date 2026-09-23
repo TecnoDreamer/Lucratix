@@ -152,3 +152,32 @@ def test_malformed_payload_returns_422_not_500(client_factory):
     client = client_factory()
     resp = client.post("/api/v1/auth/register", json={"name": "Ana", "email": "nao-e-email"})
     assert resp.status_code == 422
+
+
+def test_viewer_cannot_change_experiment_status(client_factory):
+    owner = client_factory()
+    viewer_client = client_factory()
+
+    _register_and_login(owner, "Ana", "owner.expstatus@example.com")
+    _register_and_login(viewer_client, "Vitor", "expstatus@example.com")
+
+    org = owner.post("/api/v1/organizations", json={"name": "Empresa Exp Status RBAC"}).json()
+    owner.post(
+        f"/api/v1/organizations/{org['id']}/memberships",
+        json={"email": "expstatus@example.com", "role": "VIEWER"},
+    )
+    experiment = owner.post(
+        f"/api/v1/organizations/{org['id']}/experiments",
+        json={
+            "hypothesis": "H",
+            "page_or_process": "P",
+            "primary_metric": "conversion_rate",
+            "variants": [{"name": "Controle"}, {"name": "Variante"}],
+        },
+    ).json()
+
+    resp = viewer_client.patch(
+        f"/api/v1/organizations/{org['id']}/experiments/{experiment['id']}/status",
+        json={"status": "running"},
+    )
+    assert resp.status_code == 403

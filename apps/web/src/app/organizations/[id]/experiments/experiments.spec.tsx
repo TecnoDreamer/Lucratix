@@ -173,6 +173,71 @@ describe("ExperimentsPage", () => {
     expect(await screen.findByText("Botão verde converte mais")).toBeInTheDocument();
   });
 
+  it("experimento em rascunho mostra 'Iniciar' e avança para 'Em andamento'", async () => {
+    const draft: Experiment = { ...EXPERIMENT, status: "draft" };
+    mockApiGet([draft]);
+    vi.mocked(api.patch).mockResolvedValue({ ...draft, status: "running" });
+
+    render(<ExperimentsPage />);
+    await screen.findByText("Botão verde converte mais");
+    expect(screen.getByText("Rascunho")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar" }));
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith("/api/v1/organizations/org-123/experiments/exp-1/status", {
+        status: "running",
+      });
+    });
+    expect(await screen.findByText("Em andamento")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Finalizar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Iniciar" })).not.toBeInTheDocument();
+  });
+
+  it("experimento em andamento mostra 'Finalizar' e avança para 'Finalizado', sem mais botão de avanço", async () => {
+    mockApiGet([EXPERIMENT]);
+    vi.mocked(api.patch).mockResolvedValue({ ...EXPERIMENT, status: "finished" });
+
+    render(<ExperimentsPage />);
+    await screen.findByText("Botão verde converte mais");
+
+    fireEvent.click(screen.getByRole("button", { name: "Finalizar" }));
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith("/api/v1/organizations/org-123/experiments/exp-1/status", {
+        status: "finished",
+      });
+    });
+    expect(await screen.findByText("Finalizado")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finalizar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Iniciar" })).not.toBeInTheDocument();
+  });
+
+  it("experimento já finalizado não tem botão de avanço de status", async () => {
+    mockApiGet([{ ...EXPERIMENT, status: "finished" }]);
+
+    render(<ExperimentsPage />);
+    await screen.findByText("Botão verde converte mais");
+
+    expect(screen.getByText("Finalizado")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Iniciar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finalizar" })).not.toBeInTheDocument();
+  });
+
+  it("falha ao avançar o status mostra o erro e mantém o status anterior", async () => {
+    mockApiGet([EXPERIMENT]);
+    vi.mocked(api.patch).mockRejectedValue(new ApiError(403, "Sem permissão"));
+
+    render(<ExperimentsPage />);
+    await screen.findByText("Botão verde converte mais");
+
+    fireEvent.click(screen.getByRole("button", { name: "Finalizar" }));
+
+    expect(await screen.findByText("Sem permissão")).toBeInTheDocument();
+    expect(screen.getByText("Em andamento")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Finalizar" })).toBeInTheDocument();
+  });
+
   it("erro 401 redireciona para login", async () => {
     vi.mocked(api.get).mockRejectedValue(new ApiError(401, "Não autenticado"));
 

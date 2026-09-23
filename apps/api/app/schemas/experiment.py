@@ -16,6 +16,10 @@ class ExperimentVariantResultUpdate(BaseModel):
     conversions: int | None = None
 
 
+class ExperimentStatusUpdate(BaseModel):
+    status: ExperimentStatus
+
+
 class ExperimentCreate(BaseModel):
     hypothesis: str = Field(min_length=1, max_length=2000)
     page_or_process: str = Field(min_length=1, max_length=255)

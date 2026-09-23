@@ -25,6 +25,13 @@ const STATUS_TONE: Record<string, string> = {
   finished: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
 };
 
+// Espelha `_VALID_STATUS_TRANSITIONS` em apps/api/app/modules/experiments/router.py
+// (L-08): ciclo linear, sem voltar atrás — `finished` não tem próximo passo.
+const NEXT_STATUS: Partial<Record<Experiment["status"], Experiment["status"]>> = {
+  draft: "running",
+  running: "finished",
+};
+
 export default function ExperimentsPage() {
   const t = useTranslations("experiments");
   const tCommon = useTranslations("common");
@@ -109,6 +116,19 @@ export default function ExperimentsPage() {
     }
   }
 
+  async function advanceStatus(experimentId: string, nextStatus: Experiment["status"]) {
+    setError(null);
+    try {
+      const updated = await api.patch<Experiment>(
+        `/api/v1/organizations/${id}/experiments/${experimentId}/status`,
+        { status: nextStatus }
+      );
+      setExperiments((prev) => prev.map((e) => (e.id === experimentId ? updated : e)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("statusUpdateError"));
+    }
+  }
+
   async function updateVariant(
     experimentId: string,
     variantId: string,
@@ -158,11 +178,21 @@ export default function ExperimentsPage() {
                   <Card className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <p className="font-medium text-slate-900 dark:text-slate-50">{exp.hypothesis}</p>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[exp.status] ?? STATUS_TONE.draft}`}
-                      >
-                        {exp.status}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[exp.status] ?? STATUS_TONE.draft}`}
+                        >
+                          {t(`status.${exp.status}`)}
+                        </span>
+                        {NEXT_STATUS[exp.status] && (
+                          <button
+                            onClick={() => advanceStatus(exp.id, NEXT_STATUS[exp.status]!)}
+                            className={`${buttonSecondary} px-2.5 py-1 text-xs`}
+                          >
+                            {t(`advance.${exp.status}`)}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {exp.page_or_process} · {exp.primary_metric}
