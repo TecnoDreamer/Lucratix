@@ -79,8 +79,10 @@ test("analytics mostra os KPIs de marketing de uma campanha do mes atual", async
   await expect(page.getByRole("heading", { name: "Marketing", exact: true })).toBeVisible();
   // ROAS = 4000/1000 = 4. Escopado ao valor do card (não à tabela "Por
   // canal" logo abaixo, que também mostra "4" — só há um canal aqui, então
-  // o agregado e o valor por canal coincidem).
-  await expect(page.locator("p.text-xl").filter({ hasText: /^4$/ })).toBeVisible();
+  // o agregado e o valor por canal coincidem). text-2xl porque ROAS é um
+  // KpiCard `size="primary"` (feat/unify-kpi-card) — text-lg seria o
+  // secundário, nunca o valor de ROAS.
+  await expect(page.locator("p.text-2xl").filter({ hasText: /^4$/ })).toBeVisible();
 
   // Drill-down por canal: mesmo ROAS, agora atribuído ao canal específico.
   await expect(page.getByRole("heading", { name: "Por canal" })).toBeVisible();
