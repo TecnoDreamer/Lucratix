@@ -2,6 +2,8 @@
 
 ## Execução de experimento (registro de resultado)
 
+> **Nota (L-08, 2026-09-23):** o diagrama abaixo é o desenho original de projeto e não reflete as rotas reais. Na implementação, registrar resultado e encerrar são duas chamadas separadas: `PATCH /api/v1/organizations/{org}/experiments/{id}/variants/{variant_id}` (amostra/conversões de uma variante) e `PATCH /api/v1/organizations/{org}/experiments/{id}/status` (avança `draft → running → finished`, sem voltar atrás; `409` em qualquer outra transição). A análise de significância é `GET .../experiments/{id}/result`, calculada sob demanda — não há um "service" que a dispare no encerramento.
+
 ```mermaid
 sequenceDiagram
     actor A as Analyst
