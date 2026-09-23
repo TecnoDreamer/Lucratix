@@ -94,7 +94,7 @@ export function CorrelationChart({ points, xLabel, yLabel, xPercent, yPercent }:
           </circle>
         ))}
 
-        <text x={PADDING.left} y={HEIGHT - PADDING.bottom + 14} fontSize={9} className="fill-slate-400 dark:fill-slate-600">
+        <text x={PADDING.left} y={HEIGHT - PADDING.bottom + 14} fontSize={9} className="fill-slate-500 dark:fill-slate-400">
           {formatAxisValue(xMin, xPercent)}
         </text>
         <text
@@ -102,7 +102,7 @@ export function CorrelationChart({ points, xLabel, yLabel, xPercent, yPercent }:
           y={HEIGHT - PADDING.bottom + 14}
           textAnchor="end"
           fontSize={9}
-          className="fill-slate-400 dark:fill-slate-600"
+          className="fill-slate-500 dark:fill-slate-400"
         >
           {formatAxisValue(xMax, xPercent)}
         </text>

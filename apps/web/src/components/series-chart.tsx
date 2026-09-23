@@ -27,12 +27,29 @@ interface SeriesChartProps {
 
 const WIDTH = 300;
 const HEIGHT = 120;
-const PADDING = { top: 12, right: 8, bottom: 22, left: 8 };
+// `left: 30` (era 8) abre espaço pro rótulo de mín/máx do eixo Y — sem
+// nenhum valor visível ali, a única forma de saber a ordem de grandeza da
+// linha era passar o mouse ponto a ponto (achado 3 da auditoria de
+// gráficos, docs/analytics/CHART_DECISIONS.md).
+const PADDING = { top: 12, right: 8, bottom: 22, left: 30 };
 const INNER_WIDTH = WIDTH - PADDING.left - PADDING.right;
 const INNER_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
 // Acima desse número de pontos, nem todo mês ganha um rótulo no eixo X —
 // senão os textos se sobrepõem (ex.: intervalo de 2 anos = 24 pontos).
 const MAX_VISIBLE_LABELS = 8;
+
+/** Âncora do rótulo de mês no eixo X — "middle" pros do meio, mas o
+ * primeiro/último usam "start"/"end" pra crescer pra dentro do gráfico em
+ * vez de pra fora dele. Com `textAnchor="middle"` nas pontas (como era
+ * antes), metade do texto cai fora do `viewBox` e é cortada pelo overflow
+ * padrão do SVG — o achado 4.2 da auditoria original ("jun/26" virando
+ * ".n/26", "ago/26" virando "ago/2"), nunca corrigido até agora. */
+function xLabelAnchor(index: number, total: number): "start" | "middle" | "end" {
+  if (total <= 1) return "middle";
+  if (index === 0) return "start";
+  if (index === total - 1) return "end";
+  return "middle";
+}
 
 function formatCompactValue(value: number, percent?: boolean): string {
   return percent ? formatPercentage(value) : formatCompactNumber(value);
@@ -95,10 +112,12 @@ export function SeriesChart({ points, percent, label, targets }: SeriesChartProp
   // fora do gráfico quando a meta está acima/abaixo de todo o dado real.
   const allValues = [...present, ...presentTargets];
   const min = Math.min(...allValues);
-  const rawMax = Math.max(...allValues);
+  const displayMax = Math.max(...allValues);
   // Linha totalmente reta (todos os valores iguais): sem isso a escala
-  // colapsaria em range=0 e a divisão abaixo geraria NaN.
-  const max = min === rawMax ? min + 1 : rawMax;
+  // colapsaria em range=0 e a divisão abaixo geraria NaN. `max` é só pra
+  // escala (nunca aparece na tela) — o rótulo do eixo Y usa `displayMax`,
+  // o valor real, não o +1 artificial.
+  const max = min === displayMax ? min + 1 : displayMax;
   const range = max - min;
 
   const x = (i: number) => (points.length === 1 ? WIDTH / 2 : PADDING.left + (i * INNER_WIDTH) / (points.length - 1));
@@ -191,15 +210,60 @@ export function SeriesChart({ points, percent, label, targets }: SeriesChartProp
               key={p.period}
               x={x(i)}
               y={HEIGHT - 6}
-              textAnchor="middle"
-              className="fill-slate-400 dark:fill-slate-600"
+              textAnchor={xLabelAnchor(i, points.length)}
+              className="fill-slate-500 dark:fill-slate-400"
               fontSize={9}
             >
               {formatMonthYear(p.period)}
             </text>
           );
         })}
+
+        {/* Eixo Y: só mín/máx (não uma escala completa — o espaço é
+            pequeno demais pra mais de 2 valores sem poluir). Sem isso não
+            havia nenhum jeito de saber a ordem de grandeza da linha sem
+            passar o mouse ponto a ponto (achado 3 da auditoria). */}
+        <text x={2} y={PADDING.top + 3} textAnchor="start" className="fill-slate-500 dark:fill-slate-400" fontSize={9}>
+          {formatCompactValue(displayMax, percent)}
+        </text>
+        {displayMax !== min && (
+          <text
+            x={2}
+            y={HEIGHT - PADDING.bottom}
+            textAnchor="start"
+            className="fill-slate-500 dark:fill-slate-400"
+            fontSize={9}
+          >
+            {formatCompactValue(min, percent)}
+          </text>
+        )}
       </svg>
+
+      {presentTargets.length > 0 && (
+        <div className="mt-1 flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <svg width="14" height="6" aria-hidden="true">
+              <line x1="0" y1="3" x2="14" y2="3" stroke="currentColor" strokeWidth={2} className="text-blue-500 dark:text-blue-400" />
+            </svg>
+            {t("value")}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="14" height="6" aria-hidden="true">
+              <line
+                x1="0"
+                y1="3"
+                x2="14"
+                y2="3"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                className="text-amber-500 dark:text-amber-400"
+              />
+            </svg>
+            {t("target")}
+          </span>
+        </div>
+      )}
 
       <table className="sr-only">
         <caption>{t("tableCaption", { chartLabel })}</caption>

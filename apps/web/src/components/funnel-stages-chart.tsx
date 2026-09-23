@@ -134,7 +134,7 @@ export function ExternalStageLabel(props: {
           y={centerY}
           dy={11}
           textAnchor="start"
-          className="fill-slate-500 text-[10px] dark:fill-slate-500"
+          className="fill-slate-500 text-[10px] dark:fill-slate-400"
         >
           {detail}
         </text>
