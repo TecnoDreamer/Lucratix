@@ -9,7 +9,7 @@ PR de redesenho UX/UI + acessibilidade (`feat/redesign-ux-decisao-a11y`) corrigi
 
 | # | Item da seção 5 | Status |
 |:-:|---|---|
-| 1 | `suppressHydrationWarning` no `<html>` | ✅ Corrigido |
+| 1 | `suppressHydrationWarning` no `<html>` | 🟡 Parcial nesta PR — resolvia a hidratação em si, mas não uma causa adicional só de desenvolvimento (Strict Mode); fechado depois em `fix/theme-hydration-dev` (2026-09-23), ver seção 4.1 |
 | 2 | Acentos/textos em `pt-BR.json`; caminho de arquivo removido do disclaimer | ✅ Corrigido |
 | 3 | `<main>` nos layouts + `aria-label` nas 2 `<nav>` + `h1` no celular | ✅ Corrigido |
 | 4 | Rótulo nos 4 campos sem label | ✅ Corrigido |
@@ -95,6 +95,8 @@ Correção: `<main>` no layout (1 linha por layout), `aria-label` nas duas `<nav
 ### 4.1 Erro real de hidratação no tema escuro
 Com tema escuro salvo, o console registra: *"A tree hydrated but some attributes of the server rendered HTML didn't match the client properties"*. Tema claro: **0 erros**.
 **Causa:** `apps/web/src/app/layout.tsx` — o script de tema (`THEME_INIT_SCRIPT`) adiciona a classe `dark` ao `<html>` **antes** da hidratação, e o `<html>` não tem `suppressHydrationWarning`. Afeta todo usuário com tema escuro (ou "sistema" escuro). Em desenvolvimento aparece como selo vermelho "1 Issue". **Correção:** `suppressHydrationWarning` no `<html>` (1 linha). Esforço: **mínimo**.
+
+**Atualização (2026-09-23):** `suppressHydrationWarning` (aplicado na PR de acessibilidade, 2026-09-22) resolvia a hidratação em si, mas o erro continuou reaparecendo em `next dev`. Causa real, documentada pelo próprio Next.js (`node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md`, seção "Re-applying attributes in development"): o Strict Mode do React, **só em desenvolvimento**, remonta o `<html>` uma vez pra achar bugs e nesse remount reseta os atributos pro que está na JSX, apagando a classe `dark` que o script tinha aplicado — nada no app reaplicava o tema depois disso. Corrigido em `fix/theme-hydration-dev`: `ThemeWatcher` (`apps/web/src/components/theme-watcher.tsx`) ganhou um `useLayoutEffect` que reaplica o tema salvo logo no mount — no-op em produção (Strict Mode só remonta em dev).
 
 ### 4.2 Textos e conteúdo visíveis nas capturas
 | Achado | Onde | Evidência |
