@@ -18,6 +18,16 @@ Estes itens são reconhecidos como valiosos, mas **não fazem parte do MVP**. Fi
   - **Sequential testing / correção para "peeking"** (olhar o resultado repetidamente antes do fim planejado do experimento infla falso positivo) — o `note` da resposta avisa sobre isso textualmente, mas o sistema não impede nem corrige matematicamente.
   - Poder estatístico / cálculo de tamanho de amostra necessário antes do experimento começar (só o piso arbitrário de 30 por variante existe hoje).
 
+## LTV, Retenção e Churn — calculáveis no motor, sem modelo de dados que os alimente
+
+- `apps/api/app/modules/metrics/engine.py::ltv/retention_rate/churn_rate` existem e são testados isoladamente, mas **nenhuma rota, service ou tela os chama** — não há de onde vir `purchase_frequency`/`retention_time` (LTV) nem `active_start`/`active_end` — clientes ativos no início/fim do período (Retenção/Churn), porque o produto não tem um modelo de vendas/clientes individual, só contagens agregadas por mês (`funnel_snapshots`, `campaigns`). Construir isso exigiria um modelo transacional (`customers`, `sales`/`orders`) — decisão de produto grande (como o dado entra: digitação manual, importação, integração), não uma decisão técnica isolada.
+- **Decisão (2026-09-23, achado L-02 de [`LACUNAS_ENCONTRADAS.md`](../governanca/LACUNAS_ENCONTRADAS.md)):** manter o código como está — serve de base pronta para quando o modelo de vendas existir — e deixar explícito no [catálogo de métricas](../analytics/metrics-catalog.md) que essas três são "calculáveis no motor, ainda sem tela nem entrada de dado", em vez de dar a entender que já funcionam.
+
+## MRR e taxa de crescimento mensal
+
+- Não existe em nenhuma forma hoje — nem código órfão, nem campo, nem rota. Para um produto de BI de receita, é um KPI normalmente esperado (achado L-21 de [`LACUNAS_ENCONTRADAS.md`](../governanca/LACUNAS_ENCONTRADAS.md)).
+- **Decisão (2026-09-23):** fora de escopo por ora, sem construir nada agora. `financial_periods.revenue` é receita total do período, não necessariamente recorrente — "MRR" de verdade exigiria primeiro decidir o que conta como receita recorrente no dado atual (um modelo de assinatura/plano não existe hoje). Fica pra uma rodada dedicada de produto.
+
 ## Machine Learning
 
 - Detecção de tendência via ML, previsão e rotinas de ML são mencionadas como uso futuro do Python/pipeline de dados, não como entrega do MVP.

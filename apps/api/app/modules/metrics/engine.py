@@ -114,6 +114,13 @@ def roi(attributed_revenue: Number | None, investment: Number | None) -> MetricR
     return MetricResult.ok((revenue_f - investment_f) / investment_f)
 
 
+# ltv/retention_rate/churn_rate (abaixo): calculáveis, mas nenhuma rota/service
+# os chama hoje — o produto não tem modelo de vendas/clientes individual pra
+# alimentar purchase_frequency/retention_time/active_start/active_end, só
+# contagens agregadas por mês (funnel_snapshots/campaigns). Mantidos de
+# propósito como base pronta pra quando esse modelo existir (decisão
+# registrada, achado L-02 de docs/governanca/LACUNAS_ENCONTRADAS.md e
+# docs/product/out-of-scope.md) — nunca remover sem atualizar os dois.
 def ltv(
     average_ticket: Number | None,
     purchase_frequency: Number | None,
