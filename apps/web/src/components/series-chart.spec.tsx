@@ -46,6 +46,52 @@ describe("SeriesChart", () => {
     expect(firstCircleTitle?.textContent).toContain(`meta: ${formatCompactNumber(52000)}`);
   });
 
+  it("rótulo de mês nas pontas cresce pra dentro do gráfico, não fica centralizado na borda", () => {
+    // "middle" nas pontas cortava metade do texto pra fora do viewBox
+    // (achado 4.2 da auditoria: "jun/26" virava ".n/26", "ago/26" virava
+    // "ago/2"). O primeiro rótulo cresce à direita (start), o último à
+    // esquerda (end); só os do meio continuam centralizados.
+    const { container } = render(<SeriesChart points={POINTS} label="Receita" />);
+    const monthLabels = Array.from(container.querySelectorAll("svg > text")).filter((el) =>
+      /^(jun|jul|ago)\/26$/.test(el.textContent ?? "")
+    );
+    expect(monthLabels[0]).toHaveAttribute("text-anchor", "start");
+    expect(monthLabels[monthLabels.length - 1]).toHaveAttribute("text-anchor", "end");
+  });
+
+  it("único ponto no período usa âncora centralizada (não há 'ponta' fazendo sentido)", () => {
+    const { container } = render(<SeriesChart points={[point("2026-08-01", 58200)]} label="Receita" />);
+    const monthLabel = container.querySelector("svg > text");
+    expect(monthLabel).toHaveAttribute("text-anchor", "middle");
+  });
+
+  it("mostra o valor mínimo e máximo no eixo Y — antes só dava pra saber passando o mouse", () => {
+    const { container } = render(<SeriesChart points={POINTS} label="Receita" />);
+    const svgTexts = Array.from(container.querySelectorAll("svg text")).map((el) => el.textContent);
+    expect(svgTexts).toContain(formatCompactNumber(58200)); // maior valor
+    expect(svgTexts).toContain(formatCompactNumber(50000)); // menor valor
+  });
+
+  it("linha reta (todo mês com o mesmo valor) mostra o valor uma única vez no eixo Y, não duplicado", () => {
+    const flat = [point("2026-06-01", 50000), point("2026-07-01", 50000), point("2026-08-01", 50000)];
+    const { container } = render(<SeriesChart points={flat} label="Receita" />);
+    const svgTexts = Array.from(container.querySelectorAll("svg text")).filter(
+      (el) => el.textContent === formatCompactNumber(50000)
+    );
+    expect(svgTexts).toHaveLength(1);
+  });
+
+  it("legenda (Valor/Meta) só aparece quando há meta em algum mês", () => {
+    const { rerender } = render(<SeriesChart points={POINTS} label="Receita" />);
+    expect(screen.queryByText("Meta")).not.toBeInTheDocument();
+
+    rerender(<SeriesChart points={POINTS} label="Receita" targets={[52000, null, 60000]} />);
+    // "Meta" aparece 2x agora (legenda + cabeçalho da tabela sr-only) —
+    // basta confirmar que deixou de estar ausente.
+    expect(screen.getAllByText("Meta").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Valor").length).toBeGreaterThan(0);
+  });
+
   it("mês sem dado real e sem meta continua sem quebrar (buraco em ambas as linhas)", () => {
     const withGap = [point("2026-06-01", 50000), point("2026-07-01", null), point("2026-08-01", 58200)];
     const { container } = render(

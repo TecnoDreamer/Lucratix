@@ -63,13 +63,13 @@ export function FunnelEvolutionChart({
               dataKey="period"
               tickFormatter={(v: string) => formatMonthYear(v)}
               tick={{ fontSize: 10 }}
-              className="fill-slate-400 dark:fill-slate-600"
+              className="fill-slate-500 dark:fill-slate-400"
             />
             <YAxis
               tickFormatter={(v: number) => formatCompactNumber(v)}
               width={48}
               tick={{ fontSize: 10 }}
-              className="fill-slate-400 dark:fill-slate-600"
+              className="fill-slate-500 dark:fill-slate-400"
             />
             <Tooltip
               content={({ active, payload, label: axisLabel }) => (

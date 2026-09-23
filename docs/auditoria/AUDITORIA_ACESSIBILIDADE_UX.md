@@ -15,8 +15,8 @@ PR de redesenho UX/UI + acessibilidade (`feat/redesign-ux-decisao-a11y`) corrigi
 | 4 | Rótulo nos 4 campos sem label | ✅ Corrigido |
 | 5 | `tabindex`/`role` na área rolável (estendido às 11 tabelas com rolagem do produto, não só o Funil) | ✅ Corrigido |
 | 6 | Traduzir/ocultar nomes internos em "dado ausente: …" | ✅ Corrigido (`lib/metric-reason.ts`) — cobre os 2 formatos do motor de métricas; frases já prontas de correlação/metas continuam sem i18n (debito à parte) |
-| 7 | Rótulos de eixo dos gráficos | ⏳ Não abordado nesta PR |
-| 8 | Contraste (tokens de cor) claro e escuro | 🟡 Parcial — as combinações concretamente medidas pelo axe (seção 3.2) foram corrigidas nó a nó; não houve migração para token de design nem varredura de todo `text-slate-400`/`text-slate-500` do código (179+118 usos, a maioria em ícones decorativos fora do escopo da regra `color-contrast`) |
+| 7 | Rótulos de eixo dos gráficos | ✅ Corrigido em `fix/chart-audit` (2026-09-23) — ver `docs/analytics/CHART_DECISIONS.md`, seção "Auditoria (2026-09-23)" |
+| 8 | Contraste (tokens de cor) claro e escuro | 🟡 Parcial — as combinações concretamente medidas pelo axe (seção 3.2) foram corrigidas nó a nó; `fix/chart-audit` fechou também o contraste equivalente em rótulo de eixo de gráfico (`fill-*` de SVG, fora do escopo do grep original por `text-*`); ainda não houve migração para token de design nem varredura de todo `text-slate-400`/`text-slate-500` do código (179+118 usos, a maioria em ícones decorativos fora do escopo da regra `color-contrast`) |
 
 Além da lista acima, essa PR também endereçou, fora da ordem de correção original: hierarquia visual dos KPIs do Dashboard (achado de UX, não do axe) e sinalização de tendência que não depende só de cor (achado de UX + reforço do princípio WCAG 1.4.1 que gerou o achado 3.2).
 
