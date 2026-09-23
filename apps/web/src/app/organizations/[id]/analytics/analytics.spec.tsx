@@ -301,6 +301,31 @@ describe("AnalyticsPage", () => {
     expect(screen.getByText("133,33", { selector: "p" })).toBeInTheDocument();
   });
 
+  it("hierarquia de KPI: Receita/Lucro/Margem/CAC em 'Principais indicadores', o resto em 'Outros indicadores'", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Principais indicadores").length).toBeGreaterThan(0);
+    });
+    // "Principais/Outros indicadores" aparece 2x na página (Situação atual
+    // + Marketing, mais abaixo) — pega o primeiro par, que é o de Situação
+    // atual.
+    const [situationPrimaryHeading] = screen.getAllByText("Principais indicadores");
+    const [situationSecondaryHeading] = screen.getAllByText("Outros indicadores");
+    const primaryGrid = situationPrimaryHeading.nextElementSibling as HTMLElement;
+    const secondaryGrid = situationSecondaryHeading.nextElementSibling as HTMLElement;
+    for (const label of ["Receita", "Lucro", "Margem", "CAC"]) {
+      expect(within(primaryGrid).getByText(label)).toBeInTheDocument();
+    }
+    for (const label of ["Conversão", "Ticket médio", "Recorrência"]) {
+      expect(within(secondaryGrid).getByText(label)).toBeInTheDocument();
+    }
+    // CAC não aparece 2x (uma vez por grid) — confirma que os grupos não
+    // se sobrepõem.
+    expect(within(secondaryGrid).queryByText("CAC")).not.toBeInTheDocument();
+  });
+
   it("mostra a variação percentual positiva e negativa", async () => {
     mockApiByUrl();
     renderPage();
@@ -636,6 +661,26 @@ describe("AnalyticsPage", () => {
     });
     expect(screen.getByText("5%")).toBeInTheDocument();
     expect(screen.getByText("2,5")).toBeInTheDocument();
+  });
+
+  it("hierarquia de KPI em Marketing: ROAS/ROI em 'Principais indicadores', CTR/CPC/CPM/CPL/CPA em 'Outros'", async () => {
+    mockApiByUrl();
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("4,2")).toBeInTheDocument();
+    });
+    // 2 pares "Principais/Outros indicadores" na página (Situação atual +
+    // Marketing) — pega o segundo par, que é o de Marketing.
+    const [, marketingPrimaryHeading] = screen.getAllByText("Principais indicadores");
+    const [, marketingSecondaryHeading] = screen.getAllByText("Outros indicadores");
+    const primaryGrid = marketingPrimaryHeading.nextElementSibling as HTMLElement;
+    const secondaryGrid = marketingSecondaryHeading.nextElementSibling as HTMLElement;
+    expect(within(primaryGrid).getByText("ROAS")).toBeInTheDocument();
+    expect(within(primaryGrid).getByText("ROI")).toBeInTheDocument();
+    for (const label of ["CTR", "CPC", "CPM", "CPL", "CPA"]) {
+      expect(within(secondaryGrid).getByText(label)).toBeInTheDocument();
+    }
   });
 
   it("sem campanhas no período mostra aviso de dados insuficientes", async () => {

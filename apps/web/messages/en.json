@@ -712,7 +712,9 @@
       "noPriority": "No finding needs immediate attention this period. Still, it's worth digging into other screens:",
       "exploreFunnel": "Analyze the Funnel",
       "exploreFinancials": "See Financials"
-    }
+    },
+    "primaryHeading": "Key indicators",
+    "secondaryHeading": "Other indicators"
   },
   "metricFields": {
     "revenue": "revenue",

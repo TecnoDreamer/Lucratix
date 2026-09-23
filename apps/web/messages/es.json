@@ -712,7 +712,9 @@
       "noPriority": "Ningún hallazgo exige atención inmediata en este período. Aun así, vale la pena profundizar en otras pantallas:",
       "exploreFunnel": "Analizar el Embudo",
       "exploreFinancials": "Ver Financiero"
-    }
+    },
+    "primaryHeading": "Indicadores principales",
+    "secondaryHeading": "Otros indicadores"
   },
   "metricFields": {
     "revenue": "ingresos",

@@ -26,6 +26,7 @@ import { formatPercentage, formatPeriodRange } from "@/lib/formatters";
 import { sectionTitle, buttonSecondary } from "@/lib/ui";
 import { useOrganization } from "@/contexts/organization-context";
 import { Alert, Card, Skeleton } from "@/components/ui";
+import { KpiCard } from "@/components/kpi-card";
 import { MetricHelp } from "@/components/metric-help";
 import { DateRangeFilter } from "@/components/date-range-filter";
 import { SeriesChart } from "@/components/series-chart";
@@ -78,6 +79,12 @@ const CARDS: CardConfig<ExecutiveDashboard>[] = [
   { key: "average_ticket", labelKey: "averageTicket", icon: IconDollar },
   { key: "recurrence_rate", labelKey: "recurrenceRate", percent: true, icon: IconTrendingUp },
 ];
+// Mesmo critério do Dashboard (KPI_HIERARCHY_AND_TONE.md): os 4
+// financeiros que decidem se o período foi bom ou ruim ganham destaque;
+// os 3 operacionais (taxas) vêm depois, menores. `SeriesGrid` (Evolução)
+// continua usando `CARDS` inteiro, sem hierarquia — é outra seção,
+// escopo desta unificação foi só o cartão de KPI (`MetricGrid`).
+const PRIMARY_METRIC_KEYS = new Set<keyof ExecutiveDashboard>(["revenue", "profit", "margin", "cac"]);
 
 const MARKETING_CARDS: CardConfig<MarketingAnalytics>[] = [
   { key: "roas", labelKey: "roas", icon: IconMegaphone },
@@ -88,6 +95,18 @@ const MARKETING_CARDS: CardConfig<MarketingAnalytics>[] = [
   { key: "cpl", labelKey: "cpl", icon: IconDollar },
   { key: "cpa", labelKey: "cpa", icon: IconDollar },
 ];
+// ROAS/ROI são os 2 KPIs de retorno (o que decide se o investimento valeu
+// a pena); os 5 de custo/alcance por etapa (CTR/CPC/CPM/CPL/CPA) vêm
+// depois, menores — mesmo critério "o que decide" do resto do produto.
+const MARKETING_PRIMARY_KEYS = new Set<keyof MarketingAnalytics>(["roas", "roi"]);
+
+// Colunas do grid `sm:` por quantidade de cartões primários — classes
+// literais (não interpoladas) pra o scanner do Tailwind gerar cada uma.
+const PRIMARY_GRID_COLS: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+};
 
 function ComparisonBadge({
   comparison,
@@ -140,44 +159,68 @@ function TargetProgressLine({ progress }: { progress: TargetProgress }) {
 function MetricGrid<T extends object>({
   data,
   cards,
+  primaryKeys,
   targetProgress,
 }: {
   data: T;
   cards: CardConfig<T>[];
+  /** Chaves que viram cartão `size="primary"` (maior) — as demais viram
+   * `"secondary"`. Sem nenhuma seção "Outros indicadores" quando todos os
+   * cartões são primários (não é o caso de nenhum chamador hoje, mas
+   * evita uma seção vazia se algum vier a ser). */
+  primaryKeys: Set<keyof T>;
   targetProgress?: Partial<Record<string, TargetProgress>>;
 }) {
   const t = useTranslations("analytics");
   const tMetricLabels = useTranslations("analytics.metricLabels");
   const reasonLabel = useMetricReasonLabel();
-  return (
-    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {cards.map(({ key, labelKey, percent, icon: Icon }, i) => {
-        const metric = data[key] as unknown as MetricWithComparison;
-        const progress = targetProgress?.[key];
-        const label = tMetricLabels(labelKey);
-        return (
-          <Card key={key} hover className="animate-fade-in-up p-4" style={{ animationDelay: `${i * 40}ms` }}>
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {label}
-                <MetricHelp metric={key} />
-              </p>
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
-                <Icon className="h-3.5 w-3.5" />
-              </span>
-            </div>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-              {formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
-            </p>
-            {!metric.current.is_applicable && metric.current.reason && (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{reasonLabel(metric.current.reason)}</p>
-            )}
+
+  const primaryCards = cards.filter((c) => primaryKeys.has(c.key));
+  const secondaryCards = cards.filter((c) => !primaryKeys.has(c.key));
+
+  function renderCard({ key, labelKey, percent, icon }: CardConfig<T>, size: "primary" | "secondary", index: number) {
+    const metric = data[key] as unknown as MetricWithComparison;
+    const progress = targetProgress?.[key];
+    return (
+      <KpiCard
+        key={key}
+        size={size}
+        index={index}
+        label={tMetricLabels(labelKey)}
+        metricHelpKey={key}
+        icon={icon}
+        value={formatMetric(metric.current, { percent, notApplicableLabel: t("notApplicable") })}
+        reason={!metric.current.is_applicable ? reasonLabel(metric.current.reason) : null}
+        trend={
+          <>
             {metric.current.is_applicable && <ComparisonBadge comparison={metric.comparison} metricId={key} />}
             {progress && <TargetProgressLine progress={progress} />}
-          </Card>
-        );
-      })}
-    </div>
+          </>
+        }
+      />
+    );
+  }
+
+  return (
+    <>
+      <h3 className="mt-6 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        {t("primaryHeading")}
+      </h3>
+      <div className={`mt-2 grid grid-cols-2 gap-3 ${PRIMARY_GRID_COLS[primaryCards.length] ?? "sm:grid-cols-4"}`}>
+        {primaryCards.map((c, i) => renderCard(c, "primary", i))}
+      </div>
+
+      {secondaryCards.length > 0 && (
+        <>
+          <h3 className="mt-6 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {t("secondaryHeading")}
+          </h3>
+          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {secondaryCards.map((c, i) => renderCard(c, "secondary", i))}
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -452,7 +495,9 @@ export default function AnalyticsPage() {
             ))}
           </div>
         ) : (
-          data && <MetricGrid data={data} cards={CARDS} targetProgress={targetProgress} />
+          data && (
+            <MetricGrid data={data} cards={CARDS} primaryKeys={PRIMARY_METRIC_KEYS} targetProgress={targetProgress} />
+          )
         )}
       </section>
 
@@ -582,7 +627,9 @@ export default function AnalyticsPage() {
             ))}
           </div>
         ) : (
-          marketing && <MetricGrid data={marketing} cards={MARKETING_CARDS} />
+          marketing && (
+            <MetricGrid data={marketing} cards={MARKETING_CARDS} primaryKeys={MARKETING_PRIMARY_KEYS} />
+          )
         )}
 
         {!loading && marketingByChannel && marketingByChannel.channels.length > 0 && (

@@ -28,9 +28,9 @@ possível — é o mais direto de justificar sem introduzir um conceito de
 
 Implementado em [`components/kpi-card.tsx`](../../apps/web/src/components/kpi-card.tsx)
 (`size="primary" | "secondary"`) e usado por
-[`dashboard/page.tsx`](../../apps/web/src/app/organizations/%5Bid%5D/dashboard/page.tsx).
-A Visão Executiva (Analytics) mantém seu próprio grid (`MetricGrid`) por
-enquanto — ver seção 3.
+[`dashboard/page.tsx`](../../apps/web/src/app/organizations/%5Bid%5D/dashboard/page.tsx)
+e, desde `feat/unify-kpi-card`, também pelo `MetricGrid` da Visão
+Executiva e de Marketing — ver seção 3.
 
 ## 2. Tom da variação nunca é só cor
 
@@ -56,16 +56,31 @@ direção da métrica, porque receita é `higher_is_better` e o bug nunca
 apareceu na prática; ficaria errado no dia em que uma métrica
 `lower_is_better` ganhasse comparação nesse cartão).
 
-## 3. O que não foi unificado (dívida registrada)
+## 3. Unificação com Analytics/Marketing (`feat/unify-kpi-card`)
 
-`Dashboard` (`KpiCard`) e Analytics (`MetricGrid`) continuam sendo dois
-componentes de grid separados, com formas de dado diferentes
-(`MetricResult` simples vs. `MetricWithComparison`) e comportamento hoje
-diferente (Analytics tem meta, comparação com período anterior e o
-`ComparisonBadge`; Dashboard não tem comparação por KPI, só a receita via
-endpoint de baseline). Migrar Analytics pra usar `KpiCard` exigiria
-adaptar `MetricGrid` pra montar o `trend` como `ReactNode` e revalidar
-todos os testes existentes daquela tela — não foi feito nesta PR pra não
-arriscar regressão numa tela já bem coberta por teste. `KpiCard` já foi
-desenhado pra aceitar esse uso (prop `trend` genérica) quando alguém
-decidir fazer essa unificação.
+*Dívida fechada.* `Dashboard` e a Visão Executiva/Marketing (`MetricGrid`,
+em `analytics/page.tsx`) agora usam o mesmo `KpiCard` — exatamente a
+adaptação prevista aqui: `MetricGrid` monta `trend` como o `ReactNode`
+composto de `ComparisonBadge` (variação vs. período anterior) +
+`TargetProgressLine` (progresso de meta, só receita/lucro), e passa pro
+`KpiCard` junto com `reason` (motivo de "não aplicável", já traduzido).
+Nenhuma fórmula, nenhuma chamada de API mudou — só o cartão que renderiza
+o valor.
+
+**Hierarquia primário/secundário chegou nas duas telas:**
+- Visão Executiva: mesmo corte do Dashboard (Receita/Lucro/Margem/CAC
+  primário; Conversão/Ticket médio/Recorrência secundário) — mesma
+  fonte de decisão (`PRIMARY_METRIC_KEYS`), só reaplicada aqui.
+- Marketing: ROAS/ROI (o que decide se o investimento valeu a pena) como
+  primário; CTR/CPC/CPM/CPL/CPA (custo/alcance por etapa do funil de
+  mídia) como secundário — critério novo, mesmo princípio "o que decide
+  primeiro" do resto do produto.
+
+`SeriesGrid` (seção Evolução, os 7 gráficos mensais) **não** entrou nesta
+unificação: `KpiCard` espera um `value` de texto único, não um corpo de
+gráfico — aplicar hierarquia aos cartões de gráfico exigiria estender o
+componente pra aceitar conteúdo livre, mudando seu contrato pros 2 usos
+já existentes. Ficou de fora por escopo (o pedido foi "cartão de KPI",
+que é `MetricGrid`), não por dificuldade técnica; registrado como
+possível próximo passo se fizer sentido dar destaque visual às métricas
+principais também na Evolução.
