@@ -66,7 +66,15 @@ router = APIRouter(prefix="/api/v1/organizations/{organization_id}", tags=["anal
 # - /analytics/executive e /analytics/marketing: ANALYST+ apenas.
 # Ver docs/requirements/business-rules.md, RN-010.
 
-_BaselineMetric = Literal["revenue", "profit", "margin", "cac"]
+# L-07: as 7 metricas que o dashboard calcula. `customer_count`,
+# `marketing_investment` e `leads` ficam de fora de proposito — sao insumos
+# (entradas de `financial_periods`/`funnel_snapshots`), nao indicadores
+# derivados de `compute_dashboard_metrics`, entao nao ha "valor atual" no
+# mesmo formato pra comparar. Taxas (margin/conversion_rate/recurrence_rate)
+# sao razoes (0.2 = 20%), no baseline e no dashboard.
+_BaselineMetric = Literal[
+    "revenue", "profit", "margin", "cac", "conversion_rate", "average_ticket", "recurrence_rate"
+]
 _CorrelationMetric = Literal[
     "revenue", "profit", "margin", "cac", "conversion_rate", "average_ticket", "recurrence_rate"
 ]
