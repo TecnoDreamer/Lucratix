@@ -1270,7 +1270,17 @@
     "notSignificant": "não significativo",
     "sampleSizePlaceholder": "Amostra",
     "conversionsPlaceholder": "Conversões",
-    "conversionRateByVariant": "Taxa de conversão por variante"
+    "conversionRateByVariant": "Taxa de conversão por variante",
+    "status": {
+      "draft": "Rascunho",
+      "running": "Em andamento",
+      "finished": "Finalizado"
+    },
+    "advance": {
+      "draft": "Iniciar",
+      "running": "Finalizar"
+    },
+    "statusUpdateError": "Não foi possível atualizar o status do experimento."
   },
   "idleLogout": {
     "title": "Sua sessão está prestes a expirar",

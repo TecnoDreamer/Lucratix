@@ -1270,7 +1270,17 @@
     "notSignificant": "not significant",
     "sampleSizePlaceholder": "Sample",
     "conversionsPlaceholder": "Conversions",
-    "conversionRateByVariant": "Conversion rate by variant"
+    "conversionRateByVariant": "Conversion rate by variant",
+    "status": {
+      "draft": "Draft",
+      "running": "Running",
+      "finished": "Finished"
+    },
+    "advance": {
+      "draft": "Start",
+      "running": "Finish"
+    },
+    "statusUpdateError": "Could not update the experiment status."
   },
   "idleLogout": {
     "title": "Your session is about to expire",

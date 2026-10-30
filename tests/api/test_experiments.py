@@ -91,3 +91,81 @@ def test_experiment_result_includes_significance_test_above_minimum_sample(clien
     assert control_summary["p_value"] is None  # controle nunca compara contra si mesma
     assert variant_summary["p_value"] == pytest.approx(0.009823, abs=1e-6)
     assert variant_summary["is_significant"] is True
+
+
+def _create_experiment(client, org_id: str) -> dict:
+    return client.post(
+        f"/api/v1/organizations/{org_id}/experiments",
+        json={
+            "hypothesis": "H",
+            "page_or_process": "P",
+            "primary_metric": "conversion_rate",
+            "variants": [{"name": "Controle"}, {"name": "Variante"}],
+        },
+    ).json()
+
+
+def test_experiment_status_transitions_linearly_from_draft_to_finished(client):
+    """L-08: antes desta rota, `status` nascia `draft` e nunca saia de la."""
+    org_id = _register_login_and_create_org(client, "exp4@example.com", "Empresa Exp 4")
+    experiment = _create_experiment(client, org_id)
+    assert experiment["status"] == "draft"
+
+    running = client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "running"},
+    )
+    assert running.status_code == 200
+    assert running.json()["status"] == "running"
+
+    finished = client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "finished"},
+    )
+    assert finished.status_code == 200
+    assert finished.json()["status"] == "finished"
+
+
+def test_experiment_status_cannot_skip_running(client):
+    org_id = _register_login_and_create_org(client, "exp5@example.com", "Empresa Exp 5")
+    experiment = _create_experiment(client, org_id)
+
+    resp = client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "finished"},
+    )
+    assert resp.status_code == 409
+
+
+def test_experiment_status_cannot_go_backward(client):
+    org_id = _register_login_and_create_org(client, "exp6@example.com", "Empresa Exp 6")
+    experiment = _create_experiment(client, org_id)
+    client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "running"},
+    )
+
+    resp = client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "draft"},
+    )
+    assert resp.status_code == 409
+
+
+def test_experiment_status_cannot_change_once_finished(client):
+    org_id = _register_login_and_create_org(client, "exp7@example.com", "Empresa Exp 7")
+    experiment = _create_experiment(client, org_id)
+    client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "running"},
+    )
+    client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "finished"},
+    )
+
+    resp = client.patch(
+        f"/api/v1/organizations/{org_id}/experiments/{experiment['id']}/status",
+        json={"status": "running"},
+    )
+    assert resp.status_code == 409

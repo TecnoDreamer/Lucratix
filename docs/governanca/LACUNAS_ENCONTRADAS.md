@@ -65,10 +65,11 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Impacto:** o usuário registra um baseline "completo" mas só 4 dos 10 indicadores são comparáveis.
 - **Ação:** ampliar `_BaselineMetric` para incluir `conversion_rate`/`average_ticket`/`recurrence_rate` (a métrica atual já é calculada no dashboard), ou documentar no manual que só 4 entram na comparação e por quê.
 
-### L-08 — `experiment.status` nunca sai de `draft`
+### L-08 — `experiment.status` nunca sai de `draft` — ✅ RESOLVIDO (2026-09-23)
 - **Evidência:** `apps/api/app/models/experiment.py` — enum `experiment_status (draft/running/finished)`, `default=DRAFT`. Nenhuma rota em `apps/api/app/modules/experiments/router.py` altera `status` (só `POST` cria, `PATCH .../variants/...` atualiza variante).
 - **Impacto:** todo experimento fica `draft` para sempre; o campo é inútil na prática.
 - **Ação:** adicionar `PATCH /experiments/{id}` que aceite `status`, com auditoria; ou remover a coluna se o ciclo de vida do experimento não for do MVP. Registrar decisão.
+- **Feito:** opção (a) — construir a transição. `PATCH /api/v1/organizations/{org}/experiments/{id}/status` (ANALYST+, sub-rota em vez de `PATCH /{id}` para não sugerir edição geral do experimento) aceita só o próximo passo do ciclo linear `draft → running → finished`; qualquer outra transição (pular etapa, voltar, mudar um `finished`) devolve `409`. Auditado como `experiment.status_updated`. Na tela de Experimentos, o badge agora é traduzido (pt-BR/en/es) e ganhou o botão "Iniciar"/"Finalizar". Decisão de não permitir reabrir um experimento encerrado: os resultados dele já entram na análise de significância (RN-013), reabrir invalidaria o que foi lido.
 
 ### L-09 — `check:i18n` não roda no CI — ✅ RESOLVIDO ([#129](https://github.com/TecnoDreamer/Lucratix/pull/129))
 - **Evidência:** `apps/web/package.json` tem o script `check:i18n` (`node scripts/check-i18n-keys.mjs`, 773 chaves), mas `.github/workflows/frontend-ci.yml` rodava `lint → typegen → tsc → test → build` — não `check:i18n`. Uma chave faltando em `en.json`/`es.json` passava no CI e renderizava a chave crua em produção.
@@ -146,8 +147,8 @@ Nenhum item `CRÍTICO` foi encontrado.
 |---|---|
 | CRÍTICO | — |
 | ALTO | ~~L-01~~ ✅, ~~L-02~~ ✅, L-03 |
-| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07, L-08, ~~L-09~~ ✅, L-10 |
+| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07, ~~L-08~~ ✅, ~~L-09~~ ✅, L-10 |
 | BAIXO | L-11, L-12, L-13, L-14, L-15, L-16, L-17, L-18 |
 | MELHORIA | L-19, L-20, ~~L-21~~ ✅ |
 
-Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — os demais seguem em aberto, L-06, L-07 e L-08 (decisão de produto pendente).
+Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05, L-08 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — os demais seguem em aberto, L-06 e L-07 (decisão de produto pendente).
