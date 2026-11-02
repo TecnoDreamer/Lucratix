@@ -11,14 +11,15 @@
     "check:i18n": "node scripts/check-i18n-keys.mjs"
   },
   "dependencies": {
-    "next": "16.3.4",
+    "next": "16.4.3",
     "next-intl": "^4.14.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1"
   },
   "overrides": {
-    "sharp": ">=0.35.4"
+    "sharp": ">=0.35.5",
+    "source-map-js": ">=1.2.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -29,7 +30,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.0",
     "eslint": "^9",
-    "eslint-config-next": "16.3.4",
+    "eslint-config-next": "16.4.3",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",
