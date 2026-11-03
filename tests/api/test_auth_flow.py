@@ -116,7 +116,12 @@ def test_refresh_with_access_token_instead_of_refresh_is_rejected(client):
     )
     access_token = client.cookies.get("access_token")
 
-    resp = client.post("/api/v1/auth/refresh", cookies={"refresh_token": access_token})
+    # O login ja deixou um refresh_token valido no jar; um `cookies=` por
+    # requisicao nao o substitui, e a requisicao levaria dois cookies com o
+    # mesmo nome (quem vence depende da ordem do httpx; flaky no CI).
+    client.cookies.delete("refresh_token")
+    client.cookies.set("refresh_token", access_token)
+    resp = client.post("/api/v1/auth/refresh")
     assert resp.status_code == 401
 
 
