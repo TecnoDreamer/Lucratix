@@ -29,6 +29,13 @@ Estes itens são reconhecidos como valiosos, mas **não fazem parte do MVP**. Fi
 - **Decisão (2026-09-23):** fora de escopo por ora, sem construir nada agora. `financial_periods.revenue` é receita total do período, não necessariamente recorrente — "MRR" de verdade exigiria primeiro decidir o que conta como receita recorrente no dado atual (um modelo de assinatura/plano não existe hoje). Fica pra uma rodada dedicada de produto.
 - **Caminho futuro (não iniciado), se/quando L-02 e L-21 forem retomados:** tamanho de uma fase nova, não um ajuste pontual — 1) decidir como o dado de vendas entra (digitação manual, importação de planilha, ou integração, esta última já prevista em "Integrações automáticas" acima); 2) modelar `customers` e `sales`/`orders` no banco (migração + models), com identidade individual de cliente — hoje só existe contagem agregada por mês; 3) construir a tela de cadastro/lançamento (ou importação) desses dados; 4) um service que agrega as vendas em `purchase_frequency`/`retention_time`/`active_start`/`active_end` por período, alimentando `ltv`/`retention_rate`/`churn_rate`, que já existem prontos no motor; 5) só então MRR fica mais barato — dá pra derivar da recorrência dentro desse mesmo modelo de vendas, em vez de exigir um modelo de assinatura separado (ainda exigindo decidir o que conta como "recorrente" no caso).
 
+## Oportunidades por campanha — coletado, não usado
+
+- `campaigns.opportunities` (`apps/api/app/models/campaign.py`) é gravado pela API, aceito na importação e devolvido na exportação, mas **nenhuma métrica o usa** — `AggregatedCampaigns` não o soma (achado L-06 de [`LACUNAS_ENCONTRADAS.md`](../governanca/LACUNAS_ENCONTRADAS.md)).
+- **Decisão (2026-11-03):** manter a coluna, o alias de importação e a exportação como estão — remover quebraria planilhas que já trazem a coluna — e deixar explícito no [catálogo de métricas](../analytics/metrics-catalog.md) que o campo é "coletado, não usado". Nada de código ou banco muda.
+- **Não afeta** `funnel_snapshots.opportunities`, que é uma etapa viva do funil.
+- **Caminho futuro (não iniciado), se o campo for retomado:** usá-lo numa métrica de marketing, por exemplo taxa lead→oportunidade por campanha (somar em `AggregatedCampaigns`, expor no schema e na tela de marketing); ou, se for descartado de vez, remover coluna (migração), alias de importação e exportação juntos.
+
 ## Machine Learning
 
 - Detecção de tendência via ML, previsão e rotinas de ML são mencionadas como uso futuro do Python/pipeline de dados, não como entrega do MVP.

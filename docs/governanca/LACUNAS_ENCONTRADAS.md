@@ -55,10 +55,11 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Ação:** adicionar `Field(ge=0)` nos campos de contagem e monetários onde negativo não faz sentido (avaliar caso a caso — `attributed_revenue` negativo pode ser estorno legítimo). Registrar a decisão de cada campo. PR de backend próprio.
 - **Feito:** `Field(ge=0)` adicionado caso a caso em `financial_period.py` (5 campos), `funnel_snapshot.py` (8 etapas) e `marketing.py` (investimento + 5 contagens da campanha). Decisão registrada em `RN-017` (`business-rules.md`). Duas exceções deliberadas, sem `ge=0`: `campaigns.attributed_revenue` (estorno/chargeback pode ser negativo) e `targets.value` (meta de `PROFIT`/`MARGIN` pode ser negativa).
 
-### L-06 — `campaigns.opportunities` é coluna morta
+### L-06 — `campaigns.opportunities` é coluna morta — ✅ DECISÃO REGISTRADA (2026-11-03)
 - **Evidência:** `apps/api/app/models/campaign.py` tem `opportunities Integer`; `apps/api/app/modules/imports/domains.py` aceita o cabeçalho; mas `AggregatedCampaigns` (`apps/api/app/modules/analytics/marketing_service.py`) não soma `opportunities` e nenhuma métrica de marketing o usa.
 - **Impacto:** o usuário preenche/importa um campo que não influencia nada.
 - **Ação:** decidir — (a) remover a coluna e o alias de import; ou (b) usá-lo em alguma métrica (ex.: taxa lead→oportunidade por campanha). Registrar no catálogo de métricas como "coletado, não usado" enquanto pendente.
+- **Decidido (2026-11-03):** manter a coluna, o alias de importação e a exportação, e documentar como "coletado, não usado" em `docs/analytics/metrics-catalog.md` e `docs/product/out-of-scope.md`. Remover quebraria planilhas existentes; usar o campo numa métrica fica como caminho futuro. Sem mudança de código nem de banco. `funnel_snapshots.opportunities` (etapa do funil) não é afetado.
 
 ### L-07 — 6 colunas de `baselines` nunca são lidas — ✅ RESOLVIDO no endpoint (2026-10-30); relatório fica pendente
 - **Evidência:** `apps/api/app/models/baseline.py` armazena `customer_count`, `conversion_rate`, `average_ticket`, `marketing_investment`, `leads`, `recurrence_rate` — settáveis via `POST /baselines`. Mas `GET /dashboard/compare-to-baseline` só aceita `metric ∈ {revenue, profit, margin, cac}` (`apps/api/app/modules/analytics/router.py:69`) e `/reports/basic` só compara `revenue`/`profit`.
@@ -149,8 +150,8 @@ Nenhum item `CRÍTICO` foi encontrado.
 |---|---|
 | CRÍTICO | — |
 | ALTO | ~~L-01~~ ✅, ~~L-02~~ ✅, L-03 |
-| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07 (endpoint ✅, relatório pendente), ~~L-08~~ ✅, ~~L-09~~ ✅, L-10 |
+| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, ~~L-06~~ ✅ (decisão registrada), L-07 (endpoint ✅, relatório pendente), ~~L-08~~ ✅, ~~L-09~~ ✅, L-10 |
 | BAIXO | L-11, L-12, L-13, L-14, L-15, L-16, L-17, L-18 |
 | MELHORIA | L-19, L-20, ~~L-21~~ ✅ |
 
-Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05, L-08 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — L-07 foi corrigido no endpoint de comparação, com o relatório (`/reports/basic`) ainda pendente; os demais seguem em aberto, L-06 (decisão de produto pendente).
+Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05, L-08 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — L-07 foi corrigido no endpoint de comparação, com o relatório (`/reports/basic`) ainda pendente; L-06 tem decisão de produto registrada (manter e documentar como "coletado, não usado", 2026-11-03); os demais seguem em aberto.

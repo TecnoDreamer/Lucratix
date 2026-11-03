@@ -65,6 +65,11 @@ Toda métrica abaixo segue o mesmo contrato (RN-003, RN-004, RNF-011, RNF-012): 
 - **Fórmula:** `investimento / leads`.
 - **Não aplicável quando:** leads ausente ou igual a zero.
 
+## Oportunidades da campanha (coletado, não usado)
+
+- **Status: coletado, não usado.** `campaigns.opportunities` é gravado pela API (a tela de marketing não tem campo para ele) e aceito na importação (cabeçalhos `opportunities`/`oportunidades`/`oportunidade`) e na exportação, mas nenhuma métrica o consome: `AggregatedCampaigns` (`marketing_service.py`) não o soma. Decisão registrada em `docs/product/out-of-scope.md` (achado L-06 de `docs/governanca/LACUNAS_ENCONTRADAS.md`).
+- **Não confundir com** `funnel_snapshots.opportunities`, que é uma etapa viva do funil e entra normalmente nas taxas de conversão entre etapas.
+
 ## CPA (Custo por Aquisição)
 
 - **Fórmula:** `investimento / conversoes` (conversão definida por contexto — lead, oportunidade ou cliente, conforme o RF/tela que a solicita).
