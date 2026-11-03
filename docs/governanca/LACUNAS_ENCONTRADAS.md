@@ -60,10 +60,12 @@ Nenhum item `CRÍTICO` foi encontrado.
 - **Impacto:** o usuário preenche/importa um campo que não influencia nada.
 - **Ação:** decidir — (a) remover a coluna e o alias de import; ou (b) usá-lo em alguma métrica (ex.: taxa lead→oportunidade por campanha). Registrar no catálogo de métricas como "coletado, não usado" enquanto pendente.
 
-### L-07 — 6 colunas de `baselines` nunca são lidas
+### L-07 — 6 colunas de `baselines` nunca são lidas — ✅ RESOLVIDO no endpoint (2026-10-30); relatório fica pendente
 - **Evidência:** `apps/api/app/models/baseline.py` armazena `customer_count`, `conversion_rate`, `average_ticket`, `marketing_investment`, `leads`, `recurrence_rate` — settáveis via `POST /baselines`. Mas `GET /dashboard/compare-to-baseline` só aceita `metric ∈ {revenue, profit, margin, cac}` (`apps/api/app/modules/analytics/router.py:69`) e `/reports/basic` só compara `revenue`/`profit`.
 - **Impacto:** o usuário registra um baseline "completo" mas só 4 dos 10 indicadores são comparáveis.
 - **Ação:** ampliar `_BaselineMetric` para incluir `conversion_rate`/`average_ticket`/`recurrence_rate` (a métrica atual já é calculada no dashboard), ou documentar no manual que só 4 entram na comparação e por quê.
+- **Feito:** `_BaselineMetric` agora aceita as 7 métricas que o dashboard calcula (`revenue`, `profit`, `margin`, `cac`, `conversion_rate`, `average_ticket`, `recurrence_rate`) — `GET /dashboard/compare-to-baseline` passa a comparar as 3 que faltavam. `customer_count`, `marketing_investment` e `leads` continuam sem comparação **de propósito**: são insumos (entradas de `financial_periods`/`funnel_snapshots`), não indicadores derivados, então não existe um "valor atual" no mesmo formato (a API devolve `422` se pedidos). O endpoint não tinha nenhum teste; `tests/api/test_compare_to_baseline.py` cobre as 7 métricas, baseline sem o campo (sem variação afirmada, RN-003/RN-004), ausência de baseline (`404`) e as 3 entradas rejeitadas.
+- **Pendente (não feito):** `/reports/basic` (JSON e PDF) segue comparando só `revenue`/`profit` — mexer nele muda o schema de resposta e o layout do PDF, então é uma decisão de conteúdo do relatório, separada. O frontend também só consome `metric=revenue` hoje (`use-dashboard.ts`); as outras 6 estão disponíveis na API mas sem tela que as use.
 
 ### L-08 — `experiment.status` nunca sai de `draft` — ✅ RESOLVIDO (2026-09-23)
 - **Evidência:** `apps/api/app/models/experiment.py` — enum `experiment_status (draft/running/finished)`, `default=DRAFT`. Nenhuma rota em `apps/api/app/modules/experiments/router.py` altera `status` (só `POST` cria, `PATCH .../variants/...` atualiza variante).
@@ -147,8 +149,8 @@ Nenhum item `CRÍTICO` foi encontrado.
 |---|---|
 | CRÍTICO | — |
 | ALTO | ~~L-01~~ ✅, ~~L-02~~ ✅, L-03 |
-| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07, ~~L-08~~ ✅, ~~L-09~~ ✅, L-10 |
+| MÉDIO | ~~L-04~~ ✅, ~~L-05~~ ✅, L-06, L-07 (endpoint ✅, relatório pendente), ~~L-08~~ ✅, ~~L-09~~ ✅, L-10 |
 | BAIXO | L-11, L-12, L-13, L-14, L-15, L-16, L-17, L-18 |
 | MELHORIA | L-19, L-20, ~~L-21~~ ✅ |
 
-Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05, L-08 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — os demais seguem em aberto, L-06 e L-07 (decisão de produto pendente).
+Nenhuma correção foi aplicada na rodada original de auditoria — cada item era candidato a uma issue ou PR próprio. Desde então, L-01, L-04, L-05, L-08 e L-09 já foram corrigidos (ver notas "Feito" em cada item), e L-02/L-21 já têm decisão de produto registrada (ver notas "Decidido" em cada item, 2026-09-23) — L-07 foi corrigido no endpoint de comparação, com o relatório (`/reports/basic`) ainda pendente; os demais seguem em aberto, L-06 (decisão de produto pendente).
