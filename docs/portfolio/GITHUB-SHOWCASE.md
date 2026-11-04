@@ -12,6 +12,8 @@
 
 Recomendação neutra: **B** é a via de menor risco para começar; **A** é a que mais comprova engenharia, mas só após a checklist da seção 3.
 
+**Decisão do autor (2026-11-04): opção B.** O repositório atual continua privado. Uma versão inicial da vitrine foi montada localmente (fora deste repositório, ainda sem remoto, nada publicado): README com números conferidos em 2026-11-04, `docs/portfolio/` (portfólio, matriz de maturidade, estudo de caso, diagramas), ADRs, regras de negócio, catálogo de métricas, lacunas conhecidas e trechos de código escolhidos (motor de métricas e teste de isolamento entre empresas). Links para o repositório privado viraram texto. Pendente para publicar: contato, licença (não escolhida), capturas de tela e a criação do repositório pelo autor. A checklist da seção 3 vale para a opção A; para a B, o que interessa é o item de credenciais do seed fora do README e a revisão do que entra em `docs/`.
+
 ## 2. README público proposto
 
 ```markdown
