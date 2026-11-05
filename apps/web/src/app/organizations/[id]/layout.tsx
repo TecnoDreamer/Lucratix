@@ -28,6 +28,7 @@ import {
   IconSettings,
   IconShieldCheck,
   IconTrendingUp,
+  IconUsers,
   IconX,
 } from "@/components/icons";
 import type { MembershipRole, Organization } from "@/lib/types";
@@ -56,6 +57,9 @@ const NAV_ITEMS: {
   { href: "experiments", key: "experiments", icon: IconFlask },
   { href: "reports", key: "reports", icon: IconFileText, minRole: "ANALYST" },
   { href: "audit", key: "audit", icon: IconShieldCheck, minRole: "ORGANIZATION_ADMIN" },
+  // Convidar/trocar papel/revogar membros da EMPRESA — mesmos endpoints
+  // org-scoped que já exigem ORGANIZATION_ADMIN no backend (memberships/router.py).
+  { href: "equipe", key: "team", icon: IconUsers, minRole: "ORGANIZATION_ADMIN" },
   // Sem minRole: exportar é leitura (mesmo nível de GET /financials, VIEWER
   // incluso — ver docs/data-import-export/ARCHITECTURE.md); só a etapa de
   // importação dentro da página exige ANALYST+, escondida ali dentro
@@ -87,6 +91,7 @@ export default function OrganizationLayout({ children }: { children: ReactNode }
     experiments: t("nav.experiments"),
     reports: t("nav.reports"),
     audit: t("nav.audit"),
+    team: t("nav.team"),
     centralDeDados: t("nav.centralDeDados"),
     glossary: t("nav.glossary"),
     companySettings: t("nav.companySettings"),

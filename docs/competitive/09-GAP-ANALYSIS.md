@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | G-01 | Integração | Sem integrações automáticas (Ads, redes, GA4) | Mercado (essencial) | G |
 | G-02 | Funcional | Sem white-label / portal do cliente com marca | Mercado (paridade) | M–G |
-| G-03 | UX / funcional | Sem tela de equipe para o admin da empresa | Interno | M |
+| G-03 | UX / funcional | ~~Sem tela de equipe para o admin da empresa~~ ✅ feita em 2026-11-05 | Interno | M |
 | G-04 | Onboarding | Tempo até o primeiro valor alto (dado manual) | Mercado + interno | M |
 | G-05 | Funcional | Relatórios fixos, sem variações por audiência/templates | Mercado (comum) | M |
 | G-06 | Analytics | Metas sem alerta/sinalização | Mercado (1 fonte) | P |
@@ -52,7 +52,9 @@
 | **Risco** | Escopo inflar; segurança de domínio próprio |
 | **Possível solução** | Em etapas: `VIEWER` com painel de leitura com logo da empresa → nome da consultoria → só depois domínio próprio |
 
-### G-03 — Sem tela de equipe
+### G-03 — Sem tela de equipe — ✅ RESOLVIDO (2026-11-05)
+
+> Página `/organizations/[id]/equipe` (convidar, trocar papel, revogar). O texto abaixo é o diagnóstico original, mantido como registro.
 | | |
 |---|---|
 | **Problema** | O admin da empresa não gerencia membros pela interface (só o Super Admin) |

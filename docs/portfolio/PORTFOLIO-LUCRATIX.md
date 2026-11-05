@@ -91,7 +91,7 @@ Todos com status conforme a matriz. "Screenshot" refere-se ao [`SCREENSHOT-PLAN.
 | **Produtos** | Catálogo de referência | cadastro → lista | `PARCIAL` (sem análise por produto) | — |
 | **Glossário** | Ensinar a ler o número | termo → definição, fórmula, leitura | `IMPLEMENTADO` | SS-13 |
 | **Auditoria** | Saber quem alterou o quê | ações → trilha filtrável | `IMPLEMENTADO` | SS-14 |
-| **Acesso** | Controle de quem vê o quê | papéis, chaves de API, Super Admin | `IMPLEMENTADO` (sem tela de equipe para admin da empresa) | SS-15 |
+| **Acesso** | Controle de quem vê o quê | papéis, chaves de API, Super Admin | `IMPLEMENTADO` (tela de equipe para o admin da empresa desde 2026-11-05) | SS-15 |
 
 ## 8. Analytics
 
@@ -239,7 +239,7 @@ Só o que é observável no código e nos testes — **sem comparação com conc
 | Exclusão/exportação self-service de dados pessoais (LGPD) | `PLANEJADO` | Issue #25 |
 | MFA (TOTP) para papéis privilegiados | `PROPOSTO` | Documento de arquitetura |
 | Acesso por módulo (empresa e usuário) | `PROPOSTO` | Só desenho |
-| Tela de equipe para o admin da empresa | `PLANEJADO` | API pronta, UI ausente |
+| Tela de equipe para o admin da empresa | `IMPLEMENTADO` (2026-11-05) | `/organizations/[id]/equipe`: convidar, trocar papel, revogar |
 | Observabilidade, performance, acessibilidade auditada, backup | `PLANEJADO` | Fase 18 (hardening) |
 | LTV, retenção, churn, MRR | `PLANEJADO` | Decisão de produto pendente (L-02, L-21) |
 | Priorização com base em análise de mercado | `PROPOSTO` | Backlog e roadmap documentados em [`COMPETITIVE-OPPORTUNITY-BACKLOG.md`](../product/COMPETITIVE-OPPORTUNITY-BACKLOG.md) e [`ROADMAP-COMPETITIVO.md`](../product/ROADMAP-COMPETITIVO.md); dependem de validação com usuários (discovery ainda não realizado) |

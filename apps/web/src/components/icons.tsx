@@ -167,6 +167,17 @@ export function IconLock(props: IconProps) {
   );
 }
 
+export function IconUsers(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.8 20c1.2-3.3 3.6-5 6.2-5s5 1.7 6.2 5" />
+      <path d="M16 5.2a3.2 3.2 0 0 1 0 5.6" />
+      <path d="M18.2 15.3c1.5.8 2.6 2.4 3.2 4.7" />
+    </svg>
+  );
+}
+
 export function IconUser(props: IconProps) {
   return (
     <svg {...base(props)}>

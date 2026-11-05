@@ -576,7 +576,8 @@
       "audit": "Auditoría",
       "centralDeDados": "Centro de Datos",
       "glossary": "Glosario",
-      "companySettings": "Configuración de la empresa"
+      "companySettings": "Configuración de la empresa",
+      "team": "Equipo"
     },
     "accountSectionTitle": "Cuenta",
     "accountSettings": "Configuración",
@@ -1311,5 +1312,29 @@
       "analytical": "Analítico",
       "presentation": "Presentación"
     }
+  },
+  "team": {
+    "title": "Equipo de la empresa",
+    "description": "Quién tiene acceso a esta empresa y con qué rol. Solo puedes asignar roles iguales o inferiores al tuyo.",
+    "loadError": "No se pudo cargar el equipo.",
+    "inviteError": "No se pudo invitar a la persona.",
+    "roleChangeError": "No se pudo cambiar el rol.",
+    "revokeError": "No se pudo revocar el acceso.",
+    "empty": "Aún no hay miembros en esta empresa.",
+    "nameColumn": "Nombre",
+    "emailColumn": "Correo electrónico",
+    "roleColumn": "Rol",
+    "you": "tú",
+    "locked": "No puedes modificar a este miembro.",
+    "revoke": "Revocar",
+    "revoking": "Revocando...",
+    "revokeConfirm": "¿Revocar el acceso de {name}?",
+    "invite": "Invitar persona",
+    "inviteHint": "Si el correo aún no tiene cuenta en la plataforma, indica el nombre: la cuenta se crea al instante.",
+    "nameIfNoAccount": "Nombre (si aún no tiene cuenta)",
+    "inviting": "Invitando...",
+    "invited": "Acceso concedido a {email}.",
+    "devModeTitle": "Modo desarrollo — sin envío de correo configurado",
+    "devModeAccountCreated": "Cuenta creada para {email}. Copia el enlace de abajo y envíalo manualmente: define la contraseña en el primer acceso."
   }
 }

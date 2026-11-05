@@ -88,6 +88,7 @@ describe("OrganizationLayout — sidebar", () => {
       "Experimentos",
       "Relatório",
       "Auditoria",
+      "Equipe",
       "Central de Dados",
       "Glossário",
     ]) {
@@ -95,7 +96,7 @@ describe("OrganizationLayout — sidebar", () => {
     }
   });
 
-  it("esconde Analytics, Relatório e Auditoria para VIEWER, mas mantém o resto (incluindo Central de Dados — exportar é leitura)", async () => {
+  it("esconde Analytics, Relatório, Auditoria e Equipe para VIEWER, mas mantém o resto (incluindo Central de Dados — exportar é leitura)", async () => {
     vi.mocked(api.get).mockResolvedValue({ ...FAKE_ORG, my_role: "VIEWER" });
     render(
       <OrganizationLayout>
@@ -118,12 +119,12 @@ describe("OrganizationLayout — sidebar", () => {
     ]) {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
-    for (const label of ["Analytics", "Relatório", "Auditoria"]) {
+    for (const label of ["Analytics", "Relatório", "Auditoria", "Equipe"]) {
       expect(screen.queryByRole("link", { name: label })).not.toBeInTheDocument();
     }
   });
 
-  it("esconde só Auditoria para ANALYST", async () => {
+  it("esconde só Auditoria e Equipe para ANALYST", async () => {
     vi.mocked(api.get).mockResolvedValue({ ...FAKE_ORG, my_role: "ANALYST" });
     render(
       <OrganizationLayout>
@@ -136,6 +137,7 @@ describe("OrganizationLayout — sidebar", () => {
     });
     expect(screen.getByRole("link", { name: "Relatório" })).toBeVisible();
     expect(screen.queryByRole("link", { name: "Auditoria" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Equipe" })).not.toBeInTheDocument();
   });
 
   it("marca a rota ativa com aria-current", async () => {

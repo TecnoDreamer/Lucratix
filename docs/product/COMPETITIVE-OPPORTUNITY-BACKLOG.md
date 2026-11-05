@@ -33,7 +33,7 @@ Faixas de horizonte: **Agora** ≥ 60 · **Próximo** 30–59 · **Depois** 10�
 
 | ID | Título | Categoria | Problema | Evidência / Fonte | Persona | Hipótese |
 |---|---|---|---|---|---|---|
-| **B-01** | Tela de equipe para o admin da empresa | UX / funcionalidade | O admin da empresa não convida nem gerencia membros pela interface | Matriz de maturidade §3 (API pronta, sem consumidor no front); G-03 | Consultor(a)/dono(a) | Sem isso, não há demo honesta nem portal do cliente |
+| **B-01** | ✅ Tela de equipe para o admin da empresa (feita em 2026-11-05) | UX / funcionalidade | O admin da empresa não convida nem gerencia membros pela interface | Matriz de maturidade §3 (API pronta, sem consumidor no front); G-03 | Consultor(a)/dono(a) | Sem isso, não há demo honesta nem portal do cliente |
 | **B-02** | Discovery com usuários (roteiro pronto) | Pesquisa | Nenhuma evidência de demanda; hipóteses H-D1…H-D8 abertas | [`07`](../competitive/07-ROTEIRO-DISCOVERY-MERCADO.md); G-15; `problem.md` sem pesquisa formal | P1–P5 | O problema e o público existem como descritos |
 | **B-03** | Capturas de tela + decisão do showcase (A/B/C) | Documentação | Portfólio sem imagens; repositório privado | [`SCREENSHOT-PLAN.md`](../portfolio/SCREENSHOT-PLAN.md); [`GITHUB-SHOWCASE.md`](../portfolio/GITHUB-SHOWCASE.md); G-16 | Autor/recrutadores | Imagens e vitrine aumentam a credibilidade |
 | **B-04** | Onboarding: planilha-modelo, dados de exemplo opcionais, estados vazios guiados | UX / onboarding | Tempo até o primeiro valor alto por causa do dado manual | Onboarding dos concorrentes (S31); G-04 | Analista; novo usuário | O atrito está no preparo dos dados |
