@@ -18,7 +18,7 @@ test("admin da empresa convida, troca o papel e revoga um membro pela tela de Eq
   await page.getByRole("button", { name: "Convidar pessoa" }).click();
 
   await expect(page.getByText(`Acesso concedido a ${guestEmail}.`)).toBeVisible();
-  await expect(page.getByRole("cell", { name: guestName })).toBeVisible();
+  await expect(page.getByRole("cell", { name: guestName, exact: true })).toBeVisible();
 
   // O papel padrão do convite é o mais restrito (Visualizador); promove a Analista.
   const roleSelect = page.getByRole("combobox", { name: `Papel — ${guestName}` });
@@ -32,5 +32,5 @@ test("admin da empresa convida, troca o papel e revoga um membro pela tela de Eq
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Revogar" }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByRole("cell", { name: guestName })).not.toBeVisible();
+  await expect(page.getByRole("cell", { name: guestName, exact: true })).not.toBeVisible();
 });
