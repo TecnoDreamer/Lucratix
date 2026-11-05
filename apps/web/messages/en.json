@@ -576,7 +576,8 @@
       "audit": "Audit log",
       "centralDeDados": "Data Hub",
       "glossary": "Glossary",
-      "companySettings": "Company settings"
+      "companySettings": "Company settings",
+      "team": "Team"
     },
     "accountSectionTitle": "Account",
     "accountSettings": "Settings",
@@ -1311,5 +1312,29 @@
       "analytical": "Analytical",
       "presentation": "Presentation"
     }
+  },
+  "team": {
+    "title": "Company team",
+    "description": "Who has access to this company and with which role. You can only assign roles equal to or below your own.",
+    "loadError": "Could not load the team.",
+    "inviteError": "Could not invite this person.",
+    "roleChangeError": "Could not change the role.",
+    "revokeError": "Could not revoke access.",
+    "empty": "No members in this company yet.",
+    "nameColumn": "Name",
+    "emailColumn": "Email",
+    "roleColumn": "Role",
+    "you": "you",
+    "locked": "You cannot change this member.",
+    "revoke": "Revoke",
+    "revoking": "Revoking...",
+    "revokeConfirm": "Revoke {name}'s access?",
+    "invite": "Invite person",
+    "inviteHint": "If the email has no account on the platform yet, enter the name — the account is created right away.",
+    "nameIfNoAccount": "Name (if no account yet)",
+    "inviting": "Inviting...",
+    "invited": "Access granted to {email}.",
+    "devModeTitle": "Development mode — no email delivery configured",
+    "devModeAccountCreated": "Account created for {email}. Copy the link below and send it manually — it sets the password on first access."
   }
 }
